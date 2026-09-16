@@ -1,0 +1,171 @@
+@import "tailwindcss";
+@import "remixicon/fonts/remixicon.css";
+
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --accent:          #3BB273;   /* primary green */
+  --accent-muted:    #2e9460;   /* darker shade for hover */
+  --accent-subtle:   #3BB27320; /* 12% opacity tint */
+  --secondary:       #EB5E28;   /* warm orange */
+  --secondary-muted: #c94d1e;
+  --secondary-subtle:#EB5E2820;
+
+  /* Deep Pitch-Black Terminal Theme (Default) */
+  --bg:              #08090C;
+  --bg-card:         #0E1015;
+  --bg-elevated:     #141720;
+  --border:          #1A1E29;
+  --border-subtle:   #12151D;
+  --text-primary:    #F4F2EB;
+  --text-secondary:  #8E92A0;
+  --text-muted:      #505465;
+  --text-inverse:    #08090C;
+
+  /* Semantic */
+  --success:  #3BB273;
+  --error:    #E53935;
+  --warning:  #F59E0B;  /* amber — for pending/in-progress states */
+  --pending:  #F59E0B;
+
+  /* Spacing / Radius */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast:   150ms;
+  --duration-base:   250ms;
+  --duration-slow:   400ms;
+}
+
+[data-theme="light"] {
+  --bg:              #FFFCF2;
+  --bg-card:         #F5F2E4;
+  --bg-elevated:     #EDEADC;
+  --border:          #D8D5C8;
+  --border-subtle:   #E8E5D8;
+  --text-primary:    #1A1A1A;
+  --text-secondary:  #5A5A5A;
+  --text-muted:      #8A8A8A;
+  --text-inverse:    #FFFCF2;
+}
+
+/* ─── Tailwind v4 Theme Bridge ───────────────────────────────────────────── */
+@theme inline {
+  /* Font */
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Colors — expose design tokens as Tailwind utilities */
+  --color-accent:           var(--accent);
+  --color-accent-muted:     var(--accent-muted);
+  --color-accent-subtle:    var(--accent-subtle);
+  --color-secondary:        var(--secondary);
+  --color-secondary-muted:  var(--secondary-muted);
+  --color-secondary-subtle: var(--secondary-subtle);
+
+  --color-bg:               var(--bg);
+  --color-bg-card:          var(--bg-card);
+  --color-bg-elevated:      var(--bg-elevated);
+  --color-border:           var(--border);
+  --color-border-subtle:    var(--border-subtle);
+
+  --color-text-primary:     var(--text-primary);
+  --color-text-secondary:   var(--text-secondary);
+  --color-text-muted:       var(--text-muted);
+  --color-text-inverse:     var(--text-inverse);
+
+  --color-success:          var(--success);
+  --color-error:            var(--error);
+  --color-warning:          var(--warning);
+  --color-pending:          var(--pending);
+
+  /* Border radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  min-height: 100dvh;
+  line-height: 1.5;
+}
+
+/* ─── Typography Scale ───────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  {
+  background: var(--border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── Selection ──────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+/* ─── Focus Ring ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Inputs and textareas should not have the global focus outline */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ─── Numeric tabular figures ────────────────────────────────────────────── */
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Remove default spin buttons on number inputs ───────────────────────── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
