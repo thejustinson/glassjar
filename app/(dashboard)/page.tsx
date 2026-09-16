@@ -9,10 +9,12 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTopTokens, getCookPrice, type Token } from "@/lib/das";
 import { TokenSearchModal } from "@/components/search/TokenSearchModal";
 import {
+  useWatchlist,
   formatPrice,
   formatPct,
   formatNumber,
@@ -78,7 +80,7 @@ function TokenLogo({ token }: { token: Token }) {
 
 type SortKey = "price" | "priceChange24h" | "volume24h" | "marketCap" | "liquidity" | "holderCount";
 
-const COLS = "44px minmax(220px,2.5fr) 130px 140px 140px 110px 110px";
+const COLS = "56px minmax(220px,2.5fr) 130px 140px 140px 110px 110px";
 
 function TableHeaderCol({
   label,
@@ -126,6 +128,10 @@ function TableHeaderCol({
 
 function TokenRow({ token, rank }: { token: Token; rank: number }) {
   const router = useRouter();
+  const { publicKey } = useWallet();
+  const { isWatched, toggle } = useWatchlist(publicKey?.toBase58());
+  const watched = isWatched(token.mint);
+
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const changeClass = deltaColorClass(token.priceChange24h ?? 0);
@@ -139,6 +145,18 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
     setMenuOpen(false);
   }
 
+  function handleToggleWatchlist(e: React.MouseEvent) {
+    e.stopPropagation();
+    toggle({
+      mint: token.mint,
+      symbol: token.symbol,
+      name: token.name,
+      decimals: token.decimals,
+      logoUri: token.logoUri,
+      price: token.price,
+    });
+  }
+
   return (
     <motion.div
       variants={variants.fadeUp}
@@ -150,10 +168,24 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
         "hover:bg-bg-elevated/70 transition-colors duration-150 cursor-pointer group"
       )}
     >
-      {/* Rank */}
-      <span className="text-xs text-text-muted font-mono tabular-nums text-left font-medium">
-        {rank}
-      </span>
+      {/* Star & Rank */}
+      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={handleToggleWatchlist}
+          className={cn(
+            "p-0.5 rounded transition-transform hover:scale-125 select-none",
+            watched
+              ? "text-amber-400 opacity-100"
+              : "text-text-muted opacity-30 hover:opacity-100 hover:text-amber-400"
+          )}
+          title={watched ? "Remove from watchlist" : "Add to watchlist"}
+        >
+          <i className={cn(watched ? "ri-star-fill text-amber-400 text-sm" : "ri-star-line text-sm")} />
+        </button>
+        <span className="text-xs text-text-muted font-mono tabular-nums text-left font-medium">
+          {rank}
+        </span>
+      </div>
 
       {/* Token identity */}
       <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -523,7 +555,10 @@ export default function DiscoverPage() {
           style={{ gridTemplateColumns: COLS }}
           className="grid items-center gap-x-4 px-5 bg-bg/50 border-b border-border text-xs text-text-muted"
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted">#</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
+            <span className="text-amber-400/80">★</span>
+            <span>#</span>
+          </span>
           <TableHeaderCol label="Token Name" sortKey="marketCap" current={sort} onSort={handleSort} align="left" />
           <TableHeaderCol label="Price" sortKey="price" current={sort} onSort={handleSort} />
           <TableHeaderCol label="Trading Volume (24h)" sortKey="volume24h" current={sort} onSort={handleSort} />

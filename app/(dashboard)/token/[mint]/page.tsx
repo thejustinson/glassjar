@@ -9,11 +9,13 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { motion } from "framer-motion";
 import { getTokenByMint, getCookPrice, type Token } from "@/lib/das";
 import { PriceChart } from "@/components/charts/PriceChart";
 import { SwapBridgePanel } from "@/components/swap/SwapBridgePanel";
 import {
+  useWatchlist,
   formatPrice,
   formatPct,
   formatNumber,
@@ -34,11 +36,16 @@ export default function TokenPage({ params }: TokenPageProps) {
   const resolvedParams = use(params);
   const mint = resolvedParams.mint;
 
+  const { publicKey } = useWallet();
+  const { isWatched, toggle } = useWatchlist(publicKey?.toBase58());
+
   const [token, setToken] = useState<Token | null>(null);
   const [cookUsd, setCookUsd] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const watched = token ? isWatched(token.mint) : false;
 
   useEffect(() => {
     let active = true;
@@ -129,6 +136,30 @@ export default function TokenPage({ params }: TokenPageProps) {
         </Link>
 
         <div className="flex items-center gap-2">
+          {/* Watchlist Toggle */}
+          <button
+            onClick={() =>
+              toggle({
+                mint: token.mint,
+                symbol: token.symbol,
+                name: token.name,
+                decimals: token.decimals,
+                logoUri: token.logoUri,
+                price: token.price,
+              })
+            }
+            className={cn(
+              "h-7 px-3 rounded-full text-[11px] font-semibold transition-all inline-flex items-center gap-1.5 select-none shadow-sm",
+              watched
+                ? "bg-amber-400/15 text-amber-400 border border-amber-400/40"
+                : "bg-bg-card border border-border text-text-secondary hover:text-amber-400 hover:border-amber-400/40"
+            )}
+            title={watched ? "Remove from watchlist" : "Add to watchlist"}
+          >
+            <i className={cn(watched ? "ri-star-fill text-amber-400 text-xs" : "ri-star-line text-xs")} />
+            <span>{watched ? "Watching" : "Add to Watchlist"}</span>
+          </button>
+
           <a
             href={`https://cookiescan.io/token/${token.mint}`}
             target="_blank"

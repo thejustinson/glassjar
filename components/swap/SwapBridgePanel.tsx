@@ -306,35 +306,44 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
         className
       )}
     >
-      {/* ─── TAB SWITCHER: SWAP VS BRIDGE ─── */}
+      {/* ─── HEADER & TAB SWITCHER (Only show Bridge for bridgeable COOK) ─── */}
       <div className="flex items-center justify-between pb-1">
-        <div className="flex items-center gap-1 bg-[#141720] p-1 rounded-full border border-border">
-          <button
-            onClick={() => setActiveTab("swap")}
-            className={cn(
-              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5",
-              activeTab === "swap"
-                ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.35)]"
-                : "text-text-muted hover:text-text-primary"
-            )}
-          >
-            <i className="ri-swap-line text-xs" />
-            <span>Swap</span>
-          </button>
+        {token.mint === COOK_MINT ? (
+          <div className="flex items-center gap-1 bg-[#141720] p-1 rounded-full border border-border">
+            <button
+              onClick={() => setActiveTab("swap")}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5",
+                activeTab === "swap"
+                  ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.35)]"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <i className="ri-swap-line text-xs" />
+              <span>Swap</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("bridge")}
-            className={cn(
-              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5",
-              activeTab === "bridge"
-                ? "bg-secondary text-white shadow-[0_0_12px_rgba(235,94,40,0.35)]"
-                : "text-text-muted hover:text-text-primary"
-            )}
-          >
-            <i className="ri-arrow-left-right-line text-xs" />
-            <span>Bridge</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setActiveTab("bridge")}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5",
+                activeTab === "bridge"
+                  ? "bg-secondary text-white shadow-[0_0_12px_rgba(235,94,40,0.35)]"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <i className="ri-arrow-left-right-line text-xs" />
+              <span>Bridge</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-text-primary tracking-wide">Swap</h2>
+            <span className="text-[10px] font-semibold text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20">
+              Cookieswap
+            </span>
+          </div>
+        )}
 
         {/* Right Settings (Slippage Dropdown) */}
         {activeTab === "swap" && (
@@ -708,9 +717,23 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
             </div>
 
             <div className="flex items-center justify-between text-xs font-bold text-text-primary px-3 py-2.5 rounded-xl bg-bg-card border border-border">
-              <span>{bridgeDirection === "cookie-to-solana" ? "Cookie Chain" : "Solana Mainnet"}</span>
+              <div className="flex items-center gap-1.5">
+                <img
+                  src={bridgeDirection === "cookie-to-solana" ? "/cook.jpeg" : "/solana-logo.png"}
+                  alt=""
+                  className="w-4 h-4 rounded-full object-cover border border-border flex-shrink-0"
+                />
+                <span>{bridgeDirection === "cookie-to-solana" ? "Cookie Chain" : "Solana Mainnet"}</span>
+              </div>
               <i className="ri-arrow-right-line text-secondary text-sm" />
-              <span>{bridgeDirection === "cookie-to-solana" ? "Solana Mainnet" : "Cookie Chain"}</span>
+              <div className="flex items-center gap-1.5">
+                <span>{bridgeDirection === "cookie-to-solana" ? "Solana Mainnet" : "Cookie Chain"}</span>
+                <img
+                  src={bridgeDirection === "cookie-to-solana" ? "/solana-logo.png" : "/cook.jpeg"}
+                  alt=""
+                  className="w-4 h-4 rounded-full object-cover border border-border flex-shrink-0"
+                />
+              </div>
             </div>
           </div>
 

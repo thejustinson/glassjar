@@ -25,9 +25,10 @@ import { TokenAvatar } from "@/components/ui/TokenAvatar";
 interface TokenSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectToken?: (token: Token) => void;
 }
 
-export function TokenSearchModal({ isOpen, onClose }: TokenSearchModalProps) {
+export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearchModalProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
@@ -105,8 +106,22 @@ export function TokenSearchModal({ isOpen, onClose }: TokenSearchModalProps) {
   }, [tokens, query]);
 
   function handleSelect(mint: string) {
-    onClose();
-    router.push(`/token/${mint}`);
+    const selectedToken =
+      (caToken && caToken.mint.toLowerCase() === mint.toLowerCase() ? caToken : null) ||
+      tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) || {
+        mint,
+        symbol: "TOKEN",
+        name: "Unknown Token",
+        decimals: 9,
+      };
+
+    if (onSelectToken) {
+      onSelectToken(selectedToken);
+      onClose();
+    } else {
+      onClose();
+      router.push(`/token/${mint}`);
+    }
   }
 
   async function handleCopy(e: React.MouseEvent, mint: string) {
