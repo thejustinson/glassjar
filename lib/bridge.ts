@@ -60,6 +60,38 @@ const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC ?? "https://api.mainnet-be
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
+export interface SolanaWalletBalances {
+  cook: number;
+  sol: number;
+}
+
+/**
+ * Reads both bridged COOK and native SOL balance for the user on Solana Mainnet.
+ */
+export async function getSolanaWalletBalances(
+  ownerAddress: string | PublicKey
+): Promise<SolanaWalletBalances> {
+  const pubkeyStr = typeof ownerAddress === "string" ? ownerAddress : ownerAddress.toBase58();
+  try {
+    const res = await fetch(`/api/solana-balance?address=${pubkeyStr}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        cook: typeof data.balance === "number" ? data.balance : 0,
+        sol: typeof data.solBalance === "number" ? data.solBalance : 0,
+      };
+    }
+  } catch {
+    // fallback
+  }
+
+  const cook = await getSolanaCookBalance(ownerAddress);
+  return { cook, sol: 0 };
+}
+
 /**
  * Reads the user's bridged COOK (Token-2022) balance on Solana Mainnet.
  * Calls our server route first (which proxies to Solana RPC without browser Origin blocks),
@@ -359,4 +391,28 @@ export async function broadcastBridgeTransaction(
   const data = await res.json();
   return data.txHash;
 }
+
+/**
+ * Resolves the Hyperlane message ID from a confirmed transaction.
+ */
+export async function fetchMessageIdFromTx(
+  txHash: string,
+  chain: "cookie" | "solana"
+): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `/api/bridge/tx-message-id?txHash=${encodeURIComponent(txHash)}&chain=${chain}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.messageId) {
+        return data.messageId;
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
 

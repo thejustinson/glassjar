@@ -14,9 +14,11 @@ import {
   calculateBridgeAmounts,
   getDestinationCollateral,
   getSolanaCookBalance,
+  getSolanaWalletBalances,
   buildBridgeTransaction,
   broadcastBridgeTransaction,
   checkBridgeDelivery,
+  fetchMessageIdFromTx,
   getHyperlaneMessageUrl,
   OFFICIAL_BRIDGE_URL,
   COOKIE_WARP_PROGRAM_ID,
@@ -43,6 +45,7 @@ export function BridgeTerminal() {
   // Balances on both sides of the bridge
   const [cookieBalance, setCookieBalance] = useState<number>(0);
   const [solanaBalance, setSolanaBalance] = useState<number>(0);
+  const [solNativeBalance, setSolNativeBalance] = useState<number>(0);
   const [loadingBalances, setLoadingBalances] = useState<boolean>(false);
 
   // Form State
@@ -79,10 +82,13 @@ export function BridgeTerminal() {
       try {
         const [cBal, sBal] = await Promise.allSettled([
           getCookBalance(publicKey),
-          getSolanaCookBalance(publicKey),
+          getSolanaWalletBalances(publicKey),
         ]);
         if (cBal.status === "fulfilled") setCookieBalance(cBal.value);
-        if (sBal.status === "fulfilled") setSolanaBalance(sBal.value);
+        if (sBal.status === "fulfilled") {
+          setSolanaBalance(sBal.value.cook);
+          setSolNativeBalance(sBal.value.sol);
+        }
 
         if (!recipient) {
           setRecipient(publicKey.toBase58());
@@ -166,6 +172,8 @@ export function BridgeTerminal() {
       const sourceChain = isCookieToSolana ? "cookie" : "solana";
       const destChain = isCookieToSolana ? "solana" : "cookie";
       const destRecipient = recipient.trim() || publicKey.toBase58();
+      const initialDestBal = isCookieToSolana ? solanaBalance : cookieBalance;
+      const transferAmountNum = Number(amount.trim());
 
       // 1. Build VersionedTransaction
       const built = await buildBridgeTransaction({
@@ -214,15 +222,53 @@ export function BridgeTerminal() {
       setTransferStatus("awaiting_delivery");
       setStatusMessage("Source confirmed! Hyperlane relayer is executing delivery to destination chain (~1–3 min)...");
 
+      // Extract real Hyperlane message ID from source transaction logs
+      let resolvedMsgId: string | null = null;
+      try {
+        resolvedMsgId = await fetchMessageIdFromTx(hash, sourceChain);
+        if (resolvedMsgId) {
+          setUniqueMessageAccount(resolvedMsgId);
+        }
+      } catch {
+        // continue
+      }
+
       // Refresh source balance
       refreshData();
 
-      // 6. Poll for delivery
+      // 6. Poll for delivery with Dual Detection (On-Chain Balance Arrival + Relayer Status)
       const startTime = Date.now();
       const pollTimer = setInterval(async () => {
         try {
-          if (built.uniqueMessageAccount) {
-            const check = await checkBridgeDelivery(built.uniqueMessageAccount, destChain);
+          // Signal A: Instant On-Chain Destination Balance Check
+          // The moment funds credit the wallet on the destination chain, finish immediately!
+          const currentDest = isCookieToSolana
+            ? await getSolanaCookBalance(publicKey)
+            : await getCookBalance(publicKey);
+
+          if (
+            currentDest > initialDestBal + 0.0001 ||
+            (transferAmountNum > 0 && currentDest >= initialDestBal + transferAmountNum * 0.9)
+          ) {
+            clearInterval(pollTimer);
+            setTransferStatus("delivered");
+            setStatusMessage("Bridge transfer completed! Funds received on destination chain.");
+            refreshData();
+            return;
+          }
+
+          // Signal B: Resolve message ID if not yet obtained
+          if (!resolvedMsgId) {
+            resolvedMsgId = await fetchMessageIdFromTx(hash, sourceChain);
+            if (resolvedMsgId) {
+              setUniqueMessageAccount(resolvedMsgId);
+            }
+          }
+
+          // Signal C: Check Hyperlane relayer delivery status
+          const targetId = resolvedMsgId || built.uniqueMessageAccount;
+          if (targetId) {
+            const check = await checkBridgeDelivery(targetId, destChain);
             if (check.delivered) {
               clearInterval(pollTimer);
               setTransferStatus("delivered");
@@ -241,13 +287,33 @@ export function BridgeTerminal() {
         // 3 minute timeout
         if (Date.now() - startTime > 180000) {
           clearInterval(pollTimer);
-          setStatusMessage("Transfer dispatched! Relayer delivery may take up to 5 minutes. Check destination balance shortly.");
+          const finalDest = isCookieToSolana
+            ? await getSolanaCookBalance(publicKey)
+            : await getCookBalance(publicKey);
+          if (finalDest > initialDestBal) {
+            setTransferStatus("delivered");
+            setStatusMessage("Bridge transfer completed! Funds received on destination chain.");
+          } else {
+            setStatusMessage("Transfer dispatched! Relayer delivery may take up to 5 minutes. Check destination balance shortly.");
+          }
+          refreshData();
         }
-      }, 5000);
+      }, 2500);
 
     } catch (err: any) {
       setTransferStatus("error");
-      setStatusMessage(err?.message || "Bridge transfer failed. Please try again.");
+      const msg = err?.message || "";
+      if (
+        msg.includes("insufficient lamports") ||
+        msg.includes("custom program error: 0x1") ||
+        msg.includes("Custom\":1")
+      ) {
+        setStatusMessage(
+          "Insufficient SOL for gas: Your Solana wallet needs ~0.002 SOL to pay the network fee and fund the temporary Hyperlane message account. Please add ~0.005 SOL and try again."
+        );
+      } else {
+        setStatusMessage(msg || "Bridge transfer failed. Please try again.");
+      }
     }
   }
 
@@ -520,6 +586,15 @@ export function BridgeTerminal() {
             Transfers use Hyperlane 2-phase settlement: source transaction confirms in ~1s, then an off-chain relayer releases funds from destination collateral within 2–5 minutes.
           </p>
         )}
+
+        {!isCookieToSolana && connected && solNativeBalance < 0.002 && (
+          <div className="p-2.5 rounded-xl bg-warning/10 border border-warning/30 text-warning text-[11px] leading-relaxed flex items-start gap-1.5">
+            <i className="ri-error-warning-line text-xs shrink-0 mt-0.5" />
+            <span>
+              <strong>Low Solana Gas:</strong> Your wallet has {formatNumber(solNativeBalance, 4)} SOL. Hyperlane requires ~0.002 SOL to fund the message dispatch account and transaction fee. Please add ~0.005 SOL to execute.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ─── STATUS / 2-PHASE SETTLEMENT TRACKER BANNER ─── */}
@@ -613,7 +688,11 @@ export function BridgeTerminal() {
               <>
                 <span>•</span>
                 <a
-                  href={`https://explorer.hyperlane.xyz`}
+                  href={
+                    uniqueMessageAccount.startsWith("0x")
+                      ? `https://explorer.hyperlane.xyz/message/${uniqueMessageAccount}`
+                      : "https://explorer.hyperlane.xyz"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:opacity-80 flex items-center gap-1 text-text-muted"
@@ -700,6 +779,13 @@ export function BridgeTerminal() {
           className="w-full py-4 rounded-2xl font-bold text-sm bg-bg-card border border-warning/30 text-warning cursor-not-allowed select-none"
         >
           Amount Exceeds Collateral Pool
+        </button>
+      ) : !isCookieToSolana && solNativeBalance < 0.002 ? (
+        <button
+          disabled
+          className="w-full py-4 rounded-2xl font-bold text-sm bg-bg-card border border-warning/30 text-warning cursor-not-allowed select-none"
+        >
+          Insufficient SOL for gas (~0.002 SOL required)
         </button>
       ) : (
         <button

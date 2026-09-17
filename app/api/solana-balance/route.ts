@@ -59,6 +59,28 @@ export async function GET(req: NextRequest) {
         signal: AbortSignal.timeout(8000),
       });
 
+      // Query native SOL balance for gas fee preflights
+      let solBalance = 0;
+      try {
+        const solRes = await fetch(rpc, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 99,
+            method: "getBalance",
+            params: [owner.toBase58()],
+          }),
+          signal: AbortSignal.timeout(4000),
+        });
+        if (solRes.ok) {
+          const solData = await solRes.json();
+          solBalance = (solData.result?.value ?? 0) / 1e9;
+        }
+      } catch {
+        // ignore
+      }
+
       if (res.ok) {
         const data = await res.json();
         if (data.result?.value?.uiAmount !== undefined) {
@@ -69,6 +91,7 @@ export async function GET(req: NextRequest) {
               amount: data.result.value.amount as string,
               decimals: data.result.value.decimals as number,
               ata: ata.toBase58(),
+              solBalance,
             },
             {
               status: 200,
