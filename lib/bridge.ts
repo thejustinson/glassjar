@@ -54,6 +54,82 @@ export interface BridgeTransferRecord {
   recipient: string;
 }
 
+// ─── Solana Mainnet COOK Balance Reader ─────────────────────────────────────
+
+const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC ?? "https://api.mainnet-beta.solana.com";
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+
+/**
+ * Reads the user's bridged COOK (Token-2022) balance on Solana Mainnet.
+ * Calls our server route first (which proxies to Solana RPC without browser Origin blocks),
+ * with client-side fallback.
+ */
+export async function getSolanaCookBalance(ownerAddress: string | PublicKey): Promise<number> {
+  const pubkeyStr = typeof ownerAddress === "string" ? ownerAddress : ownerAddress.toBase58();
+
+  // 1. Primary: Query via server API route to bypass browser CORS / 403 Forbidden on Solana public RPCs
+  try {
+    const res = await fetch(`/api/solana-balance?address=${pubkeyStr}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data.balance === "number") {
+        return data.balance;
+      }
+    }
+  } catch {
+    // API route not reachable, proceed to direct RPC fallback
+  }
+
+  // 2. Secondary: Direct RPC fallback
+  const pubkey = new PublicKey(pubkeyStr);
+  const rpcs = [
+    SOLANA_RPC,
+    "https://api.mainnet-beta.solana.com",
+  ];
+
+  for (const rpc of rpcs) {
+    try {
+      const conn = new Connection(rpc, "confirmed");
+      const mintPubkey = new PublicKey(SOLANA_WARP_MINT);
+
+      const [ata] = PublicKey.findProgramAddressSync(
+        [pubkey.toBuffer(), TOKEN_2022_PROGRAM_ID.toBuffer(), mintPubkey.toBuffer()],
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+
+      try {
+        const bal = await conn.getTokenAccountBalance(ata);
+        if (bal.value.uiAmount !== null && bal.value.uiAmount !== undefined) {
+          return bal.value.uiAmount;
+        }
+      } catch {
+        // ATA uninitialized or not found
+      }
+
+      const accounts = await conn.getParsedTokenAccountsByOwner(pubkey, {
+        mint: mintPubkey,
+      });
+
+      if (accounts.value.length > 0) {
+        let total = 0;
+        for (const a of accounts.value) {
+          total += a.account.data.parsed.info.tokenAmount.uiAmount || 0;
+        }
+        return total;
+      }
+
+      return 0;
+    } catch {
+      // try next RPC
+    }
+  }
+  return 0;
+}
+
 // ─── Destination Collateral Preflight ──────────────────────────────────────────
 
 /**

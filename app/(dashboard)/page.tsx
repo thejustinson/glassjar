@@ -385,7 +385,7 @@ export default function DiscoverPage() {
   const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>("1D");
   const [category, setCategory] = useState<Category>("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
-    key: "marketCap",
+    key: "volume24h",
     dir: "desc",
   });
 
@@ -447,7 +447,10 @@ export default function DiscoverPage() {
       .sort((a, b) => {
         const av = (a[sort.key] as number | undefined) ?? -Infinity;
         const bv = (b[sort.key] as number | undefined) ?? -Infinity;
-        return sort.dir === "asc" ? av - bv : bv - av;
+        if (bv !== av) {
+          return sort.dir === "asc" ? av - bv : bv - av;
+        }
+        return (b.marketCap ?? 0) - (a.marketCap ?? 0);
       });
   }, [tokens, query, category, sort]);
 

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   calculateBridgeAmounts,
   getDestinationCollateral,
+  getSolanaCookBalance,
   OFFICIAL_BRIDGE_URL,
   COOKIE_WARP_PROGRAM_ID,
   SOLANA_WARP_PROGRAM_ID,
@@ -32,11 +33,13 @@ export function BridgeTerminal() {
   const { publicKey, connected } = useWallet();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
-  // Direction: "cookie-to-solana" | "solana-to-cookie"
-  const [direction, setBridgeDirection] = useState<BridgeDirection>("cookie-to-solana");
+  // Direction: defaulted to "solana-to-cookie" per user preference
+  const [direction, setBridgeDirection] = useState<BridgeDirection>("solana-to-cookie");
 
-  // Balances
-  const [cookBalance, setCookBalance] = useState<number>(0);
+  // Balances on both sides of the bridge
+  const [cookieBalance, setCookieBalance] = useState<number>(0);
+  const [solanaBalance, setSolanaBalance] = useState<number>(0);
+  const [loadingBalances, setLoadingBalances] = useState<boolean>(false);
 
   // Form State
   const [amount, setAmount] = useState<string>("");
@@ -57,17 +60,31 @@ export function BridgeTerminal() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  const isCookieToSolana = direction === "cookie-to-solana";
+  const sourceBalance = isCookieToSolana ? cookieBalance : solanaBalance;
+  const destBalance = isCookieToSolana ? solanaBalance : cookieBalance;
+  const sourceChainName = isCookieToSolana ? "Cookie Chain" : "Solana Mainnet";
+  const destChainName = isCookieToSolana ? "Solana Mainnet" : "Cookie Chain";
+
   // Fetch balances and destination collateral
   const refreshData = useCallback(async () => {
     if (publicKey) {
+      setLoadingBalances(true);
       try {
-        const bal = await getCookBalance(publicKey);
-        setCookBalance(bal);
+        const [cBal, sBal] = await Promise.allSettled([
+          getCookBalance(publicKey),
+          getSolanaCookBalance(publicKey),
+        ]);
+        if (cBal.status === "fulfilled") setCookieBalance(cBal.value);
+        if (sBal.status === "fulfilled") setSolanaBalance(sBal.value);
+
         if (!recipient) {
           setRecipient(publicKey.toBase58());
         }
       } catch {
         // ignore
+      } finally {
+        setLoadingBalances(false);
       }
     }
 
@@ -100,13 +117,11 @@ export function BridgeTerminal() {
     setAmount("");
   }
 
-  // Quick percentage selection
+  // Quick percentage selection based on active source balance
   function handlePercent(p: number) {
-    if (cookBalance <= 0) return;
-    const reserve = 0.05; // leave small fee buffer
-    const calc = (cookBalance * p) / 100;
-    const finalAmount = Math.max(0, calc - reserve);
-    setAmount(finalAmount > 0 ? finalAmount.toFixed(4) : "0");
+    if (sourceBalance <= 0) return;
+    const calc = (sourceBalance * p) / 100;
+    setAmount(calc > 0 ? (p === 100 ? calc.toString() : calc.toFixed(4)) : "0");
   }
 
   // Calculate quote and safety preflights
@@ -118,7 +133,7 @@ export function BridgeTerminal() {
 
   const exceedsCollateral =
     quote !== null && quote.sourceAmount > collateral.available;
-  const isCookieToSolana = direction === "cookie-to-solana";
+
 
   // Handle Initiating Bridge Transfer
   async function handleBridge() {
@@ -246,6 +261,25 @@ export function BridgeTerminal() {
         </div>
       </div>
 
+      {/* ─── DUAL BALANCE PILL ─── */}
+      <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#141720] border border-border/70 text-xs">
+        <div className="flex items-center gap-2">
+          <img src="/solana-logo.png" alt="Solana" className="w-4 h-4 rounded-full bg-black" />
+          <span className="text-[11px] text-text-muted">Solana:</span>
+          <span className="text-[11px] font-bold text-text-primary font-mono tabular-nums">
+            {loadingBalances ? "..." : formatNumber(solanaBalance, 4)} COOK
+          </span>
+        </div>
+        <div className="h-3.5 w-[1px] bg-border/80" />
+        <div className="flex items-center gap-2">
+          <img src="/cook.jpeg" alt="Cookie" className="w-4 h-4 rounded-full object-cover" />
+          <span className="text-[11px] text-text-muted">Cookie Chain:</span>
+          <span className="text-[11px] font-bold text-text-primary font-mono tabular-nums">
+            {loadingBalances ? "..." : formatNumber(cookieBalance, 4)} COOK
+          </span>
+        </div>
+      </div>
+
       {/* ─── YOU SEND CONTAINER ─── */}
       <div
         className={cn(
@@ -257,10 +291,17 @@ export function BridgeTerminal() {
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
           <span className="font-semibold text-text-secondary text-xs uppercase tracking-wider">
-            You Send
+            You Send ({sourceChainName})
           </span>
-          <span className="tabular-nums font-mono text-[11px]">
-            Balance: {formatNumber(cookBalance, 4)} COOK
+          <span className="tabular-nums font-mono text-[11px] flex items-center gap-1.5">
+            <span>Balance: {loadingBalances ? "..." : formatNumber(sourceBalance, 4)} COOK</span>
+            <button
+              onClick={refreshData}
+              className="text-text-muted hover:text-secondary transition-colors p-0.5 cursor-pointer"
+              title="Refresh balances"
+            >
+              <i className={cn("ri-refresh-line text-xs", loadingBalances && "animate-spin text-secondary")} />
+            </button>
           </span>
         </div>
 
@@ -312,7 +353,7 @@ export function BridgeTerminal() {
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
           <span className="font-semibold text-text-secondary uppercase tracking-wider text-[11px]">
-            Destination Recipient Address
+            Destination Recipient Address ({destChainName})
           </span>
           {publicKey && recipient === publicKey.toBase58() && (
             <span className="text-[10px] text-accent flex items-center gap-1 font-semibold">
@@ -337,10 +378,10 @@ export function BridgeTerminal() {
       <div className="p-4 rounded-2xl bg-[#141720] border border-border/70 space-y-2.5">
         <div className="flex items-center justify-between text-xs text-text-muted">
           <span className="font-semibold text-text-secondary text-xs uppercase tracking-wider">
-            You Receive (Est.)
+            You Receive (Est. on {destChainName})
           </span>
-          <span className="text-[11px] font-mono text-text-muted">
-            {isCookieToSolana ? "Token-2022 (Solana)" : "Native COOK (Cookie Chain)"}
+          <span className="text-[11px] font-mono text-text-muted tabular-nums">
+            Dest Balance: {loadingBalances ? "..." : formatNumber(destBalance, 4)} COOK
           </span>
         </div>
 
@@ -451,12 +492,12 @@ export function BridgeTerminal() {
         >
           Enter an amount to bridge
         </button>
-      ) : Number(amount) > cookBalance ? (
+      ) : Number(amount) > sourceBalance ? (
         <button
           disabled
           className="w-full py-4 rounded-2xl font-bold text-sm bg-bg-card border border-error/30 text-error/80 cursor-not-allowed select-none"
         >
-          Insufficient COOK balance
+          Insufficient COOK on {sourceChainName}
         </button>
       ) : exceedsCollateral ? (
         <button

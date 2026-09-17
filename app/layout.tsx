@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Mono } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { AppWalletProvider } from "@/components/wallet/WalletProvider";
 import "./globals.css";
 
@@ -7,13 +7,6 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   axes: ["opsz"],
-  display: "swap",
-});
-
-const dmMono = DM_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
   display: "swap",
 });
 
@@ -28,10 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} font-sans h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-text-primary">
+      <body className="min-h-full flex flex-col bg-bg text-text-primary font-sans">
         <AppWalletProvider>
           {children}
         </AppWalletProvider>

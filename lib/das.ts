@@ -241,14 +241,14 @@ export function isTestToken(token: {
 }
 
 /**
- * GET /api/tokens — filtered to top verified/active tokens by market cap.
+ * GET /api/tokens — filtered to top verified/active tokens by 24h trading volume.
  * Filters out spam/test mints so the terminal looks professional and real.
  */
 export async function getTopTokens(limit = 100): Promise<Token[]> {
   const all = await getAllTokens();
   return all
     .filter((t) => !isTestToken(t))
-    .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+    .sort((a, b) => ((b.volume24h ?? 0) - (a.volume24h ?? 0)) || ((b.marketCap ?? 0) - (a.marketCap ?? 0)))
     .slice(0, limit);
 }
 

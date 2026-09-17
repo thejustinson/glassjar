@@ -56,9 +56,9 @@
 
 /* ─── Tailwind v4 Theme Bridge ───────────────────────────────────────────── */
 @theme inline {
-  /* Font */
+  /* Font — all text uses DM Sans */
   --font-sans: var(--font-dm-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-dm-sans);
 
   /* Colors — expose design tokens as Tailwind utilities */
   --color-accent:           var(--accent);
@@ -111,8 +111,14 @@ body {
   line-height: 1.5;
 }
 
+/* Ensure all text and form elements use DM Sans */
+html, body, input, button, select, textarea, kbd, code, pre, table, th, td {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
 /* ─── Typography Scale ───────────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-weight: 600;
   line-height: 1.2;
   color: var(--text-primary);
@@ -152,10 +158,20 @@ textarea:focus-visible {
   box-shadow: none !important;
 }
 
-/* ─── Numeric tabular figures ────────────────────────────────────────────── */
+/* ─── Numeric tabular figures (DM Sans with tabular alignment) ───────────── */
 .tabular-nums,
 .font-mono {
+  font-family: var(--font-dm-sans), system-ui, sans-serif !important;
   font-variant-numeric: tabular-nums;
+}
+
+/* ─── Wallet Adapter Modal & Buttons (DM Sans) ───────────────────────────── */
+.wallet-adapter-dropdown,
+.wallet-adapter-button,
+.wallet-adapter-modal-title,
+.wallet-adapter-modal-wrapper,
+.wallet-adapter-modal-list {
+  font-family: var(--font-dm-sans), system-ui, sans-serif !important;
 }
 
 /* ─── Remove default spin buttons on number inputs ───────────────────────── */
