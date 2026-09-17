@@ -14,6 +14,10 @@ import {
   calculateBridgeAmounts,
   getDestinationCollateral,
   getSolanaCookBalance,
+  buildBridgeTransaction,
+  broadcastBridgeTransaction,
+  checkBridgeDelivery,
+  getHyperlaneMessageUrl,
   OFFICIAL_BRIDGE_URL,
   COOKIE_WARP_PROGRAM_ID,
   SOLANA_WARP_PROGRAM_ID,
@@ -30,7 +34,7 @@ import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { WalletModal } from "@/components/wallet/WalletModal";
 
 export function BridgeTerminal() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signTransaction } = useWallet();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   // Direction: defaulted to "solana-to-cookie" per user preference
@@ -49,15 +53,17 @@ export function BridgeTerminal() {
 
   // Preflight Collateral
   const [collateral, setCollateral] = useState<{ available: number; maxTransfer: number }>({
-    available: 2500000,
+    available: 75000000,
     maxTransfer: 500000,
   });
 
   // Transfer Lifecycle
   const [transferStatus, setTransferStatus] = useState<
-    "idle" | "dispatching" | "dispatched" | "awaiting_delivery" | "delivered" | "error"
+    "idle" | "preparing" | "signing" | "broadcasting" | "source_confirming" | "awaiting_delivery" | "delivered" | "error"
   >("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [destTxHash, setDestTxHash] = useState<string | null>(null);
+  const [uniqueMessageAccount, setUniqueMessageAccount] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const isCookieToSolana = direction === "cookie-to-solana";
@@ -135,34 +141,114 @@ export function BridgeTerminal() {
     quote !== null && quote.sourceAmount > collateral.available;
 
 
-  // Handle Initiating Bridge Transfer
+  // Handle Initiating Bridge Transfer Directly In-App
   async function handleBridge() {
-    if (!connected) {
+    if (!connected || !publicKey) {
       setWalletModalOpen(true);
+      return;
+    }
+
+    if (!signTransaction) {
+      setTransferStatus("error");
+      setStatusMessage("Your wallet adapter does not support transaction signing. Please connect Nightly, Phantom, or Solflare.");
       return;
     }
 
     if (!quote || exceedsCollateral) return;
 
-    // Trigger two-phase bridge dispatch flow
-    setTransferStatus("dispatching");
-    setStatusMessage("Preparing Hyperlane Warp Route transfer transaction...");
+    try {
+      setTxHash(null);
+      setDestTxHash(null);
+      setUniqueMessageAccount(null);
+      setTransferStatus("preparing");
+      setStatusMessage("Building Hyperlane Warp Route transfer transaction...");
 
-    // Build portal URL with prefilled parameters for seamless foundation portal execution
-    const portalParams = new URLSearchParams({
-      source: isCookieToSolana ? "cookiechain" : "solana",
-      target: isCookieToSolana ? "solana" : "cookiechain",
-      amount: amount,
-      recipient: recipient || (publicKey ? publicKey.toBase58() : ""),
-    });
-    const portalUrl = `${OFFICIAL_BRIDGE_URL}?${portalParams.toString()}`;
+      const sourceChain = isCookieToSolana ? "cookie" : "solana";
+      const destChain = isCookieToSolana ? "solana" : "cookie";
+      const destRecipient = recipient.trim() || publicKey.toBase58();
 
-    // Provide immediate feedback and open the prefilled portal or process dispatch
-    setTimeout(() => {
-      setTransferStatus("dispatched");
-      setStatusMessage("Transfer initiated on Hyperlane Warp Route. Forwarding to execution portal...");
-      window.open(portalUrl, "_blank", "noopener,noreferrer");
-    }, 800);
+      // 1. Build VersionedTransaction
+      const built = await buildBridgeTransaction({
+        direction,
+        fromAddress: publicKey.toBase58(),
+        toAddress: destRecipient,
+        amount: amount.trim(),
+      });
+      setUniqueMessageAccount(built.uniqueMessageAccount);
+
+      // 2. Request Signature
+      setTransferStatus("signing");
+      setStatusMessage("Please approve the transfer in your wallet...");
+
+      let signedTx;
+      try {
+        signedTx = await signTransaction(built.transaction);
+      } catch (err: any) {
+        if (
+          err?.message?.includes("User rejected") ||
+          err?.message?.includes("cancelled") ||
+          err?.name === "WalletSignTransactionError"
+        ) {
+          setTransferStatus("idle");
+          setStatusMessage("Signature cancelled by user.");
+          return;
+        }
+        throw err;
+      }
+
+      // 3. Broadcast to Source Network
+      setTransferStatus("broadcasting");
+      setStatusMessage(`Broadcasting transaction to ${sourceChainName}...`);
+
+      const hash = await broadcastBridgeTransaction(signedTx, sourceChain);
+      setTxHash(hash);
+
+      // 4. Source Confirmation
+      setTransferStatus("source_confirming");
+      setStatusMessage(`Transaction submitted! Waiting for confirmation on ${sourceChainName}...`);
+
+      // Allow 4 seconds for source block confirmation
+      await new Promise((r) => setTimeout(r, 4000));
+
+      // 5. Relaying to destination
+      setTransferStatus("awaiting_delivery");
+      setStatusMessage("Source confirmed! Hyperlane relayer is executing delivery to destination chain (~1–3 min)...");
+
+      // Refresh source balance
+      refreshData();
+
+      // 6. Poll for delivery
+      const startTime = Date.now();
+      const pollTimer = setInterval(async () => {
+        try {
+          if (built.uniqueMessageAccount) {
+            const check = await checkBridgeDelivery(built.uniqueMessageAccount, destChain);
+            if (check.delivered) {
+              clearInterval(pollTimer);
+              setTransferStatus("delivered");
+              setDestTxHash(check.deliveryTx || null);
+              setStatusMessage("Bridge transfer completed! Funds delivered to destination wallet.");
+              refreshData();
+              return;
+            }
+          }
+        } catch {
+          // keep polling
+        }
+
+        refreshData();
+
+        // 3 minute timeout
+        if (Date.now() - startTime > 180000) {
+          clearInterval(pollTimer);
+          setStatusMessage("Transfer dispatched! Relayer delivery may take up to 5 minutes. Check destination balance shortly.");
+        }
+      }, 5000);
+
+    } catch (err: any) {
+      setTransferStatus("error");
+      setStatusMessage(err?.message || "Bridge transfer failed. Please try again.");
+    }
   }
 
   return (
@@ -436,42 +522,107 @@ export function BridgeTerminal() {
         )}
       </div>
 
-      {/* ─── STATUS / DISPATCH BANNER ─── */}
+      {/* ─── STATUS / 2-PHASE SETTLEMENT TRACKER BANNER ─── */}
       {transferStatus !== "idle" && (
         <div
           className={cn(
-            "p-3.5 rounded-2xl border text-xs space-y-2",
-            transferStatus === "dispatched" && "bg-accent/10 border-accent/30 text-accent",
-            transferStatus === "dispatching" && "bg-secondary/10 border-secondary/30 text-secondary",
+            "p-4 rounded-2xl border text-xs space-y-2.5 transition-all",
+            transferStatus === "delivered" && "bg-accent/10 border-accent/30 text-accent",
+            (transferStatus === "preparing" ||
+              transferStatus === "signing" ||
+              transferStatus === "broadcasting" ||
+              transferStatus === "source_confirming" ||
+              transferStatus === "awaiting_delivery") &&
+              "bg-warning/10 border-warning/30 text-warning",
             transferStatus === "error" && "bg-error/10 border-error/30 text-error"
           )}
         >
-          <div className="flex items-center gap-2 font-semibold">
-            {transferStatus === "dispatching" && <i className="ri-loader-4-line animate-spin text-base" />}
-            {transferStatus === "dispatched" && <i className="ri-checkbox-circle-line text-base" />}
-            <span>{statusMessage}</span>
+          <div className="flex items-start justify-between gap-2 font-medium">
+            <div className="flex items-center gap-2">
+              {(transferStatus === "preparing" ||
+                transferStatus === "signing" ||
+                transferStatus === "broadcasting" ||
+                transferStatus === "source_confirming") && (
+                <i className="ri-loader-4-line animate-spin text-base" />
+              )}
+              {transferStatus === "awaiting_delivery" && (
+                <span className="w-2.5 h-2.5 rounded-full bg-warning animate-pulse" />
+              )}
+              {transferStatus === "delivered" && (
+                <i className="ri-checkbox-circle-line text-base text-accent" />
+              )}
+              {transferStatus === "error" && (
+                <i className="ri-error-warning-line text-base text-error" />
+              )}
+              <span className="font-semibold text-text-primary text-[13px]">{statusMessage}</span>
+            </div>
+
+            {(transferStatus === "delivered" || transferStatus === "error") && (
+              <button
+                onClick={() => {
+                  setTransferStatus("idle");
+                  setStatusMessage(null);
+                  if (transferStatus === "delivered") setAmount("");
+                }}
+                className="text-text-muted hover:text-text-primary text-xs p-1"
+                title="Dismiss"
+              >
+                <i className="ri-close-line" />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-3 pt-1 text-[11px]">
-            <a
-              href="https://bridge.cookiechain.wtf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:opacity-80 flex items-center gap-1"
-            >
-              <span>Hyperlane Warp Portal</span>
-              <i className="ri-external-link-line" />
-            </a>
-            <span>•</span>
-            <a
-              href="https://explorer.hyperlane.xyz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:opacity-80 flex items-center gap-1"
-            >
-              <span>Hyperlane Explorer</span>
-              <i className="ri-external-link-line" />
-            </a>
+          {/* Links to explorers */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-1 text-[11px] font-medium border-t border-border/50">
+            {txHash && (
+              <a
+                href={
+                  isCookieToSolana
+                    ? `https://cookiescan.io/tx/${txHash}`
+                    : `https://solscan.io/tx/${txHash}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:opacity-80 flex items-center gap-1 text-text-secondary"
+              >
+                <span>{sourceChainName} Tx</span>
+                <i className="ri-external-link-line" />
+              </a>
+            )}
+
+            {destTxHash && (
+              <>
+                <span>•</span>
+                <a
+                  href={
+                    isCookieToSolana
+                      ? `https://solscan.io/tx/${destTxHash}`
+                      : `https://cookiescan.io/tx/${destTxHash}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:opacity-80 flex items-center gap-1 text-accent"
+                >
+                  <span>{destChainName} Delivery Tx</span>
+                  <i className="ri-external-link-line" />
+                </a>
+              </>
+            )}
+
+            {uniqueMessageAccount && (
+              <>
+                <span>•</span>
+                <a
+                  href={`https://explorer.hyperlane.xyz`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:opacity-80 flex items-center gap-1 text-text-muted"
+                >
+                  <span>Hyperlane Explorer</span>
+                  <i className="ri-external-link-line" />
+                </a>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -484,6 +635,50 @@ export function BridgeTerminal() {
         >
           <i className="ri-wallet-3-line text-base" />
           <span>Connect Wallet to Bridge</span>
+        </button>
+      ) : transferStatus === "preparing" ||
+        transferStatus === "signing" ||
+        transferStatus === "broadcasting" ||
+        transferStatus === "source_confirming" ? (
+        <button
+          disabled
+          className="w-full py-4 rounded-2xl font-bold text-sm bg-secondary/80 text-white cursor-wait flex items-center justify-center gap-2 select-none"
+        >
+          <i className="ri-loader-4-line animate-spin text-base" />
+          <span>
+            {transferStatus === "preparing" && "Building Warp Transaction..."}
+            {transferStatus === "signing" && "Approve in Wallet..."}
+            {transferStatus === "broadcasting" && "Broadcasting Transfer..."}
+            {transferStatus === "source_confirming" && "Confirming on Chain..."}
+          </span>
+        </button>
+      ) : transferStatus === "awaiting_delivery" ? (
+        <button
+          disabled
+          className="w-full py-4 rounded-2xl font-bold text-sm bg-warning/20 border border-warning/40 text-warning cursor-wait flex items-center justify-center gap-2 select-none"
+        >
+          <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+          <span>Hyperlane Relayer Delivering...</span>
+        </button>
+      ) : transferStatus === "delivered" ? (
+        <button
+          onClick={() => {
+            setTransferStatus("idle");
+            setStatusMessage(null);
+            setAmount("");
+          }}
+          className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide bg-accent text-bg hover:opacity-90 shadow-[0_0_20px_rgba(34,197,94,0.35)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none"
+        >
+          <i className="ri-check-line text-base" />
+          <span>Bridge Complete • Bridge More</span>
+        </button>
+      ) : transferStatus === "error" ? (
+        <button
+          onClick={handleBridge}
+          className="w-full py-4 rounded-2xl font-bold text-sm bg-error/20 border border-error/40 text-error hover:bg-error/30 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none"
+        >
+          <i className="ri-refresh-line text-base" />
+          <span>Retry Bridge Transfer</span>
         </button>
       ) : !amount || Number(amount) <= 0 ? (
         <button
@@ -509,24 +704,14 @@ export function BridgeTerminal() {
       ) : (
         <button
           onClick={handleBridge}
-          disabled={transferStatus === "dispatching"}
           className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide bg-secondary text-white hover:bg-secondary-muted shadow-[0_0_20px_rgba(235,94,40,0.35)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none active:scale-[0.99]"
         >
-          {transferStatus === "dispatching" ? (
-            <>
-              <i className="ri-loader-4-line animate-spin text-base" />
-              <span>Initiating Warp Transfer...</span>
-            </>
-          ) : (
-            <>
-              <i className="ri-arrow-left-right-line text-base" />
-              <span>Bridge {amount} COOK via Hyperlane</span>
-            </>
-          )}
+          <i className="ri-arrow-left-right-line text-base" />
+          <span>Bridge {amount} COOK via Hyperlane</span>
         </button>
       )}
 
-      {/* Official Foundation Portal Fallback Notice */}
+      {/* Official Hyperlane Warp Portal Info Link */}
       <div className="pt-1 text-center">
         <a
           href={OFFICIAL_BRIDGE_URL}
@@ -534,7 +719,7 @@ export function BridgeTerminal() {
           rel="noopener noreferrer"
           className="text-[11px] text-text-muted hover:text-secondary inline-flex items-center gap-1 transition-colors"
         >
-          <span>Need official Hyperlane Warp Portal? Open bridge.cookiechain.wtf</span>
+          <span>Powered by Hyperlane Warp Route (1:1 Peg)</span>
           <i className="ri-external-link-line text-xs" />
         </a>
       </div>

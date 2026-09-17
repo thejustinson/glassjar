@@ -5,7 +5,7 @@
  * destination collateral preflighting, message status tracking, and 2-phase settlement.
  */
 
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { getConnection, COOKIE_RPC } from "./chain";
 
 // ─── Constants & Program IDs (Verified from cookiechain reference) ────────────
@@ -132,6 +132,45 @@ export async function getSolanaCookBalance(ownerAddress: string | PublicKey): Pr
 
 // ─── Destination Collateral Preflight ──────────────────────────────────────────
 
+// ─── Destination Collateral Preflight & Live Reserves ─────────────────────────
+
+export interface BridgeReservesData {
+  cookie: {
+    balance: number;
+    decimals: number;
+    collateralAddress: string;
+    symbol: string;
+    paysOutDirection: string;
+    chain: string;
+  };
+  solana: {
+    balance: number;
+    decimals: number;
+    collateralAddress: string;
+    symbol: string;
+    paysOutDirection: string;
+    chain: string;
+  };
+}
+
+/**
+ * Fetches live collateral reserves from the Hyperlane Warp Route contract pools.
+ */
+export async function getLiveBridgeReserves(): Promise<BridgeReservesData | null> {
+  try {
+    const res = await fetch("/api/bridge/reserves", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      return (await res.json()) as BridgeReservesData;
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
 /**
  * Preflights destination collateral account balance before initiating a bridge transfer.
  * If user transfers more than the fixed collateral on the destination chain,
@@ -141,19 +180,26 @@ export async function getDestinationCollateral(
   direction: BridgeDirection
 ): Promise<{ available: number; maxTransfer: number }> {
   try {
-    if (direction === "cookie-to-solana") {
-      // Solana side collateral pool for Token-2022 COOK
-      // Return a safe estimated liquidity ceiling
-      return { available: 2500000, maxTransfer: 500000 };
-    } else {
-      // Cookie Chain side collateral
-      const conn = getConnection();
-      // Safe fallback from live chain
-      return { available: 5000000, maxTransfer: 1000000 };
+    const reserves = await getLiveBridgeReserves();
+    if (reserves) {
+      if (direction === "cookie-to-solana") {
+        // Destination is Solana
+        const avail = reserves.solana.balance;
+        return { available: avail, maxTransfer: Math.min(avail * 0.9, 1000000) };
+      } else {
+        // Destination is Cookie Chain
+        const avail = reserves.cookie.balance;
+        return { available: avail, maxTransfer: Math.min(avail * 0.9, 1000000) };
+      }
     }
   } catch {
-    return { available: 500000, maxTransfer: 100000 };
+    // fallback to safe defaults
   }
+
+  return {
+    available: direction === "cookie-to-solana" ? 120000000 : 70000000,
+    maxTransfer: 500000,
+  };
 }
 
 // ─── Quote Calculation ────────────────────────────────────────────────────────
@@ -177,7 +223,6 @@ export function calculateBridgeAmounts(
 
   // 1 COOK bridges 1:1
   const sourceAmount = num;
-  // Format destination amount respecting destination decimals precision
   const destAmount = Number(num.toFixed(destDecimals));
 
   return {
@@ -186,12 +231,80 @@ export function calculateBridgeAmounts(
     destAmount,
     sourceDecimals,
     destDecimals,
-    estimatedRelayerTime: "2–5 minutes",
-    sourceFeeCook: 0.005, // estimated gas on source SVM
-    interchainFee: 0.02,  // Hyperlane Interchain Gas Payment (IGP)
+    estimatedRelayerTime: "1–3 minutes",
+    sourceFeeCook: 0.005,
+    interchainFee: 0.01,
     destinationCollateralAvailable: collateralAvailable,
     sufficientCollateral: sourceAmount <= collateralAvailable,
   };
+}
+
+// ─── Direct In-App Bridge Transaction Execution ──────────────────────────────
+
+export interface BuiltBridgeTx {
+  transaction: VersionedTransaction;
+  uniqueMessageAccount: string;
+  sourceRpc: string;
+  destinationDomain: number;
+  txBase64: string;
+}
+
+/**
+ * Builds the serialized VersionedTransaction on the Hyperlane Warp Route
+ * for direct in-app signing and submission.
+ */
+export async function buildBridgeTransaction(params: {
+  direction: BridgeDirection;
+  fromAddress: string;
+  toAddress: string;
+  amount: number | string;
+}): Promise<BuiltBridgeTx> {
+  const res = await fetch("/api/bridge/build-tx", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      direction: params.direction,
+      fromAddress: params.fromAddress,
+      toAddress: params.toAddress,
+      amount: params.amount.toString().trim(),
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Failed to build bridge transaction (${res.status})`);
+  }
+
+  const data = await res.json();
+  const txBuffer = Buffer.from(data.txBase64, "base64");
+  const transaction = VersionedTransaction.deserialize(txBuffer);
+
+  return {
+    transaction,
+    uniqueMessageAccount: data.uniqueMessageAccount,
+    sourceRpc: data.sourceRpc,
+    destinationDomain: data.destinationDomain,
+    txBase64: data.txBase64,
+  };
+}
+
+/**
+ * Extracts Hyperlane 32-byte (64 hex character) message ID from transaction log messages.
+ */
+export function extractHyperlaneMessageId(logMessages?: string[] | null): string | null {
+  if (!logMessages || !logMessages.length) return null;
+
+  for (const log of logMessages) {
+    const match = log.match(/ID (0x[a-fA-F0-9]{64})/i);
+    if (match) return match[1].toLowerCase();
+  }
+
+  for (const log of logMessages) {
+    const match = log.match(/(0x[a-fA-F0-9]{64})/);
+    if (match) return match[1].toLowerCase();
+  }
+
+  return null;
 }
 
 // ─── Message Status & Hyperlane Explorer URL ─────────────────────────────────
@@ -201,23 +314,49 @@ export function getHyperlaneMessageUrl(messageId: string): string {
 }
 
 /**
- * Polls the Hyperlane message delivery status.
+ * Checks destination chain delivery status by Hyperlane message ID.
  */
-export async function checkHyperlaneDeliveryStatus(
-  messageId: string
-): Promise<"pending" | "delivered" | "unknown"> {
+export async function checkBridgeDelivery(
+  messageId: string,
+  destChain: "cookie" | "solana"
+): Promise<{ delivered: boolean; deliveryTx?: string }> {
   try {
-    const res = await fetch(`https://api.hyperlane.xyz/v1/message/${messageId}`, {
+    const res = await fetch(`/api/bridge/delivered/${encodeURIComponent(messageId)}?dest=${destChain}`, {
       headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(4000),
     });
-    if (!res.ok) return "pending";
-    const data = await res.json();
-    if (data?.status === "delivered" || data?.delivered === true) {
-      return "delivered";
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        delivered: !!data.delivered,
+        deliveryTx: data.deliveryTx,
+      };
     }
-    return "pending";
   } catch {
-    return "pending";
+    // pending
   }
+  return { delivered: false };
 }
+
+/**
+ * Broadcasts a signed bridge transaction to the appropriate network.
+ */
+export async function broadcastBridgeTransaction(
+  signedTx: VersionedTransaction,
+  chain: "cookie" | "solana"
+): Promise<string> {
+  const rawTxBase64 = Buffer.from(signedTx.serialize()).toString("base64");
+  const res = await fetch("/api/bridge/broadcast", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rawTxBase64, chain }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Broadcast failed with status ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.txHash;
+}
+
