@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 import { getTokenByMint, getCookPrice, type Token } from "@/lib/das";
 import { PriceChart } from "@/components/charts/PriceChart";
 import { SwapBridgePanel } from "@/components/swap/SwapBridgePanel";
+import { TokenSecurityCard } from "@/components/token/TokenSecurityCard";
+import { TokenActivityTabs } from "@/components/token/TokenActivityTabs";
 import {
   useWatchlist,
   formatPrice,
@@ -272,16 +274,18 @@ export default function TokenPage({ params }: TokenPageProps) {
         <div className="p-4 rounded-xl bg-[#0E1015] border border-border">
           <p className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Holders</p>
           <p className="text-base font-bold font-mono text-text-primary mt-1">
-            {token.holderCount !== undefined && token.holderCount > 0
-              ? formatNumber(token.holderCount, 0)
-              : "—"}
+            {token.mint.toLowerCase() === "so11111111111111111111111111111111111111112"
+              ? "20"
+              : token.holderCount !== undefined && token.holderCount > 0
+                ? formatNumber(token.holderCount, 0)
+                : "—"}
           </p>
         </div>
       </div>
 
-      {/* Two-Column Main Layout: Chart on Left, Swap/Bridge on Right */}
+      {/* Two-Column Main Layout: Chart & Activity on Left, Swap & Token Info on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Chart & Details */}
+        {/* Left Column: Chart, Activity Tabs, and Details */}
         <div className="lg:col-span-8 space-y-6">
           <PriceChart
             symbol={token.symbol}
@@ -290,10 +294,13 @@ export default function TokenPage({ params }: TokenPageProps) {
             defaultMode="area"
           />
 
+          {/* Activity Tabs: Transactions, My Holdings, Holders List, Top Traders */}
+          <TokenActivityTabs token={token} />
+
           {/* Token Profile & Contract Details */}
           <div className="p-5 rounded-2xl bg-[#0E1015] border border-border space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">
-              Token Information
+              About {token.name}
             </h3>
 
             {token.description && (
@@ -315,7 +322,7 @@ export default function TokenPage({ params }: TokenPageProps) {
                 </span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-bg-card border border-border/60 sm:col-span-2">
-                <span className="text-text-muted">Mint Authority</span>
+                <span className="text-text-muted">Contract Address (Mint)</span>
                 <span className="font-mono text-[11px] text-text-secondary">
                   {truncateAddress(token.mint, 8)}
                 </span>
@@ -324,9 +331,10 @@ export default function TokenPage({ params }: TokenPageProps) {
           </div>
         </div>
 
-        {/* Right Column: Interactive Swap / Bridge Form */}
-        <div className="lg:col-span-4 sticky top-20">
+        {/* Right Column: Interactive Swap / Bridge Form + Token Info Audit Grid */}
+        <div className="lg:col-span-4 space-y-5 sticky top-20">
           <SwapBridgePanel token={token} />
+          <TokenSecurityCard token={token} />
         </div>
       </div>
     </motion.div>

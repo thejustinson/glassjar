@@ -88,13 +88,24 @@ export function formatUsd(value: number, dp = 2): string {
 }
 
 /**
- * Formats a price — uses more decimal places for sub-cent assets.
+ * Converts a tiny float to a decimal string without scientific notation,
+ * capping at a maximum of 9 decimal places (e.g. 9.24e-7 → "0.000000924").
+ */
+function toDecimalString(value: number, maxDecimals = 9): string {
+  const raw = value.toFixed(maxDecimals);
+  // Strip unnecessary trailing zeros while maintaining valid decimal representation
+  return raw.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, ".00");
+}
+
+/**
+ * Formats a price — uses more decimal places for sub-cent assets, up to at most 9 decimal places.
+ * Never uses scientific notation (e.g. displays $0.000000924, not $9.24e-7).
  */
 export function formatPrice(value: number): string {
   if (!isFinite(value)) return "—";
-  if (value === 0) return "$0.00";
-  if (value < 0.000001) return `$${value.toExponential(2)}`;
-  if (value < 0.001) return `$${value.toFixed(6)}`;
+  if (value <= 0) return "$0.00";
+  if (value < 0.000000001) return "<$0.000000001";
+  if (value < 0.01) return `$${toDecimalString(value, 9)}`;
   if (value < 1) return `$${value.toFixed(4)}`;
   return formatUsd(value, 2);
 }

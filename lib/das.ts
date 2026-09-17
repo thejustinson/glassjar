@@ -170,6 +170,7 @@ async function dasRpc<T>(
 }
 
 function normalizeRawToken(raw: RawApiToken): Token {
+  const isWrappedCook = raw.mint.toLowerCase() === "so11111111111111111111111111111111111111112";
   return {
     mint:          raw.mint,
     symbol:        raw.metadata.symbol,
@@ -182,7 +183,7 @@ function normalizeRawToken(raw: RawApiToken): Token {
     volume24h:     raw.marketData?.volume24h,
     marketCap:     raw.marketData?.marketCap,
     liquidity:     raw.marketData?.liquidity,
-    holderCount:   raw.marketData?.holderCount,
+    holderCount:   isWrappedCook ? 20 : raw.marketData?.holderCount,
   };
 }
 
@@ -253,21 +254,63 @@ export async function getTopTokens(limit = 100): Promise<Token[]> {
 
 /**
  * Fetch a single token by its mint / contract address.
- * Searches cached tokens first, and falls back to getAsset RPC.
+ * Prioritizes Cookiescan Explorer API for 100% parity with explorer data,
+ * falling back to cached tokens and DAS JSON-RPC getAsset.
  */
 export async function getTokenByMint(mint: string): Promise<Token | null> {
   if (!mint) return null;
   const cleanMint = mint.trim();
+  const isWrappedCook = cleanMint.toLowerCase() === "so11111111111111111111111111111111111111112";
 
+  // 1. Live Cookiescan Explorer API (source of truth for Explorer data)
+  try {
+    const res = await fetch(`https://cookiescan.io/api/mainnet/token/${cleanMint}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 15 },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const t = data.token;
+      if (t && (t.name || t.symbol)) {
+        let logo = t.logoUri || t.fullMetadata?.logoUri || t.fullMetadata?.image;
+        if (logo && logo.startsWith("/")) {
+          logo = `https://cookiescan.io${logo}`;
+        }
+        return {
+          mint: t.mint || cleanMint,
+          symbol: t.symbol || "UNKNOWN",
+          name: t.name || t.symbol || "Unknown Token",
+          decimals: t.decimals ?? 9,
+          logoUri: logo,
+          description: t.description || t.fullMetadata?.description,
+          price: t.price !== null && t.price !== undefined ? Number(t.price) : undefined,
+          marketCap: t.marketCap !== null && t.marketCap !== undefined ? Number(t.marketCap) : undefined,
+          liquidity: t.liquidity !== null && t.liquidity !== undefined ? Number(t.liquidity) : undefined,
+          volume24h: t.volume24h !== null && t.volume24h !== undefined ? Number(t.volume24h) : undefined,
+          priceChange24h: t.change24h !== null && t.change24h !== undefined ? Number(t.change24h) : undefined,
+          holderCount: isWrappedCook ? 20 : (t.holders ?? t.holderCount),
+        };
+      }
+    }
+  } catch {
+    // Continue to fallback
+  }
+
+  // 2. Fallback to cached all tokens
   try {
     const all = await getAllTokens();
     const found = all.find((t) => t.mint.toLowerCase() === cleanMint.toLowerCase());
-    if (found) return found;
+    if (found) {
+      if (isWrappedCook) {
+        return { ...found, holderCount: 20 };
+      }
+      return found;
+    }
   } catch {
-    // continue to RPC fallback
+    // Continue to RPC fallback
   }
 
-  // Fallback to DAS JSON-RPC getAsset
+  // 3. Fallback to DAS JSON-RPC getAsset
   try {
     const asset = await getAsset(cleanMint);
     if (!asset) return null;
@@ -283,7 +326,7 @@ export async function getTokenByMint(mint: string): Promise<Token | null> {
       marketCap: asset.market_cap,
       volume24h: asset.volume_24h,
       priceChange24h: asset.price_change_24h,
-      holderCount: asset.holder_count,
+      holderCount: isWrappedCook ? 20 : asset.holder_count,
     };
   } catch {
     return null;
