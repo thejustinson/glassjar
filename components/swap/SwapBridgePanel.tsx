@@ -331,7 +331,7 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
               className={cn(
                 "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5",
                 activeTab === "bridge"
-                  ? "bg-secondary text-white shadow-[0_0_12px_rgba(235,94,40,0.35)]"
+                  ? "bg-secondary text-black shadow-[0_0_12px_rgba(251,255,108,0.3)]"
                   : "text-text-muted hover:text-text-primary"
               )}
             >
@@ -796,7 +796,7 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
           {!connected ? (
             <button
               onClick={() => setWalletModalOpen(true)}
-              className="w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-wider bg-secondary text-white hover:bg-secondary-muted shadow-[0_0_15px_rgba(235,94,40,0.4)] transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-wider bg-secondary text-black hover:bg-secondary-muted shadow-[0_0_15px_rgba(251,255,108,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <i className="ri-wallet-3-line text-base" />
               <span>Connect Wallet to Bridge</span>
@@ -806,7 +806,7 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
               href="https://bridge.cookiechain.wtf"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-wider bg-secondary text-white hover:bg-secondary-muted shadow-[0_0_15px_rgba(235,94,40,0.4)] transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-wider bg-secondary text-black hover:bg-secondary-muted shadow-[0_0_15px_rgba(251,255,108,0.35)] transition-all flex items-center justify-center gap-2"
             >
               <i className="ri-arrow-left-right-line text-base" />
               <span>Launch Hyperlane Bridge Portal</span>

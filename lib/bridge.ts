@@ -415,4 +415,80 @@ export async function fetchMessageIdFromTx(
   return null;
 }
 
+// ─── Solana Native SOL → COOK Swap Helpers ────────────────────────────────────
+
+export interface SolanaSwapQuoteResult {
+  inAmount: string; // in lamports
+  outAmount: string; // in base units of COOK (6 decimals)
+  outputCookAmount: number; // in human readable COOK (outAmount / 1e6)
+  priceImpactPct: string;
+  routePlan: any[];
+  rawQuote: any;
+}
+
+/**
+ * Calculates max safe SOL amount that can be swapped, ensuring a minimum gas reserve.
+ * Default reserve: 0.008 SOL (for Solana gas + Hyperlane message account creation).
+ */
+export function getSafeMaxSolAmount(solBalance: number, gasReserve = 0.008): number {
+  return Math.max(0, Number((solBalance - gasReserve).toFixed(4)));
+}
+
+/**
+ * Fetches a swap quote for swapping native SOL to bridged COOK on Solana Mainnet.
+ */
+export async function fetchSolanaSwapQuote(
+  solAmount: number | string,
+  slippageBps = 100
+): Promise<SolanaSwapQuoteResult | null> {
+  const num = typeof solAmount === "string" ? parseFloat(solAmount) : solAmount;
+  if (isNaN(num) || num <= 0) return null;
+
+  const lamports = Math.round(num * 1e9);
+  const res = await fetch(`/api/solana-swap/quote?amount=${lamports}&slippageBps=${slippageBps}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Failed to fetch quote (${res.status})`);
+  }
+
+  const data = await res.json();
+  const outCook = Number(data.outAmount) / 1e6;
+
+  return {
+    inAmount: data.inAmount,
+    outAmount: data.outAmount,
+    outputCookAmount: outCook,
+    priceImpactPct: data.priceImpactPct || "0",
+    routePlan: data.routePlan || [],
+    rawQuote: data,
+  };
+}
+
+/**
+ * Builds a signed-ready VersionedTransaction for SOL → COOK swap on Solana.
+ */
+export async function buildSolanaSwapTransaction(
+  quoteResponse: any,
+  userPublicKey: string
+): Promise<VersionedTransaction> {
+  const res = await fetch("/api/solana-swap/build-tx", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quoteResponse, userPublicKey }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Failed to build swap transaction (${res.status})`);
+  }
+
+  const data = await res.json();
+  const txBuffer = Buffer.from(data.swapTransaction, "base64");
+  return VersionedTransaction.deserialize(txBuffer);
+}
+
 

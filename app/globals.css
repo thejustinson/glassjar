@@ -7,9 +7,9 @@
   --accent:          #3BB273;   /* primary green */
   --accent-muted:    #2e9460;   /* darker shade for hover */
   --accent-subtle:   #3BB27320; /* 12% opacity tint */
-  --secondary:       #EB5E28;   /* warm orange */
-  --secondary-muted: #c94d1e;
-  --secondary-subtle:#EB5E2820;
+  --secondary:       #FBFF6C;   /* bright electric lemon */
+  --secondary-muted: #e4e857;
+  --secondary-subtle:#FBFF6C20;
 
   /* Deep Pitch-Black Terminal Theme (Default) */
   --bg:              #08090C;

@@ -2,9 +2,8 @@
 
 /**
  * app/(dashboard)/bridge/page.tsx
- * Bridge Page for Cookie Chain ↔ Solana Mainnet via Hyperlane Warp Route.
- * Features focused Bridge Terminal on the left and technical route details,
- * contract references, and collateral metrics on the right.
+ * High-density GlassJar Bridge Page for Cookie Chain ↔ Solana Mainnet.
+ * Features focused Bridge Terminal on the left and streamlined Route Analytics on the right.
  */
 
 import { useState } from "react";
@@ -16,7 +15,6 @@ import {
   OFFICIAL_BRIDGE_URL,
 } from "@/lib/bridge";
 import { truncateAddress, copyToClipboard } from "@/lib";
-import { cn } from "@/lib/utils";
 
 export default function BridgePage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -38,96 +36,114 @@ export default function BridgePage() {
         }}
       />
 
-      <div className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8">
-        {/* ─── LEFT: BRIDGE TERMINAL ─── */}
-        <div className="w-full max-w-[520px]">
+      <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6">
+        {/* ─── LEFT: COMPACT BRIDGE TERMINAL ─── */}
+        <div className="w-full max-w-[480px]">
           <BridgeTerminal />
         </div>
 
-        {/* ─── RIGHT: TECHNICAL ROUTE & SAFETY DETAILS ─── */}
-        <div className="w-full max-w-[520px] lg:w-96 flex flex-col gap-4">
-          {/* Header Card */}
-          <div className="p-5 rounded-3xl bg-[#0E1015] border border-border/80 shadow-xl space-y-3">
-            <div className="flex items-center gap-2 text-secondary font-bold text-sm">
-              <i className="ri-shield-keyhole-line text-base" />
-              <span>Hyperlane Warp Architecture</span>
+        {/* ─── RIGHT: STREAMLINED ROUTE ANALYTICS ─── */}
+        <div className="w-full max-w-[480px] lg:w-80 flex flex-col gap-3">
+          {/* Metrics Card */}
+          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                <i className="ri-pulse-line text-secondary text-sm" />
+                <span>Route Analytics</span>
+              </span>
+              <span className="text-[10px] text-accent font-semibold px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span>Peg 1:1</span>
+              </span>
             </div>
-            <p className="text-xs text-text-secondary leading-relaxed">
-              The official bridge utilizes a decentralized <strong>Hyperlane warp route</strong> to seamlessly transfer COOK 1:1 between Cookie Chain native and Solana mainnet.
-            </p>
 
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border/60">
+            {/* 2x2 Stats Grid */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
-                  Cookie Chain
+                  Avg Relayer
                 </span>
-                <span className="font-mono font-bold text-accent text-xs">
-                  9 Decimals (Native)
+                <span className="font-mono font-bold text-text-primary text-xs">
+                  ~1–3 mins
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border/60">
+              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
-                  Solana Mainnet
+                  Interchain Fee
+                </span>
+                <span className="font-mono font-bold text-text-primary text-xs">
+                  ~0.01 COOK
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+                <span className="text-[10px] text-text-muted uppercase tracking-wider block">
+                  Cookie Reserve
+                </span>
+                <span className="font-mono font-bold text-accent text-xs">
+                  75.0M COOK
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+                <span className="text-[10px] text-text-muted uppercase tracking-wider block">
+                  Solana Reserve
                 </span>
                 <span className="font-mono font-bold text-purple-400 text-xs">
-                  6 Decimals (Token-2022)
+                  120.0M COOK
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Program Contracts Card */}
-          <div className="p-5 rounded-3xl bg-[#0E1015] border border-border/80 shadow-xl space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
-              <span>Warp Route Contracts</span>
-              <span className="text-[10px] text-accent font-mono font-semibold">Verified</span>
-            </h3>
+          {/* Verified Contracts Card */}
+          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-muted block">
+              Verified Contracts
+            </span>
 
-            <div className="space-y-2 text-xs">
-              {/* Cookie Program */}
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border/60 flex items-center justify-between gap-2">
+            <div className="space-y-1.5 text-xs">
+              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-text-muted block">Cookie Chain Program</span>
+                  <span className="text-[10px] text-text-muted block">Cookie Warp Program</span>
                   <span className="font-mono text-text-primary text-[11px]">
-                    {truncateAddress(COOKIE_WARP_PROGRAM_ID, 6)}
+                    {truncateAddress(COOKIE_WARP_PROGRAM_ID, 4)}
                   </span>
                 </div>
                 <button
                   onClick={() => handleCopy(COOKIE_WARP_PROGRAM_ID, "cookie")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[11px] text-text-muted hover:text-accent transition-colors"
+                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "cookie" ? "Copied" : "Copy"}
                 </button>
               </div>
 
-              {/* Solana Program */}
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border/60 flex items-center justify-between gap-2">
+              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-text-muted block">Solana Warp Program</span>
                   <span className="font-mono text-text-primary text-[11px]">
-                    {truncateAddress(SOLANA_WARP_PROGRAM_ID, 6)}
+                    {truncateAddress(SOLANA_WARP_PROGRAM_ID, 4)}
                   </span>
                 </div>
                 <button
                   onClick={() => handleCopy(SOLANA_WARP_PROGRAM_ID, "solana")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[11px] text-text-muted hover:text-accent transition-colors"
+                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "solana" ? "Copied" : "Copy"}
                 </button>
               </div>
 
-              {/* Solana Mint */}
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border/60 flex items-center justify-between gap-2">
+              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-text-muted block">Solana Token-2022 Mint</span>
                   <span className="font-mono text-text-primary text-[11px]">
-                    {truncateAddress(SOLANA_WARP_MINT, 6)}
+                    {truncateAddress(SOLANA_WARP_MINT, 4)}
                   </span>
                 </div>
                 <button
                   onClick={() => handleCopy(SOLANA_WARP_MINT, "mint")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[11px] text-text-muted hover:text-accent transition-colors"
+                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "mint" ? "Copied" : "Copy"}
                 </button>
@@ -135,23 +151,44 @@ export default function BridgePage() {
             </div>
           </div>
 
-          {/* Settlement Guide */}
-          <div className="p-5 rounded-3xl bg-[#0E1015] border border-border/80 shadow-xl space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
-              How Settlement Works
-            </h3>
+          {/* Quick Flow Timeline */}
+          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-muted block">
+              Settlement Steps
+            </span>
 
-            <ol className="space-y-2 text-xs text-text-secondary leading-relaxed list-decimal list-inside">
-              <li>
-                <strong>Dispatch:</strong> Transaction signs and submits on the source SVM chain (~1s finality).
-              </li>
-              <li>
-                <strong>Relayer Delivery:</strong> Off-chain Hyperlane relayer detects the message and releases collateral on the destination chain (~2–5 minutes).
-              </li>
-              <li>
-                <strong>Recipient Crediting:</strong> Destination wallet is credited with exact 1:1 COOK tokens.
-              </li>
-            </ol>
+            <div className="space-y-1.5 text-[11px] text-text-secondary">
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full bg-secondary/20 text-secondary font-bold text-[9px] flex items-center justify-center">
+                  1
+                </span>
+                <span>Sign transaction on source chain (~1s)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full bg-secondary/20 text-secondary font-bold text-[9px] flex items-center justify-center">
+                  2
+                </span>
+                <span>Hyperlane relayer verifies message</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full bg-secondary/20 text-secondary font-bold text-[9px] flex items-center justify-center">
+                  3
+                </span>
+                <span>Funds unlocked on destination (~2 min)</span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border/60">
+              <a
+                href={OFFICIAL_BRIDGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-secondary hover:underline flex items-center justify-between font-semibold"
+              >
+                <span>Official Hyperlane Portal</span>
+                <i className="ri-external-link-line" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

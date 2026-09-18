@@ -25,7 +25,7 @@ const variantClasses: Record<Variant, string> = {
     "bg-accent text-white hover:bg-accent-muted active:bg-accent-muted " +
     "border border-accent hover:border-accent-muted",
   secondary:
-    "bg-secondary text-white hover:bg-secondary-muted active:bg-secondary-muted " +
+    "bg-secondary text-black font-bold hover:bg-secondary-muted active:bg-secondary-muted " +
     "border border-secondary hover:border-secondary-muted",
   ghost:
     "bg-transparent text-text-primary hover:bg-bg-elevated active:bg-bg-card " +
