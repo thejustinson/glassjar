@@ -34,6 +34,7 @@ import { formatNumber, truncateAddress, copyToClipboard } from "@/lib";
 import { cn } from "@/lib/utils";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { WalletModal } from "@/components/wallet/WalletModal";
+import { recordTransactionDb } from "@/lib/supabase";
 
 export function BridgeTerminal() {
   const { publicKey, connected, signTransaction } = useWallet();
@@ -186,7 +187,15 @@ export function BridgeTerminal() {
 
       // 2. Request Signature
       setTransferStatus("signing");
-      setStatusMessage("Please approve the transfer in your wallet...");
+      if (isCookieToSolana) {
+        setStatusMessage(
+          "Awaiting wallet signature. You are transacting on Cookie Chain — ensure Nightly is set to Cookie Chain (in Nightly: Settings → Network → switch to Cookie) to approve."
+        );
+      } else {
+        setStatusMessage(
+          "Awaiting wallet signature. You are transacting on Solana — ensure Nightly is set to Solana (in Nightly: Settings → Network → switch to Solana) to approve."
+        );
+      }
 
       let signedTx;
       try {
@@ -210,6 +219,21 @@ export function BridgeTerminal() {
 
       const hash = await broadcastBridgeTransaction(signedTx, sourceChain);
       setTxHash(hash);
+
+      // Record Bridge Transaction to Supabase
+      recordTransactionDb({
+        signature: hash,
+        wallet_address: publicKey.toBase58(),
+        tx_type: "bridge",
+        source_chain: isCookieToSolana ? "cookie" : "solana",
+        dest_chain: isCookieToSolana ? "solana" : "cookie",
+        input_symbol: "COOK",
+        input_amount: transferAmountNum,
+        output_symbol: "COOK",
+        output_amount: transferAmountNum,
+        status: "confirmed",
+        message_id: built.uniqueMessageAccount || undefined,
+      });
 
       // 4. Source Confirmation
       setTransferStatus("source_confirming");
@@ -253,6 +277,19 @@ export function BridgeTerminal() {
             clearInterval(pollTimer);
             setTransferStatus("delivered");
             setStatusMessage("Bridge transfer completed! Funds received on destination chain.");
+            recordTransactionDb({
+              signature: hash,
+              wallet_address: publicKey.toBase58(),
+              tx_type: "bridge",
+              source_chain: isCookieToSolana ? "cookie" : "solana",
+              dest_chain: isCookieToSolana ? "solana" : "cookie",
+              input_symbol: "COOK",
+              input_amount: transferAmountNum,
+              output_symbol: "COOK",
+              output_amount: transferAmountNum,
+              status: "delivered",
+              message_id: resolvedMsgId || built.uniqueMessageAccount || undefined,
+            });
             refreshData();
             return;
           }
@@ -274,6 +311,19 @@ export function BridgeTerminal() {
               setTransferStatus("delivered");
               setDestTxHash(check.deliveryTx || null);
               setStatusMessage("Bridge transfer completed! Funds delivered to destination wallet.");
+              recordTransactionDb({
+                signature: hash,
+                wallet_address: publicKey.toBase58(),
+                tx_type: "bridge",
+                source_chain: isCookieToSolana ? "cookie" : "solana",
+                dest_chain: isCookieToSolana ? "solana" : "cookie",
+                input_symbol: "COOK",
+                input_amount: transferAmountNum,
+                output_symbol: "COOK",
+                output_amount: transferAmountNum,
+                status: "delivered",
+                message_id: targetId || undefined,
+              });
               refreshData();
               return;
             }

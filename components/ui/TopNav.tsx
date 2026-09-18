@@ -25,9 +25,9 @@ const ConnectButton = dynamic(
 );
 
 const NAV_LINKS = [
+  { href: "/", label: "Discover" },
   { href: "/swap", label: "Swap" },
   { href: "/bridge", label: "Bridge" },
-  { href: "/", label: "Discover" },
   { href: "/launch", label: "Launch" },
   { href: "/watchlist", label: "Watchlist" },
 ] as const;

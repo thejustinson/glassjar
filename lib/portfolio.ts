@@ -8,6 +8,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { getConnection, COOK_MINT, NATIVE_MINT_DECIMALS } from "./chain";
 import { getAllTokens, getCookPrice, type Token } from "./das";
+import { fetchWalletTransactionsDb } from "./supabase";
 
 const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
@@ -192,22 +193,40 @@ export async function fetchWalletTransactions(
     const conn = getConnection();
     const ownerPubkey = new PublicKey(ownerAddress);
 
-    const sigs = await conn
-      .getSignaturesForAddress(ownerPubkey, { limit })
-      .catch(() => []);
+    const [sigs, dbTxs] = await Promise.all([
+      conn.getSignaturesForAddress(ownerPubkey, { limit }).catch(() => []),
+      fetchWalletTransactionsDb(ownerAddress, limit).catch(() => []),
+    ]);
 
-    if (sigs.length === 0) {
-      return [];
+    const dbMap = new Map(dbTxs.map((t) => [t.signature, t]));
+
+    if (sigs.length === 0 && dbTxs.length > 0) {
+      // Fallback if RPC signatures query fails
+      return dbTxs.map((t) => ({
+        signature: t.signature,
+        status: t.status === "failed" ? "failed" : "success",
+        timestamp: t.created_at ? Math.floor(new Date(t.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000),
+        type: t.tx_type.toUpperCase(),
+        instructionsCount: 1,
+      }));
     }
 
-    return sigs.map((s) => ({
-      signature: s.signature,
-      slot: s.slot,
-      status: s.err ? "failed" : "success",
-      timestamp: s.blockTime || Math.floor(Date.now() / 1000),
-      type: s.memo ? "MEMO" : "TRANSACTION",
-      instructionsCount: 1,
-    }));
+    return sigs.map((s) => {
+      const dbRecord = dbMap.get(s.signature);
+      let type = s.memo ? "MEMO" : "TRANSACTION";
+      if (dbRecord) {
+        type = dbRecord.tx_type.toUpperCase();
+      }
+
+      return {
+        signature: s.signature,
+        slot: s.slot,
+        status: s.err ? "failed" : "success",
+        timestamp: s.blockTime || Math.floor(Date.now() / 1000),
+        type,
+        instructionsCount: 1,
+      };
+    });
   } catch (err) {
     console.error("Failed to fetch wallet transactions:", err);
     return [];

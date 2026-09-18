@@ -25,6 +25,7 @@ import {
   NATIVE_MINT_DECIMALS,
   COOK_MINT,
   SOLANA_WARP_MINT,
+  confirmTransactionPolling,
 } from "@/lib/chain";
 
 // Re-export for external callers
@@ -244,15 +245,20 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
 
       // 3. Signature
       setTxStatus("signing");
-      setStatusMessage("Please sign the transaction in your wallet...");
+      setStatusMessage(
+        "Awaiting wallet signature. You are transacting on Cookie Chain — ensure Nightly is set to Cookie Chain (in Nightly: Settings → Network → switch to Cookie) to approve."
+      );
 
       let signature: string;
-      if (sendTransaction) {
-        signature = await sendTransaction(tx, conn, { skipPreflight: false });
-      } else if (signTransaction) {
+      if (signTransaction) {
         const signed = await signTransaction(tx);
         const rawTx = signed.serialize();
-        signature = await conn.sendRawTransaction(rawTx, { skipPreflight: false });
+        signature = await conn.sendRawTransaction(rawTx, {
+          skipPreflight: false,
+          maxRetries: 3,
+        });
+      } else if (sendTransaction) {
+        signature = await sendTransaction(tx, conn, { skipPreflight: false });
       } else {
         throw new Error("Connected wallet does not support transaction signing.");
       }
@@ -261,19 +267,10 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
       setTxStatus("confirming");
       setStatusMessage("Submitting to Cookie Chain. Awaiting confirmation...");
 
-      // 4. Confirm
-      const latestBlockhash = await conn.getLatestBlockhash();
-      const confirmation = await conn.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-        },
-        "confirmed"
-      );
-
-      if (confirmation.value.err) {
-        throw new Error(`On-chain transaction error: ${JSON.stringify(confirmation.value.err)}`);
+      // 4. Ultra-fast HTTP RPC Confirm
+      const confirmation = await confirmTransactionPolling(conn, signature);
+      if (!confirmation.ok) {
+        throw new Error(`On-chain transaction error: ${JSON.stringify(confirmation.err)}`);
       }
 
       setTxStatus("success");
@@ -281,11 +278,17 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
       setInputAmount("");
       refreshBalances();
     } catch (err) {
-      setTxStatus("error");
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("User rejected") || msg.includes("cancelled")) {
+      if (
+        msg.includes("User rejected") ||
+        msg.includes("cancelled") ||
+        msg.includes("rejected the request") ||
+        (err as any)?.name === "WalletSignTransactionError"
+      ) {
+        setTxStatus("idle");
         setStatusMessage("Signature cancelled by user.");
       } else {
+        setTxStatus("error");
         setStatusMessage(msg);
       }
     }
@@ -633,6 +636,14 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
               <i className="ri-wallet-3-line text-base" />
               <span>Connect Wallet</span>
             </button>
+          ) : txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming" ? (
+            <button
+              disabled
+              className="w-full py-4 rounded-2xl font-bold text-sm bg-accent/80 text-[#08090C] cursor-wait flex items-center justify-center gap-2 select-none shadow-[0_0_20px_rgba(59,178,115,0.25)]"
+            >
+              <i className="ri-loader-4-line animate-spin text-lg" />
+              <span>Processing Swap...</span>
+            </button>
           ) : !inputAmount || Number(inputAmount) <= 0 ? (
             <button
               disabled
@@ -658,27 +669,11 @@ export function SwapBridgePanel({ token, className }: SwapBridgePanelProps) {
           ) : (
             <button
               onClick={handleExecuteSwap}
-              disabled={
-                !quote ||
-                txStatus === "simulating" ||
-                txStatus === "signing" ||
-                txStatus === "confirming"
-              }
-              className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide bg-accent text-[#08090C] hover:bg-accent-muted shadow-[0_0_20px_rgba(59,178,115,0.35)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer select-none active:scale-[0.99]"
+              disabled={!quote}
+              className="w-full py-4 rounded-2xl font-bold text-sm bg-accent text-[#08090C] hover:bg-[#45c381] transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(59,178,115,0.4)] select-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              {txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming" ? (
-                <>
-                  <i className="ri-loader-4-line animate-spin text-base" />
-                  <span>Processing Swap...</span>
-                </>
-              ) : (
-                <>
-                  <i className="ri-swap-line text-base" />
-                  <span>
-                    Swap {inputToken.symbol} to {outputToken.symbol}
-                  </span>
-                </>
-              )}
+              <i className="ri-swap-line text-base" />
+              <span>Execute Swap</span>
             </button>
           )}
         </div>

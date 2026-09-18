@@ -6,21 +6,29 @@
  * Prioritizes Nightly Wallet and avoids default generic wallet-adapter-react-ui popups.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { truncateAddress, copyToClipboard } from "@/lib";
 import { cn } from "@/lib/utils";
 import { WalletModal } from "./WalletModal";
+import { recordWalletConnection } from "@/lib/supabase";
 
 export function ConnectButton({ className }: { className?: string }) {
-  const { publicKey, disconnect, connecting, connected } = useWallet();
+  const { publicKey, wallet, disconnect, connecting, connected } = useWallet();
   const [modalOpen, setModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
   const address = publicKey?.toBase58() ?? "";
   const truncated = address ? truncateAddress(address) : "";
+
+  // Record connection to Supabase
+  useEffect(() => {
+    if (connected && address) {
+      recordWalletConnection(address, wallet?.adapter?.name);
+    }
+  }, [connected, address, wallet?.adapter?.name]);
 
   async function handleCopy() {
     await copyToClipboard(address);

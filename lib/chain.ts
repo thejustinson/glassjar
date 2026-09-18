@@ -125,3 +125,60 @@ export async function getTokenBalance(
     return null;
   }
 }
+
+/**
+ * Ultra-fast, reliable transaction confirmation using active HTTP RPC status polling.
+ * Resolves within ~1-2 seconds of block inclusion without hanging on WebSocket subscriptions.
+ */
+export async function confirmTransactionPolling(
+  conn: Connection,
+  signature: string,
+  timeoutMs = 45000
+): Promise<{ ok: boolean; err?: unknown }> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const { value } = await conn.getSignatureStatus(signature, {
+        searchTransactionHistory: true,
+      });
+
+      if (value) {
+        if (value.err) {
+          return { ok: false, err: value.err };
+        }
+        if (
+          value.confirmationStatus === "confirmed" ||
+          value.confirmationStatus === "finalized"
+        ) {
+          return { ok: true };
+        }
+      }
+    } catch {
+      // Ignore transient network errors and continue polling
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  // Fallback check with getTransaction
+  try {
+    const tx = await conn.getTransaction(signature, {
+      maxSupportedTransactionVersion: 0,
+      commitment: "confirmed",
+    });
+    if (tx) {
+      if (tx.meta?.err) {
+        return { ok: false, err: tx.meta.err };
+      }
+      return { ok: true };
+    }
+  } catch {
+    // ignore
+  }
+
+  throw new Error(
+    "Confirmation timeout. The transaction was submitted to Cookie Chain, please check the explorer."
+  );
+}
+

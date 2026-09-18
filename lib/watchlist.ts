@@ -7,6 +7,11 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  fetchWalletWatchlist,
+  upsertWatchlistDbItem,
+  removeWatchlistDbItem,
+} from "./supabase";
 
 export interface WatchlistItem {
   mint: string;
@@ -109,6 +114,9 @@ export function addToWatchlist(
       trackedAmount: options?.trackedAmount ?? items[existingIndex].trackedAmount,
     };
     saveWatchlist(items, walletAddress);
+    if (walletAddress) {
+      upsertWatchlistDbItem(items[existingIndex], walletAddress);
+    }
     return false;
   }
 
@@ -126,6 +134,9 @@ export function addToWatchlist(
   };
 
   saveWatchlist([newItem, ...items], walletAddress);
+  if (walletAddress) {
+    upsertWatchlistDbItem(newItem, walletAddress);
+  }
   return true;
 }
 
@@ -137,6 +148,9 @@ export function removeFromWatchlist(mint: string, walletAddress?: string | null)
   const filtered = items.filter((i) => i.mint.toLowerCase() !== mint.toLowerCase());
   if (filtered.length !== items.length) {
     saveWatchlist(filtered, walletAddress);
+    if (walletAddress) {
+      removeWatchlistDbItem(mint, walletAddress);
+    }
     return true;
   }
   return false;
@@ -155,6 +169,9 @@ export function updateWatchlistItem(
   if (index >= 0) {
     items[index] = { ...items[index], ...updates };
     saveWatchlist(items, walletAddress);
+    if (walletAddress) {
+      upsertWatchlistDbItem(items[index], walletAddress);
+    }
   }
 }
 
@@ -192,6 +209,32 @@ export function useWatchlist(walletAddress?: string | null) {
       window.removeEventListener("storage", handleStorage);
     };
   }, [walletAddress, refresh]);
+
+  // Cloud sync with Supabase when wallet connects
+  useEffect(() => {
+    if (!walletAddress) return;
+    let active = true;
+
+    fetchWalletWatchlist(walletAddress).then((remote) => {
+      if (!active) return;
+      if (remote.length > 0) {
+        saveWatchlist(remote, walletAddress);
+        setItems(remote);
+      } else {
+        // If Supabase has no records yet for this wallet, push any existing local items
+        const local = getWatchlist(walletAddress);
+        if (local.length > 0) {
+          local.forEach((item) => {
+            upsertWatchlistDbItem(item, walletAddress);
+          });
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [walletAddress]);
 
   const add = useCallback(
     (

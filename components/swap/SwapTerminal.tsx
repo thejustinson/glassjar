@@ -23,6 +23,7 @@ import {
   getCookBalance,
   getTokenBalance,
   explorerTxUrl,
+  confirmTransactionPolling,
 } from "@/lib/chain";
 import {
   formatNumber,
@@ -35,6 +36,7 @@ import { getTokenByMint, type Token } from "@/lib/das";
 import { TokenSelectModal, NATIVE_COOK_TOKEN } from "./TokenSelectModal";
 import { WalletModal } from "@/components/wallet/WalletModal";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
+import { recordTransactionDb } from "@/lib/supabase";
 
 export interface SwapTerminalProps {
   inputToken: Token;
@@ -191,15 +193,20 @@ export function SwapTerminal({
 
       // 3. Wallet Signature
       setTxStatus("signing");
-      setStatusMessage("Awaiting signature in your wallet...");
+      setStatusMessage(
+        "Awaiting wallet signature. You are transacting on Cookie Chain — ensure Nightly is set to Cookie Chain (in Nightly: Settings → Network → switch to Cookie) to approve."
+      );
 
       let signature: string;
-      if (sendTransaction) {
-        signature = await sendTransaction(tx, conn, { skipPreflight: false });
-      } else if (signTransaction) {
+      if (signTransaction) {
         const signed = await signTransaction(tx);
         const rawTx = signed.serialize();
-        signature = await conn.sendRawTransaction(rawTx, { skipPreflight: false });
+        signature = await conn.sendRawTransaction(rawTx, {
+          skipPreflight: false,
+          maxRetries: 3,
+        });
+      } else if (sendTransaction) {
+        signature = await sendTransaction(tx, conn, { skipPreflight: false });
       } else {
         throw new Error("Connected wallet does not support transaction signing.");
       }
@@ -208,31 +215,44 @@ export function SwapTerminal({
       setTxStatus("confirming");
       setStatusMessage("Submitting to Cookie Chain. Awaiting confirmation...");
 
-      // 4. Confirmation
-      const latestBlockhash = await conn.getLatestBlockhash();
-      const confirmation = await conn.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-        },
-        "confirmed"
-      );
-
-      if (confirmation.value.err) {
-        throw new Error(`On-chain transaction error: ${JSON.stringify(confirmation.value.err)}`);
+      // 4. Ultra-fast HTTP RPC Confirmation
+      const confirmation = await confirmTransactionPolling(conn, signature);
+      if (!confirmation.ok) {
+        throw new Error(`On-chain transaction error: ${JSON.stringify(confirmation.err)}`);
       }
 
       setTxStatus("success");
       setStatusMessage("Swap confirmed successfully!");
+
+      // Record to Supabase
+      recordTransactionDb({
+        signature,
+        wallet_address: publicKey.toBase58(),
+        tx_type: "swap",
+        source_chain: "cookie",
+        input_mint: inputToken.mint,
+        input_symbol: inputToken.symbol,
+        input_amount: Number(inputAmount),
+        output_mint: outputToken.mint,
+        output_symbol: outputToken.symbol,
+        output_amount: estimatedOut ? Number(estimatedOut) : undefined,
+        status: "confirmed",
+      });
+
       setInputAmount("");
       refreshBalances();
     } catch (err) {
-      setTxStatus("error");
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("User rejected") || msg.includes("cancelled")) {
+      if (
+        msg.includes("User rejected") ||
+        msg.includes("cancelled") ||
+        msg.includes("rejected the request") ||
+        (err as any)?.name === "WalletSignTransactionError"
+      ) {
+        setTxStatus("idle");
         setStatusMessage("Signature cancelled by user.");
       } else {
+        setTxStatus("error");
         setStatusMessage(msg);
       }
     }
@@ -548,6 +568,14 @@ export function SwapTerminal({
         >
           <span>Connect Wallet</span>
         </button>
+      ) : txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming" ? (
+        <button
+          disabled
+          className="w-full h-14 rounded-2xl text-base font-bold tracking-wide bg-accent/80 text-[#08090C] cursor-wait flex items-center justify-center gap-2 mt-1 shadow-[0_0_20px_rgba(59,178,115,0.25)]"
+        >
+          <i className="ri-loader-4-line animate-spin text-lg" />
+          <span>Processing...</span>
+        </button>
       ) : !inputAmount || Number(inputAmount) <= 0 ? (
         <button
           disabled
@@ -565,17 +593,10 @@ export function SwapTerminal({
       ) : (
         <button
           onClick={handleSwap}
-          disabled={!quote || quoting || txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming"}
+          disabled={!quote || quoting}
           className="w-full h-14 rounded-2xl text-base font-bold tracking-wide bg-accent text-[#08090C] hover:bg-accent-muted shadow-[0_0_20px_rgba(59,178,115,0.35)] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
         >
-          {txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming" ? (
-            <>
-              <i className="ri-loader-4-line animate-spin text-lg" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <span>Swap</span>
-          )}
+          <span>Swap</span>
         </button>
       )}
 
