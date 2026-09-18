@@ -26,6 +26,7 @@ export async function POST(request: Request) {
         quoteResponse,
         userPublicKey,
         wrapAndUnwrapSol: true,
+        useSharedAccounts: true,
         dynamicComputeUnitLimit: true,
         prioritizationFeeLamports: prioritizationFeeLamports || "auto",
       }),

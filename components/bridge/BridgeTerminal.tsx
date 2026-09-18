@@ -837,11 +837,11 @@ export function BridgeTerminal() {
       )}
 
       {/* ─── STATUS BANNER ─── */}
-      {transferStatus !== "idle" && (
+      {/* ─── STATUS BANNER (In-progress or Error) ─── */}
+      {transferStatus !== "idle" && transferStatus !== "delivered" && (
         <div
           className={cn(
             "p-3 rounded-xl border text-xs space-y-1.5",
-            transferStatus === "delivered" && "bg-accent/10 border-accent/30 text-accent",
             (transferStatus === "preparing" ||
               transferStatus === "signing" ||
               transferStatus === "broadcasting" ||
@@ -862,21 +862,17 @@ export function BridgeTerminal() {
               {transferStatus === "awaiting_delivery" && (
                 <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
               )}
-              {transferStatus === "delivered" && (
-                <i className="ri-checkbox-circle-line text-sm text-accent" />
-              )}
               {transferStatus === "error" && (
                 <i className="ri-error-warning-line text-sm text-error" />
               )}
               <span className="font-semibold text-text-primary text-xs">{statusMessage}</span>
             </div>
 
-            {(transferStatus === "delivered" || transferStatus === "error") && (
+            {transferStatus === "error" && (
               <button
                 onClick={() => {
                   setTransferStatus("idle");
                   setStatusMessage(null);
-                  if (transferStatus === "delivered") setAmount("");
                 }}
                 className="text-text-muted hover:text-text-primary p-0.5 cursor-pointer"
               >
@@ -927,33 +923,97 @@ export function BridgeTerminal() {
         </div>
       )}
 
-      {/* ─── GUIDED POST-BRIDGE CARD ─── */}
+      {/* ─── GUIDED POST-BRIDGE COMPLETION CARD (Direction-Aware) ─── */}
       {transferStatus === "delivered" && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-accent/20 to-bg-card border border-accent/40 shadow-lg flex flex-col gap-2.5">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-accent/20 via-accent/5 to-bg-card border border-accent/40 shadow-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-accent/20 border border-accent/50 flex items-center justify-center text-accent text-xs">
+              <span className="w-6 h-6 rounded-full bg-accent text-black font-bold flex items-center justify-center text-xs shadow-sm">
                 ✓
               </span>
               <span className="text-xs font-bold text-text-primary">
-                Delivered ~{formatNumber(receivedCook || expectedDestCook, 1)} COOK
+                Bridge Complete • Received ~{formatNumber(receivedCook || expectedDestCook, 1)} COOK
               </span>
             </div>
-            <span className="text-[10px] text-accent font-semibold">Cookie Chain</span>
+            <span className="text-[10px] font-bold text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30">
+              {destChainName}
+            </span>
           </div>
 
           <p className="text-[11px] text-text-secondary leading-normal">
-            Funds are in your Cookie Chain wallet. Switch Nightly to <strong>Cookie Chain</strong> to trade.
+            {isCookieToSolana ? (
+              <>
+                Funds arrived in your Solana wallet. Switch Nightly to <strong>Solana</strong> to view and use your COOK (Token-2022).
+              </>
+            ) : (
+              <>
+                Funds arrived in your Cookie Chain wallet. Switch Nightly to <strong>Cookie Chain</strong> to trade.
+              </>
+            )}
           </p>
 
+          {/* Explorer Links */}
+          <div className="flex items-center gap-3 text-[11px] font-mono border-t border-border/50 pt-2">
+            {txHash && (
+              <a
+                href={isCookieToSolana ? `https://cookiescan.io/tx/${txHash}` : `https://solscan.io/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-text-secondary hover:text-text-primary flex items-center gap-1"
+              >
+                <span>{sourceChainName} Tx</span>
+                <i className="ri-external-link-line" />
+              </a>
+            )}
+            {destTxHash && (
+              <a
+                href={isCookieToSolana ? `https://solscan.io/tx/${destTxHash}` : `https://cookiescan.io/tx/${destTxHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-accent hover:opacity-80 flex items-center gap-1"
+              >
+                <span>{destChainName} Delivery</span>
+                <i className="ri-external-link-line" />
+              </a>
+            )}
+            {uniqueMessageAccount && (
+              <a
+                href={
+                  uniqueMessageAccount.startsWith("0x")
+                    ? `https://explorer.hyperlane.xyz/message/${uniqueMessageAccount}`
+                    : "https://explorer.hyperlane.xyz"
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-text-muted hover:text-text-primary flex items-center gap-1"
+              >
+                <span>Hyperlane</span>
+                <i className="ri-external-link-line" />
+              </a>
+            )}
+          </div>
+
+          {/* Action Buttons */}
           <div className="flex items-center gap-2 pt-0.5">
-            <button
-              onClick={() => router.push("/swap")}
-              className="flex-1 py-2 rounded-xl bg-accent text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <span>Trade on Cookie Chain</span>
-              <i className="ri-arrow-right-line" />
-            </button>
+            {!isCookieToSolana ? (
+              <button
+                onClick={() => router.push("/swap")}
+                className="flex-1 py-2.5 rounded-xl bg-accent text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <span>Trade on Cookie Chain</span>
+                <i className="ri-arrow-right-line" />
+              </button>
+            ) : (
+              <a
+                href={`https://solscan.io/account/${effectiveRecipient}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 rounded-xl bg-secondary text-black font-bold text-xs hover:bg-secondary-muted transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <span>View on Solscan</span>
+                <i className="ri-external-link-line" />
+              </a>
+            )}
             <button
               onClick={() => {
                 setTransferStatus("idle");
@@ -961,16 +1021,16 @@ export function BridgeTerminal() {
                 setAmount("");
                 setSolQuote(null);
               }}
-              className="px-3 py-2 rounded-xl bg-bg-card border border-border text-text-muted hover:text-text-primary text-xs font-semibold cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-bg-card border border-border text-text-muted hover:text-text-primary text-xs font-semibold cursor-pointer"
             >
-              Done
+              Bridge More
             </button>
           </div>
         </div>
       )}
 
-      {/* ─── ACTION BUTTON ─── */}
-      {!connected ? (
+      {/* ─── ACTION BUTTON (Hidden when already delivered) ─── */}
+      {transferStatus === "delivered" ? null : !connected ? (
         <button
           onClick={() => setWalletModalOpen(true)}
           className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-elevated text-secondary border border-secondary/40 hover:bg-secondary/15 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
@@ -998,19 +1058,6 @@ export function BridgeTerminal() {
         >
           <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
           <span>Relaying to Destination Chain...</span>
-        </button>
-      ) : transferStatus === "delivered" ? (
-        <button
-          onClick={() => {
-            setTransferStatus("idle");
-            setStatusMessage(null);
-            setAmount("");
-            setSolQuote(null);
-          }}
-          className="w-full py-3.5 rounded-2xl font-black text-sm bg-accent text-black hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
-        >
-          <i className="ri-check-line" />
-          <span>Bridge More</span>
         </button>
       ) : transferStatus === "error" ? (
         <button
