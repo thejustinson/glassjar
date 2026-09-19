@@ -556,7 +556,7 @@ export function BridgeTerminal() {
   }
 
   return (
-    <div className="w-full max-w-[480px] rounded-3xl bg-[#0E1015] border border-border shadow-2xl p-4 sm:p-5 flex flex-col gap-3 relative select-none">
+    <div className="w-full max-w-[480px] squircle-lg bg-[#0E1015] border border-border p-4 sm:p-5 flex flex-col gap-3 relative select-none">
       {/* ─── TOP BAR ─── */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
@@ -569,7 +569,7 @@ export function BridgeTerminal() {
         {/* Route Direction Switcher Badge */}
         <button
           onClick={handleFlipDirection}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-card border border-border hover:border-secondary/50 transition-all text-xs font-semibold cursor-pointer group"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141720] border border-border hover:border-secondary/50 transition-all text-xs font-semibold cursor-pointer group"
           title="Switch direction"
         >
           <span className="text-text-secondary group-hover:text-text-primary text-[11px]">
@@ -583,7 +583,7 @@ export function BridgeTerminal() {
       </div>
 
       {/* ─── FROM CONTAINER ─── */}
-      <div className="p-3.5 rounded-2xl bg-[#141720] border border-border/80 space-y-2 focus-within:border-secondary/70 transition-colors">
+      <div className="p-3.5 squircle-md bg-[#141720] border border-border space-y-2 focus-within:border-secondary/70 transition-colors">
         <div className="flex items-center justify-between text-[11px] text-text-muted">
           <span className="font-bold text-text-secondary uppercase tracking-wider">
             From {sourceChainName}
@@ -621,7 +621,7 @@ export function BridgeTerminal() {
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
                   sourceAsset === "SOL"
-                    ? "bg-secondary text-black shadow-sm"
+                    ? "bg-secondary text-black"
                     : "text-text-muted hover:text-text-primary"
                 )}
               >
@@ -637,7 +637,7 @@ export function BridgeTerminal() {
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
                   sourceAsset === "COOK"
-                    ? "bg-secondary text-black shadow-sm"
+                    ? "bg-secondary text-black"
                     : "text-text-muted hover:text-text-primary"
                 )}
               >
@@ -646,7 +646,7 @@ export function BridgeTerminal() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0 shadow-sm">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0">
               <TokenAvatar symbol="COOK" size={18} />
               <span className="text-text-primary font-bold">COOK</span>
             </div>
@@ -689,7 +689,7 @@ export function BridgeTerminal() {
       <div className="relative flex items-center justify-center -my-1 z-10">
         <button
           onClick={handleFlipDirection}
-          className="w-7 h-7 rounded-full bg-[#141720] border border-border hover:border-secondary flex items-center justify-center text-secondary shadow-md hover:rotate-180 transition-all cursor-pointer"
+          className="w-7 h-7 rounded-full bg-[#141720] border border-border hover:border-secondary flex items-center justify-center text-secondary hover:rotate-180 transition-all cursor-pointer"
           title="Invert route"
         >
           <i className="ri-arrow-up-down-line text-xs" />
@@ -697,7 +697,7 @@ export function BridgeTerminal() {
       </div>
 
       {/* ─── TO CONTAINER ─── */}
-      <div className="p-3.5 rounded-2xl bg-[#141720] border border-border/80 space-y-2">
+      <div className="p-3.5 squircle-md bg-[#141720] border border-border space-y-2">
         <div className="flex items-center justify-between text-[11px] text-text-muted">
           <span className="font-bold text-text-secondary uppercase tracking-wider">
             To {destChainName}
@@ -726,7 +726,7 @@ export function BridgeTerminal() {
             className="w-full bg-transparent text-3xl font-bold font-mono text-text-primary outline-none cursor-default"
           />
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0 shadow-sm">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0">
             <TokenAvatar symbol="COOK" size={18} />
             <span className="text-text-primary font-bold">COOK</span>
           </div>
@@ -739,7 +739,7 @@ export function BridgeTerminal() {
       </div>
 
       {/* ─── COMPACT RECIPIENT ACCORDION ─── */}
-      <div className="px-3 py-2 rounded-xl bg-[#10121A] border border-border/60 text-xs flex flex-col gap-1.5">
+      <div className="px-3 py-2 squircle-sm bg-[#10121A] border border-border text-xs flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-text-muted">Recipient:</span>
           <div className="flex items-center gap-1.5 font-mono">
@@ -925,10 +925,10 @@ export function BridgeTerminal() {
 
       {/* ─── GUIDED POST-BRIDGE COMPLETION CARD (Direction-Aware) ─── */}
       {transferStatus === "delivered" && (
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-accent/20 via-accent/5 to-bg-card border border-accent/40 shadow-xl flex flex-col gap-3">
+        <div className="p-4 squircle-md bg-[#10141E] border border-accent/40 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-accent text-black font-bold flex items-center justify-center text-xs shadow-sm">
+              <span className="w-6 h-6 rounded-full bg-accent text-black font-bold flex items-center justify-center text-xs">
                 ✓
               </span>
               <span className="text-xs font-bold text-text-primary">
@@ -998,7 +998,7 @@ export function BridgeTerminal() {
             {!isCookieToSolana ? (
               <button
                 onClick={() => router.push("/swap")}
-                className="flex-1 py-2.5 rounded-xl bg-accent text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                className="flex-1 py-2.5 rounded-full bg-accent text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Trade on Cookie Chain</span>
                 <i className="ri-arrow-right-line" />
@@ -1008,7 +1008,7 @@ export function BridgeTerminal() {
                 href={`https://solscan.io/account/${effectiveRecipient}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-2.5 rounded-xl bg-secondary text-black font-bold text-xs hover:bg-secondary-muted transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                className="flex-1 py-2.5 rounded-full bg-secondary text-black font-bold text-xs hover:bg-secondary-muted transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>View on Solscan</span>
                 <i className="ri-external-link-line" />
@@ -1021,7 +1021,7 @@ export function BridgeTerminal() {
                 setAmount("");
                 setSolQuote(null);
               }}
-              className="px-4 py-2.5 rounded-xl bg-bg-card border border-border text-text-muted hover:text-text-primary text-xs font-semibold cursor-pointer"
+              className="px-4 py-2.5 rounded-full bg-[#141720] border border-border text-text-muted hover:text-text-primary text-xs font-semibold cursor-pointer"
             >
               Bridge More
             </button>
@@ -1033,7 +1033,7 @@ export function BridgeTerminal() {
       {transferStatus === "delivered" ? null : !connected ? (
         <button
           onClick={() => setWalletModalOpen(true)}
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-elevated text-secondary border border-secondary/40 hover:bg-secondary/15 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-bg-elevated text-secondary border border-secondary/40 hover:bg-secondary/15 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
         >
           <i className="ri-wallet-3-line" />
           <span>Connect Wallet to Bridge</span>
@@ -1044,7 +1044,7 @@ export function BridgeTerminal() {
         transferStatus === "source_confirming" ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-secondary/80 text-black cursor-wait flex items-center justify-center gap-2 select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-secondary/80 text-black cursor-wait flex items-center justify-center gap-2 select-none"
         >
           <i className="ri-loader-4-line animate-spin" />
           <span>
@@ -1054,7 +1054,7 @@ export function BridgeTerminal() {
       ) : transferStatus === "awaiting_delivery" ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-warning/20 border border-warning/40 text-warning cursor-wait flex items-center justify-center gap-2 select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-warning/20 border border-warning/40 text-warning cursor-wait flex items-center justify-center gap-2 select-none"
         >
           <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
           <span>Relaying to Destination Chain...</span>
@@ -1062,7 +1062,7 @@ export function BridgeTerminal() {
       ) : transferStatus === "error" ? (
         <button
           onClick={handleBridge}
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-error/20 border border-error/40 text-error hover:bg-error/30 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-error/20 border border-error/40 text-error hover:bg-error/30 transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
         >
           <i className="ri-refresh-line" />
           <span>Retry Bridge</span>
@@ -1070,35 +1070,35 @@ export function BridgeTerminal() {
       ) : !amount || Number(amount) <= 0 ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-card border border-border/70 text-text-muted cursor-not-allowed select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-border text-text-muted cursor-not-allowed select-none"
         >
           Enter Amount
         </button>
       ) : Number(amount) > effectiveSourceBalance ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-card border border-error/30 text-error/80 cursor-not-allowed select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-error/30 text-error/80 cursor-not-allowed select-none"
         >
           Insufficient {isSolMode ? "SOL" : "COOK"}
         </button>
       ) : isSolGasInsufficient ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-card border border-warning/30 text-warning cursor-not-allowed select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-warning/30 text-warning cursor-not-allowed select-none"
         >
           Reserve 0.008 SOL for gas
         </button>
       ) : exceedsCollateral ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-card border border-warning/30 text-warning cursor-not-allowed select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-warning/30 text-warning cursor-not-allowed select-none"
         >
           Exceeds Destination Reserve
         </button>
       ) : isSolMode && loadingSolQuote ? (
         <button
           disabled
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-bg-card border border-secondary/40 text-secondary cursor-wait select-none"
+          className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-secondary/40 text-secondary cursor-wait select-none"
         >
           <i className="ri-loader-4-line animate-spin" />
           <span>Fetching Quote...</span>
@@ -1106,7 +1106,7 @@ export function BridgeTerminal() {
       ) : (
         <button
           onClick={handleBridge}
-          className="w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-wide bg-secondary text-black hover:bg-secondary-muted shadow-[0_0_20px_rgba(251,255,108,0.25)] transition-all flex items-center justify-center gap-2 cursor-pointer select-none active:scale-[0.99]"
+          className="w-full py-3.5 rounded-full font-black text-sm uppercase tracking-wide bg-secondary text-black hover:bg-secondary-muted transition-all flex items-center justify-center gap-2 cursor-pointer select-none active:scale-[0.99]"
         >
           <i className="ri-arrow-left-right-line" />
           <span>

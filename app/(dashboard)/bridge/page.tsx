@@ -45,7 +45,7 @@ export default function BridgePage() {
         {/* ─── RIGHT: STREAMLINED ROUTE ANALYTICS ─── */}
         <div className="w-full max-w-[480px] lg:w-80 flex flex-col gap-3">
           {/* Metrics Card */}
-          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-3">
+          <div className="p-4 squircle-lg bg-[#0E1015] border border-border space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
                 <i className="ri-pulse-line text-secondary text-sm" />
@@ -59,7 +59,7 @@ export default function BridgePage() {
 
             {/* 2x2 Stats Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+              <div className="p-2.5 squircle-md bg-[#141720] border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
                   Avg Relayer
                 </span>
@@ -68,7 +68,7 @@ export default function BridgePage() {
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+              <div className="p-2.5 squircle-md bg-[#141720] border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
                   Interchain Fee
                 </span>
@@ -77,7 +77,7 @@ export default function BridgePage() {
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+              <div className="p-2.5 squircle-md bg-[#141720] border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
                   Cookie Reserve
                 </span>
@@ -86,7 +86,7 @@ export default function BridgePage() {
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-bg-card border border-border">
+              <div className="p-2.5 squircle-md bg-[#141720] border border-border">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider block">
                   Solana Reserve
                 </span>
@@ -98,13 +98,13 @@ export default function BridgePage() {
           </div>
 
           {/* Verified Contracts Card */}
-          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-2.5">
+          <div className="p-4 squircle-lg bg-[#0E1015] border border-border space-y-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-text-muted block">
               Verified Contracts
             </span>
 
             <div className="space-y-1.5 text-xs">
-              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
+              <div className="p-2 squircle-sm bg-[#141720] border border-border flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-text-muted block">Cookie Warp Program</span>
                   <span className="font-mono text-text-primary text-[11px]">
@@ -113,13 +113,13 @@ export default function BridgePage() {
                 </div>
                 <button
                   onClick={() => handleCopy(COOKIE_WARP_PROGRAM_ID, "cookie")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
+                  className="px-2 py-1 rounded bg-[#0B0D13] border border-border text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "cookie" ? "Copied" : "Copy"}
                 </button>
               </div>
 
-              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
+              <div className="p-2 squircle-sm bg-[#141720] border border-border flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-text-muted block">Solana Warp Program</span>
                   <span className="font-mono text-text-primary text-[11px]">
@@ -128,13 +128,13 @@ export default function BridgePage() {
                 </div>
                 <button
                   onClick={() => handleCopy(SOLANA_WARP_PROGRAM_ID, "solana")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
+                  className="px-2 py-1 rounded bg-[#0B0D13] border border-border text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "solana" ? "Copied" : "Copy"}
                 </button>
               </div>
 
-              <div className="p-2 rounded-xl bg-bg-card border border-border flex items-center justify-between">
+              <div className="p-2 squircle-sm bg-[#141720] border border-border flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-text-muted block">Solana Token-2022 Mint</span>
                   <span className="font-mono text-text-primary text-[11px]">
@@ -143,7 +143,7 @@ export default function BridgePage() {
                 </div>
                 <button
                   onClick={() => handleCopy(SOLANA_WARP_MINT, "mint")}
-                  className="px-2 py-1 rounded bg-bg-elevated text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
+                  className="px-2 py-1 rounded bg-[#0B0D13] border border-border text-[10px] text-text-muted hover:text-text-primary cursor-pointer transition-colors"
                 >
                   {copiedId === "mint" ? "Copied" : "Copy"}
                 </button>
@@ -152,7 +152,7 @@ export default function BridgePage() {
           </div>
 
           {/* Quick Flow Timeline */}
-          <div className="p-4 rounded-3xl bg-[#0E1015] border border-border shadow-xl space-y-2">
+          <div className="p-4 squircle-lg bg-[#0E1015] border border-border space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-text-muted block">
               Settlement Steps
             </span>
