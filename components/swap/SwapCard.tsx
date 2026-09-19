@@ -691,20 +691,49 @@ export function SwapCard({
       {txStatus !== "idle" && (
         <div
           className={cn(
-            "p-3 rounded-xl border text-xs space-y-1",
+            "p-3 rounded-xl border text-xs space-y-1.5 transition-all animate-in fade-in slide-in-from-top-1",
             txStatus === "success" && "bg-success/10 border-success/30 text-success",
             txStatus === "error" && "bg-error/10 border-error/30 text-error",
             (txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming") &&
               "bg-accent/10 border-accent/30 text-accent"
           )}
         >
-          <div className="flex items-center gap-2 font-semibold">
-            {txStatus === "success" && <i className="ri-checkbox-circle-line text-base" />}
-            {txStatus === "error" && <i className="ri-error-warning-line text-base" />}
-            {(txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming") && (
-              <i className="ri-loader-4-line animate-spin text-base" />
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2.5 min-w-0">
+              {txStatus === "success" && <i className="ri-checkbox-circle-line text-base shrink-0 mt-0.5" />}
+              {txStatus === "error" && <i className="ri-error-warning-line text-base shrink-0 mt-0.5" />}
+              {(txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming") && (
+                <i className="ri-loader-4-line animate-spin text-base shrink-0 mt-0.5" />
+              )}
+              <div className="space-y-0.5 min-w-0">
+                <p className="font-semibold text-xs leading-tight">
+                  {txStatus === "simulating" && "Simulating Transaction"}
+                  {txStatus === "signing" && "Awaiting Signature"}
+                  {txStatus === "confirming" && "Confirming On-Chain"}
+                  {txStatus === "success" && "Swap Completed"}
+                  {txStatus === "error" && "Swap Failed"}
+                </p>
+                {statusMessage && (
+                  <p className="text-[11px] text-text-secondary leading-relaxed break-words font-normal">
+                    {statusMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {(txStatus === "success" || txStatus === "error") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTxStatus("idle");
+                  setStatusMessage(null);
+                }}
+                className="text-text-muted hover:text-text-primary p-0.5 shrink-0 transition-colors"
+                title="Dismiss"
+              >
+                <i className="ri-close-line text-sm" />
+              </button>
             )}
-            <span>{statusMessage}</span>
           </div>
 
           {txSignature && (
@@ -712,10 +741,10 @@ export function SwapCard({
               href={explorerTxUrl(txSignature)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] underline flex items-center gap-1 hover:opacity-80"
+              className="text-[11px] underline flex items-center gap-1 hover:opacity-80 pt-0.5 text-accent font-medium inline-flex"
             >
               <span>View On-Chain on CookieScan</span>
-              <i className="ri-external-link-line" />
+              <i className="ri-external-link-line text-xs" />
             </a>
           )}
         </div>
@@ -742,7 +771,13 @@ export function SwapCard({
           )}
         >
           <i className="ri-loader-4-line animate-spin text-sm" />
-          <span>{statusMessage}</span>
+          <span>
+            {txStatus === "simulating"
+              ? "Simulating Swap…"
+              : txStatus === "signing"
+              ? "Approve in Wallet…"
+              : "Confirming On-Chain…"}
+          </span>
         </button>
       ) : !inputAmount || Number(inputAmount) <= 0 ? (
         <button
