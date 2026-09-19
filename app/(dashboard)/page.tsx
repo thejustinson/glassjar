@@ -725,7 +725,10 @@ export default function DiscoverPage() {
 
         {/* RIGHT COLUMN: DOCKED EXCHANGE & ACTIVITY (4 COLS) */}
         <div className="xl:col-span-4 relative">
-          <div id="docked-swap-panel" className="space-y-4 xl:sticky xl:top-20">
+          <div
+            id="docked-swap-panel"
+            className="space-y-3 xl:sticky xl:top-[70px] max-h-[calc(100vh-5rem)] overflow-y-auto no-scrollbar"
+          >
             {/* Exchange Header Tag */}
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
@@ -755,8 +758,9 @@ export default function DiscoverPage() {
             {/* Embedded Real Swap Card */}
             <div className="squircle glass-panel overflow-hidden p-1">
               <SwapCard
+                compact={true}
                 initialOutputToken={selectedTradeToken}
-                className="border-0 shadow-none bg-transparent p-3"
+                className="border-0 shadow-none bg-transparent p-2.5 sm:p-3"
               />
             </div>
 
