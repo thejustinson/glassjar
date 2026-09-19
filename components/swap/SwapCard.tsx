@@ -101,6 +101,42 @@ export function SwapCard({
   const [txSignature, setTxSignature] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // Drag & Drop State
+  const [isCardDragOver, setIsCardDragOver] = useState(false);
+  const [payDragOver, setPayDragOver] = useState(false);
+  const [receiveDragOver, setReceiveDragOver] = useState(false);
+  const [dropFeedback, setDropFeedback] = useState<string | null>(null);
+
+  function handleDropToken(rawJson: string, target: "pay" | "receive" | "auto") {
+    try {
+      const token: Token = JSON.parse(rawJson);
+      if (!token || !token.mint) return;
+
+      if (target === "pay") {
+        if (token.mint.toLowerCase() === outputToken.mint.toLowerCase()) {
+          setOutputToken(inputToken);
+        }
+        setInputToken(token);
+        setDropFeedback(`Loaded ${token.symbol} as Pay token`);
+      } else if (target === "receive") {
+        if (token.mint.toLowerCase() === inputToken.mint.toLowerCase()) {
+          setInputToken(outputToken);
+        }
+        setOutputToken(token);
+        setDropFeedback(`Loaded ${token.symbol} as Receive token`);
+      } else {
+        // Auto: if not same as input, set as output
+        if (token.mint.toLowerCase() === inputToken.mint.toLowerCase()) {
+          setOutputToken(token);
+        } else {
+          setOutputToken(token);
+        }
+        setDropFeedback(`Loaded ${token.symbol} into swap`);
+      }
+      setTimeout(() => setDropFeedback(null), 2500);
+    } catch {}
+  }
+
   // Notify parent on pair changes
   useEffect(() => {
     onPairChange?.(inputToken, outputToken);
@@ -293,15 +329,43 @@ export function SwapCard({
 
   return (
     <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setIsCardDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsCardDragOver(false);
+          setPayDragOver(false);
+          setReceiveDragOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsCardDragOver(false);
+        setPayDragOver(false);
+        setReceiveDragOver(false);
+        const raw = e.dataTransfer.getData("application/json");
+        if (raw) handleDropToken(raw, "auto");
+      }}
       className={cn(
-        "squircle glass-panel p-5 flex flex-col gap-4 relative",
+        "squircle glass-panel p-5 flex flex-col gap-4 relative transition-all duration-200",
+        isCardDragOver && "ring-2 ring-accent/60 shadow-[0_0_30px_rgba(59,178,115,0.25)] bg-accent/[0.03]",
         className
       )}
     >
       {/* Top Header & Settings Trigger */}
       <div className="flex items-center justify-between pb-1 border-b border-white/[0.07]">
         <div>
-          <h2 className="text-base font-bold text-text-primary tracking-wide">Swap Terminal</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-text-primary tracking-wide">Swap Terminal</h2>
+            {isCardDragOver && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/40 animate-pulse">
+                Drop token here
+              </span>
+            )}
+          </div>
           <p className="text-xs text-text-muted">Cookieswap & Cookiebox Aggregator</p>
         </div>
 
@@ -354,17 +418,59 @@ export function SwapCard({
         </div>
       </div>
 
+      {/* Drop Feedback Toast */}
+      <AnimatePresence>
+        {dropFeedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-accent/20 border border-accent/40 text-xs font-bold text-accent shadow-sm"
+          >
+            <i className="ri-checkbox-circle-fill text-sm" />
+            <span>{dropFeedback}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ─── YOU PAY CONTAINER ─── */}
       <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = "copy";
+          setPayDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.stopPropagation();
+          setPayDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setPayDragOver(false);
+          setIsCardDragOver(false);
+          const raw = e.dataTransfer.getData("application/json");
+          if (raw) handleDropToken(raw, "pay");
+        }}
         className={cn(
-          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5",
-          activeInput === "pay"
+          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5 relative overflow-hidden",
+          payDragOver
+            ? "border-accent ring-2 ring-accent bg-accent/15 shadow-[0_0_24px_rgba(59,178,115,0.3)] scale-[1.01]"
+            : activeInput === "pay"
             ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
             : "hover:border-white/15"
         )}
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
-          <span className="font-semibold uppercase tracking-wider text-[11px]">You Pay</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">You Pay</span>
+            {payDragOver && (
+              <span className="text-[10px] font-bold text-accent animate-pulse">
+                · Drop to set as Pay
+              </span>
+            )}
+          </div>
           <span className="tabular-nums font-mono">
             Balance: {formatNumber(inputBalance, 4)} {inputToken.symbol}
           </span>
@@ -429,17 +535,44 @@ export function SwapCard({
 
       {/* ─── YOU RECEIVE CONTAINER ─── */}
       <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = "copy";
+          setReceiveDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.stopPropagation();
+          setReceiveDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setReceiveDragOver(false);
+          setIsCardDragOver(false);
+          const raw = e.dataTransfer.getData("application/json");
+          if (raw) handleDropToken(raw, "receive");
+        }}
         className={cn(
-          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5",
-          activeInput === "receive"
+          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5 relative overflow-hidden",
+          receiveDragOver
+            ? "border-accent ring-2 ring-accent bg-accent/15 shadow-[0_0_24px_rgba(59,178,115,0.3)] scale-[1.01]"
+            : activeInput === "receive"
             ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
             : "hover:border-white/15"
         )}
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
-          <span className="font-semibold uppercase tracking-wider text-[11px]">
-            You Receive (Est.)
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">
+              You Receive (Est.)
+            </span>
+            {receiveDragOver && (
+              <span className="text-[10px] font-bold text-accent animate-pulse">
+                · Drop to set as Receive
+              </span>
+            )}
+          </div>
           {quoting && (
             <span className="text-accent flex items-center gap-1 text-[11px]">
               <i className="ri-loader-4-line animate-spin" />

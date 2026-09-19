@@ -91,10 +91,16 @@ export function LiveHighlights({
           return (
             <div
               key={token.mint + badge}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/json", JSON.stringify(token));
+                e.dataTransfer.setData("text/plain", token.mint);
+                e.dataTransfer.effectAllowed = "copyMove";
+              }}
               onClick={() => router.push(`/token/${token.mint}`)}
               className={cn(
                 "w-[84vw] sm:w-auto shrink-0 sm:shrink snap-center",
-                "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[165px]",
+                "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer xl:cursor-grab active:cursor-grabbing overflow-hidden flex flex-col justify-between min-h-[165px]",
                 "hover:border-accent/50 hover:bg-white/[0.06] hover:shadow-[0_12px_36px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]",
                 isSelected && "border-accent/70 ring-1 ring-accent/30 bg-white/[0.06]"
               )}
@@ -106,16 +112,21 @@ export function LiveHighlights({
                     symbol={token.symbol}
                     logoUri={token.logoUri}
                     size={36}
-                    className="border border-white/10 group-hover:border-accent/40 transition-colors"
+                    className="border border-white/10 group-hover:border-accent/40 transition-colors flex-shrink-0"
                   />
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-text-primary truncate">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-bold text-base text-text-primary tracking-tight whitespace-nowrap">
                         {token.symbol}
                       </span>
-                      <span className="text-[10px] font-medium text-text-muted">/USD</span>
+                      <span
+                        className="hidden xl:inline-block opacity-0 group-hover:opacity-60 transition-opacity text-text-muted text-[10px]"
+                        title="Drag token to swap terminal"
+                      >
+                        <i className="ri-drag-move-2-line" />
+                      </span>
                     </div>
-                    <span className="text-[11px] text-text-muted truncate block max-w-[120px]">
+                    <span className="text-[11px] text-text-muted block truncate max-w-[140px]">
                       {token.name}
                     </span>
                   </div>

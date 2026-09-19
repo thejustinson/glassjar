@@ -42,9 +42,15 @@ export function MarketTickerTape({ tokens, onSelectToken }: MarketTickerTapeProp
           return (
             <button
               key={`${t.mint}-${idx}`}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/json", JSON.stringify(t));
+                e.dataTransfer.setData("text/plain", t.mint);
+                e.dataTransfer.effectAllowed = "copyMove";
+              }}
               onClick={() => onSelectToken?.(t)}
-              className="flex items-center gap-2 py-1 px-2.5 rounded-full glass-pill hover:bg-white/[0.08] transition-all cursor-pointer whitespace-nowrap group/item shrink-0"
-              title={`Quick Trade ${t.symbol}`}
+              className="flex items-center gap-2 py-1 px-2.5 rounded-full glass-pill hover:bg-white/[0.08] transition-all cursor-pointer xl:cursor-grab active:cursor-grabbing whitespace-nowrap group/item shrink-0"
+              title={`Drag or click to trade ${t.symbol}`}
             >
               <TokenAvatar symbol={t.symbol} logoUri={t.logoUri} size={18} />
               <span className="font-bold text-text-primary text-xs group-hover/item:text-accent transition-colors">

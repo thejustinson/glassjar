@@ -132,17 +132,31 @@ function TokenRow({
   return (
     <motion.div
       variants={variants.fadeUp}
+      draggable
+      onDragStart={(e: any) => {
+        if (e.dataTransfer) {
+          e.dataTransfer.setData("application/json", JSON.stringify(token));
+          e.dataTransfer.setData("text/plain", token.mint);
+          e.dataTransfer.effectAllowed = "copyMove";
+        }
+      }}
       onClick={() => router.push(`/token/${token.mint}`)}
       style={{ gridTemplateColumns: COLS }}
       className={cn(
-        "grid items-center gap-x-3 px-4 h-[56px] relative",
+        "grid items-center gap-x-3 px-4 h-[56px] relative select-none",
         "border-b border-white/[0.04] last:border-0",
-        "hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer group",
+        "hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer xl:cursor-grab active:cursor-grabbing group",
         isSelected && "bg-white/[0.07]"
       )}
     >
       {/* Rank & Favorite Star */}
-      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <span
+          className="hidden xl:inline-block opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity cursor-grab text-text-muted text-xs -ml-1 mr-0.5"
+          title="Drag token to swap terminal"
+        >
+          <i className="ri-drag-move-2-fill" />
+        </span>
         <button
           onClick={handleToggleWatchlist}
           className={cn(
@@ -710,7 +724,7 @@ export default function DiscoverPage() {
         </div>
 
         {/* RIGHT COLUMN: DOCKED EXCHANGE & ACTIVITY (4 COLS) */}
-        <div id="docked-swap-panel" className="xl:col-span-4 space-y-4 xl:sticky xl:top-6">
+        <div id="docked-swap-panel" className="xl:col-span-4 space-y-4 xl:sticky xl:top-20 self-start">
           {/* Exchange Header Tag */}
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -722,13 +736,19 @@ export default function DiscoverPage() {
               </span>
             </div>
 
-            <Link
-              href="/swap"
-              className="text-xs text-text-muted hover:text-accent transition-colors flex items-center gap-1"
-            >
-              <span>Full Screen</span>
-              <i className="ri-fullscreen-line text-[11px]" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <span className="hidden 2xl:inline-flex items-center gap-1 text-[10px] font-semibold text-text-muted bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/[0.06] select-none">
+                <i className="ri-drag-move-fill text-accent text-xs" />
+                <span>Drag tokens here</span>
+              </span>
+              <Link
+                href="/swap"
+                className="text-xs text-text-muted hover:text-accent transition-colors flex items-center gap-1"
+              >
+                <span>Full Screen</span>
+                <i className="ri-fullscreen-line text-[11px]" />
+              </Link>
+            </div>
           </div>
 
           {/* Embedded Real Swap Card */}
