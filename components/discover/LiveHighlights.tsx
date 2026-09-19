@@ -134,12 +134,9 @@ export function LiveHighlights({
 
               {/* Price & Change Row */}
               <div className="mt-4 mb-2">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted block">
-                  Spot Price
-                </span>
-                <div className="flex items-baseline gap-2.5 mt-0.5">
-                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-text-primary">
-                    {formatPrice(token.price || 0)}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+                    Spot Price
                   </span>
                   <span
                     className={cn(
@@ -156,6 +153,12 @@ export function LiveHighlights({
                       )}
                     />
                     <span>{formatPct(token.priceChange24h || 0)}</span>
+                  </span>
+                </div>
+
+                <div className="mt-1">
+                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-text-primary">
+                    {formatPrice(token.price || 0)}
                   </span>
                 </div>
               </div>
