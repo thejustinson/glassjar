@@ -600,61 +600,63 @@ export function BridgeTerminal() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
           <input
             type="number"
             placeholder="0.0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-transparent text-3xl font-bold font-mono text-text-primary outline-none focus:outline-none placeholder:text-text-muted/50"
+            className="w-full bg-transparent text-2xl sm:text-3xl font-bold font-mono text-text-primary outline-none focus:outline-none placeholder:text-text-muted/50 min-w-0"
           />
 
           {/* Token Selector / Toggle */}
-          {!isCookieToSolana ? (
-            <div className="flex items-center p-0.5 rounded-full bg-[#1A1E29] border border-border flex-shrink-0">
-              <button
-                onClick={() => {
-                  setSourceAsset("SOL");
-                  setAmount("");
-                  setSolQuote(null);
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
-                  sourceAsset === "SOL"
-                    ? "bg-secondary text-black"
-                    : "text-text-muted hover:text-text-primary"
-                )}
-              >
-                <img src="/solana-logo.png" alt="SOL" className="w-3.5 h-3.5 rounded-full bg-black" />
-                <span>SOL</span>
-              </button>
-              <button
-                onClick={() => {
-                  setSourceAsset("COOK");
-                  setAmount("");
-                  setSolQuote(null);
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
-                  sourceAsset === "COOK"
-                    ? "bg-secondary text-black"
-                    : "text-text-muted hover:text-text-primary"
-                )}
-              >
-                <TokenAvatar symbol="COOK" size={14} />
-                <span>COOK</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0">
-              <TokenAvatar symbol="COOK" size={18} />
-              <span className="text-text-primary font-bold">COOK</span>
-            </div>
-          )}
+          <div className="flex justify-end sm:justify-start flex-shrink-0">
+            {!isCookieToSolana ? (
+              <div className="flex items-center p-0.5 rounded-full bg-[#1A1E29] border border-border">
+                <button
+                  onClick={() => {
+                    setSourceAsset("SOL");
+                    setAmount("");
+                    setSolQuote(null);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
+                    sourceAsset === "SOL"
+                      ? "bg-secondary text-black"
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  <img src="/solana-logo.png" alt="SOL" className="w-3.5 h-3.5 rounded-full bg-black" />
+                  <span>SOL</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSourceAsset("COOK");
+                    setAmount("");
+                    setSolQuote(null);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
+                    sourceAsset === "COOK"
+                      ? "bg-secondary text-black"
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  <TokenAvatar symbol="COOK" size={14} />
+                  <span>COOK</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold">
+                <TokenAvatar symbol="COOK" size={18} />
+                <span className="text-text-primary font-bold">COOK</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Percentages & Live Conversion */}
-        <div className="flex items-center justify-between pt-0.5 text-[11px] font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px] font-mono">
           <div className="text-text-muted truncate max-w-[200px]">
             {isSolMode ? (
               loadingSolQuote ? (
@@ -707,7 +709,7 @@ export function BridgeTerminal() {
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
           <input
             type="text"
             readOnly
@@ -723,16 +725,18 @@ export function BridgeTerminal() {
                 ? standardQuote.destAmount.toString()
                 : amount || "0.0"
             }
-            className="w-full bg-transparent text-3xl font-bold font-mono text-text-primary outline-none cursor-default"
+            className="w-full bg-transparent text-2xl sm:text-3xl font-bold font-mono text-text-primary outline-none cursor-default min-w-0"
           />
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold flex-shrink-0">
-            <TokenAvatar symbol="COOK" size={18} />
-            <span className="text-text-primary font-bold">COOK</span>
+          <div className="flex justify-end sm:justify-start flex-shrink-0">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold">
+              <TokenAvatar symbol="COOK" size={18} />
+              <span className="text-text-primary font-bold">COOK</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-0.5 text-[11px] font-mono text-text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px] font-mono text-text-muted">
           <span>Est. Delivery: ~2 min</span>
           <span>Interchain Fee: ~0.01 COOK</span>
         </div>
