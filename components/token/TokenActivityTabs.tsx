@@ -16,7 +16,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { motion } from "framer-motion";
 import {
   getConnection,
   truncateAddress,
@@ -439,57 +438,81 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
   return (
     <div
       className={cn(
-        "squircle-lg glass-panel overflow-hidden select-none transition-all relative",
+        "rounded-2xl bg-[#0E1015] border border-border shadow-xl overflow-hidden select-none transition-all relative",
         className
       )}
     >
       {/* ─── TOP TABS BAR ─── */}
-      <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-white/8 bg-white/[0.02] overflow-x-auto gap-2">
-        <div className="flex items-center gap-1 sm:gap-1.5">
-          {(
-            [
-              { id: "transactions", label: "Transactions", icon: "ri-arrow-up-s-line" },
-              {
-                id: "holdings",
-                label: "My Holdings",
-                badge: userBalance > 0 ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                ) : undefined,
-              },
-              { id: "holders", label: `Holders (${holderCountDisplay})` },
-              { id: "traders", label: "Top Traders", hiddenOn: "hidden sm:inline-flex" },
-              { id: "devTokens", label: "Dev Tokens (1)", hiddenOn: "hidden md:inline-flex" },
-            ] as {
-              id: MainTab;
-              label: string;
-              icon?: string;
-              badge?: React.ReactNode;
-              hiddenOn?: string;
-            }[]
-          ).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={cn(
-                "relative px-3 sm:px-3.5 py-1.5 text-xs font-bold transition-colors whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl cursor-pointer select-none",
-                t.hiddenOn,
-                activeTab === t.id
-                  ? "text-accent"
-                  : "text-text-muted hover:text-text-primary"
-              )}
-            >
-              {activeTab === t.id && (
-                <motion.div
-                  layoutId="tokenActivityTab"
-                  className="absolute inset-0 bg-accent/15 border border-accent/30 rounded-xl"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.35 }}
-                />
-              )}
-              <span className="relative z-10">{t.label}</span>
-              {t.icon && <i className={cn(t.icon, "relative z-10 text-xs")} />}
-              {t.badge && <span className="relative z-10">{t.badge}</span>}
-            </button>
-          ))}
+      <div className="flex items-center justify-between px-4 bg-[#12151D] border-b border-border overflow-x-auto">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Transactions Tab */}
+          <button
+            onClick={() => setActiveTab("transactions")}
+            className={cn(
+              "px-3 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5",
+              activeTab === "transactions"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-muted hover:text-text-primary"
+            )}
+          >
+            <span>Transactions</span>
+            <i className="ri-arrow-up-s-line text-xs" />
+          </button>
+
+          {/* My Holdings Tab */}
+          <button
+            onClick={() => setActiveTab("holdings")}
+            className={cn(
+              "px-3 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5",
+              activeTab === "holdings"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-muted hover:text-text-primary"
+            )}
+          >
+            <span>My Holdings</span>
+            {userBalance > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            )}
+          </button>
+
+          {/* Holders Tab */}
+          <button
+            onClick={() => setActiveTab("holders")}
+            className={cn(
+              "px-3 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap",
+              activeTab === "holders"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-muted hover:text-text-primary"
+            )}
+          >
+            <span>Holders ({holderCountDisplay})</span>
+          </button>
+
+          {/* Top Traders Tab */}
+          <button
+            onClick={() => setActiveTab("traders")}
+            className={cn(
+              "px-3 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap hidden sm:inline-block",
+              activeTab === "traders"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-muted hover:text-text-primary"
+            )}
+          >
+            <span>Top Traders</span>
+          </button>
+
+          {/* Dev Tokens Tab */}
+          <button
+            onClick={() => setActiveTab("devTokens")}
+            className={cn(
+              "px-3 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap hidden md:inline-block",
+              activeTab === "devTokens"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-muted hover:text-text-primary"
+            )}
+          >
+            <span>Dev Tokens (1)</span>
+          </button>
         </div>
 
         {/* Right side controls */}
@@ -503,7 +526,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
           {/* Expand / Collapse Toggle Icon */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 glass-pill rounded-lg text-text-muted hover:text-text-primary transition-all cursor-pointer"
+            className="p-1.5 text-text-muted hover:text-text-primary transition-colors"
             title={isExpanded ? "Collapse view" : "Expand view"}
           >
             <i className={cn("text-base", isExpanded ? "ri-contract-up-down-line" : "ri-expand-up-down-line")} />
@@ -517,7 +540,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
           {/* Table Header */}
           <div
             style={{ gridTemplateColumns: "1fr 90px 1fr 1fr 40px" }}
-            className="grid items-center px-4 py-2.5 bg-white/[0.02] border-b border-white/8 text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
+            className="grid items-center px-4 py-2.5 bg-[#12151D] border-b border-border text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
           >
             <span>Date / Time</span>
             <span>Type</span>
@@ -531,7 +554,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
             ref={tableContainerRef}
             onScroll={handleTableScroll}
             className={cn(
-              "divide-y divide-white/5 overflow-y-auto transition-all relative",
+              "divide-y divide-border/40 overflow-y-auto transition-all relative",
               isExpanded ? "max-h-[700px]" : "max-h-[420px]"
             )}
           >
@@ -561,7 +584,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
                   <div
                     key={`${trade.signature}-${idx}`}
                     style={{ gridTemplateColumns: "1fr 90px 1fr 1fr 40px" }}
-                    className="grid items-center px-4 h-[44px] hover:bg-white/[0.04] transition-colors text-xs font-mono"
+                    className="grid items-center px-4 h-[44px] hover:bg-bg-elevated/60 transition-colors text-xs font-mono"
                   >
                     {/* Date / Time — real from Cookiescan timestamp */}
                     <span className="text-text-muted text-[11px] truncate">
@@ -731,7 +754,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
         <div>
           <div
             style={{ gridTemplateColumns: "60px 1fr 140px 100px 40px" }}
-            className="grid items-center px-4 py-2.5 bg-white/[0.02] border-b border-white/8 text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
+            className="grid items-center px-4 py-2.5 bg-[#12151D] border-b border-border text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
           >
             <span>Rank</span>
             <span>Address</span>
@@ -740,7 +763,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
             <span className="text-right">Link</span>
           </div>
 
-          <div className="divide-y divide-white/5 max-h-[420px] overflow-y-auto font-mono text-xs">
+          <div className="divide-y divide-border/40 max-h-[420px] overflow-y-auto font-mono text-xs">
             {loadingHolders ? (
               <div className="py-12 text-center text-xs text-text-muted space-y-2">
                 <i className="ri-refresh-line animate-spin text-lg text-accent block mx-auto" />
@@ -755,7 +778,7 @@ export function TokenActivityTabs({ token, className }: TokenActivityTabsProps) 
                 <div
                   key={h.address}
                   style={{ gridTemplateColumns: "60px 1fr 140px 100px 40px" }}
-                  className="grid items-center px-4 h-[42px] hover:bg-white/[0.04] transition-colors"
+                  className="grid items-center px-4 h-[42px] hover:bg-bg-elevated/60 transition-colors"
                 >
                   <span className="text-text-muted font-bold">#{h.rank}</span>
 

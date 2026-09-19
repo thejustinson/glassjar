@@ -213,42 +213,35 @@ export function PriceChart({
   const changeClass = deltaColorClass(priceChange24h);
 
   return (
-    <div className={cn("flex flex-col squircle-lg glass-panel overflow-hidden transition-all", className)}>
+    <div className={cn("flex flex-col rounded-2xl bg-[#0E1015] border border-border overflow-hidden", className)}>
       {/* Chart Top Bar: Controls & Current Price */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-white/8 bg-white/[0.02]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-border/70 bg-bg/40">
         <div className="flex items-center gap-3">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-baseline gap-2.5">
               <span className="text-xl font-bold font-mono text-text-primary tracking-tight">
                 {formatPrice(displayPrice)}
               </span>
-              <span
-                className={cn(
-                  "text-xs font-bold font-mono px-2.5 py-0.5 rounded-full",
-                  priceChange24h >= 0
-                    ? "bg-success/15 text-success border border-success/30"
-                    : "bg-error/15 text-error border border-error/30"
-                )}
-              >
+              <span className={cn("text-xs font-bold font-mono", changeClass)}>
                 {formatPct(priceChange24h)}
               </span>
             </div>
-            <p className="text-[11px] text-text-muted mt-0.5 font-medium">
-              {symbol} / USD · {hoveredPrice ? "Hovered Price" : "Live Spot Price"}
+            <p className="text-[11px] text-text-muted">
+              {symbol} / USD · {hoveredPrice ? "Hovered" : "Live Price"}
             </p>
           </div>
         </div>
 
         {/* Timeframe & Mode Switchers */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           {/* Mode Switcher: Area/Line first (default), then Candles */}
-          <div className="flex items-center gap-1 glass-pill p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-bg-card p-0.5 rounded-lg border border-border">
             <button
               onClick={() => setMode("area")}
               className={cn(
-                "h-6 sm:h-7 px-2.5 rounded-lg flex items-center gap-1 text-xs transition-all select-none cursor-pointer",
+                "h-7 px-2.5 rounded flex items-center gap-1 text-xs transition-colors select-none",
                 mode === "area"
-                  ? "bg-accent text-[#08090C] font-bold shadow-sm"
+                  ? "bg-accent/20 text-accent font-bold"
                   : "text-text-muted hover:text-text-primary"
               )}
               title="Line / Area Chart (Default)"
@@ -259,9 +252,9 @@ export function PriceChart({
             <button
               onClick={() => setMode("candle")}
               className={cn(
-                "h-6 sm:h-7 px-2.5 rounded-lg flex items-center gap-1 text-xs transition-all select-none cursor-pointer",
+                "h-7 px-2.5 rounded flex items-center gap-1 text-xs transition-colors select-none",
                 mode === "candle"
-                  ? "bg-accent text-[#08090C] font-bold shadow-sm"
+                  ? "bg-accent/20 text-accent font-bold"
                   : "text-text-muted hover:text-text-primary"
               )}
               title="Candlestick Chart"
@@ -272,13 +265,13 @@ export function PriceChart({
           </div>
 
           {/* Timeframe Switcher */}
-          <div className="flex items-center gap-0.5 glass-pill p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-bg-card p-0.5 rounded-lg border border-border">
             {(["1H", "24H", "7D", "1M", "ALL"] as ChartTimeframe[]).map((tf) => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
                 className={cn(
-                  "h-6 sm:h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-bold tracking-wider transition-all select-none cursor-pointer",
+                  "h-6 px-2.5 rounded text-[11px] font-bold tracking-wider transition-all select-none",
                   timeframe === tf
                     ? "bg-accent text-[#08090C] font-extrabold shadow-sm"
                     : "text-text-muted hover:text-text-primary"
