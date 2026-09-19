@@ -485,14 +485,7 @@ export default function DiscoverPage() {
         {/* ─── HEADER BAR: BREADCRUMBS & SEARCH ─── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
-            <Link href="/" className="hover:text-text-primary transition-colors">
-              Overview
-            </Link>
-            <span>/</span>
-            <span className="text-text-primary font-bold">Dashboard</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-text-primary mt-1">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-text-primary">
             Cookie Chain Markets
           </h1>
         </div>

@@ -143,7 +143,7 @@ export function LiveHighlights({
                   </span>
                   <span
                     className={cn(
-                      "text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono",
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono leading-none",
                       isPos
                         ? "bg-accent/15 text-accent border border-accent/25"
                         : "bg-error/15 text-error border border-error/25"
@@ -151,8 +151,8 @@ export function LiveHighlights({
                   >
                     <i
                       className={cn(
-                        "text-[10px]",
-                        isPos ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"
+                        "text-[8px]",
+                        isPos ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill"
                       )}
                     />
                     <span>{formatPct(token.priceChange24h || 0)}</span>
