@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { type Token } from "@/lib/das";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { formatPrice, formatPct, deltaColorClass } from "@/lib";
+import { COOK_MINT } from "@/lib/chain";
 import { cn } from "@/lib/utils";
 import { MiniSparkline } from "./MiniSparkline";
 
@@ -20,6 +22,8 @@ export function LiveHighlights({
   onTradeToken,
   selectedMint,
 }: LiveHighlightsProps) {
+  const router = useRouter();
+
   // 1. Highlight 1: Native COOK
   const cookCardToken: Token = useMemo(() => {
     const found = tokens.find(
@@ -27,10 +31,11 @@ export function LiveHighlights({
     );
     if (found) return found;
     return {
-      mint: "native-cook",
+      mint: COOK_MINT,
       symbol: "COOK",
       name: "Cookie Chain Gas",
       decimals: 9,
+      logoUri: "/cook.jpeg",
       price: cookPrice || 0.000075,
       priceChange24h: 3.42,
       volume24h: 1115,
@@ -86,7 +91,7 @@ export function LiveHighlights({
           return (
             <div
               key={token.mint + badge}
-              onClick={() => onTradeToken?.(token)}
+              onClick={() => router.push(`/token/${token.mint}`)}
               className={cn(
                 "w-[84vw] sm:w-auto shrink-0 sm:shrink snap-center",
                 "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[165px]",

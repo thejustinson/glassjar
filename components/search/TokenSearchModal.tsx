@@ -105,22 +105,71 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
       .slice(0, 20);
   }, [tokens, query]);
 
-  function handleSelect(mint: string) {
-    const selectedToken =
-      (caToken && caToken.mint.toLowerCase() === mint.toLowerCase() ? caToken : null) ||
-      tokens.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) || {
-        mint,
-        symbol: "TOKEN",
-        name: "Unknown Token",
-        decimals: 9,
-      };
+  // Combined selectable list for unified keyboard navigation
+  const displayList = useMemo(() => {
+    const list: Token[] = [];
+    if (caToken && !caSearching) {
+      list.push(caToken);
+    }
+    for (const t of filtered) {
+      if (!caToken || t.mint.toLowerCase() !== caToken.mint.toLowerCase()) {
+        list.push(t);
+      }
+    }
+    return list;
+  }, [caToken, caSearching, filtered]);
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Reset selected index when query or items change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query, displayList.length]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (itemRefs.current[selectedIndex]) {
+      itemRefs.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  }, [selectedIndex]);
+
+  function handleSelect(mint: string) {
+    onClose();
     if (onSelectToken) {
+      const selectedToken =
+        displayList.find((t) => t.mint.toLowerCase() === mint.toLowerCase()) || {
+          mint,
+          symbol: "TOKEN",
+          name: "Unknown Token",
+          decimals: 9,
+        };
       onSelectToken(selectedToken);
+    }
+    router.push(`/token/${mint}`);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (displayList.length > 0) {
+        setSelectedIndex((prev) => (prev + 1) % displayList.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (displayList.length > 0) {
+        setSelectedIndex((prev) => (prev - 1 + displayList.length) % displayList.length);
+      }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (displayList.length > 0 && displayList[selectedIndex]) {
+        handleSelect(displayList[selectedIndex].mint);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
       onClose();
-    } else {
-      onClose();
-      router.push(`/token/${mint}`);
     }
   }
 
@@ -169,12 +218,13 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
                 placeholder="Search tokens by name, symbol, or CA..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none font-medium"
               />
               {query ? (
                 <button
                   onClick={() => setQuery("")}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:text-text-primary transition-colors cursor-pointer"
                 >
                   <i className="ri-close-line text-sm" />
                 </button>
@@ -195,51 +245,56 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
                 </div>
               )}
 
-              {caToken && !caSearching && (
-                <div className="p-2 mb-2 rounded-xl bg-accent/10 border border-accent/30">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-accent px-2 mb-1">
-                    Direct Contract Address Match
-                  </div>
-                  <TokenResultRow
-                    token={caToken}
-                    onSelect={handleSelect}
-                    onCopy={handleCopy}
-                    isCopied={copiedMint === caToken.mint}
-                  />
-                </div>
-              )}
-
               {loading ? (
                 <div className="p-8 text-center text-xs text-text-muted space-y-2">
                   <i className="ri-loader-4-line animate-spin text-accent text-xl block mx-auto" />
                   <p>Loading verified tokens...</p>
                 </div>
-              ) : filtered.length === 0 && !caToken && !caSearching ? (
+              ) : displayList.length === 0 && !caSearching ? (
                 <div className="py-12 text-center text-xs text-text-muted space-y-2">
                   <i className="ri-search-line text-2xl text-text-muted opacity-50 block mx-auto" />
                   <p className="font-semibold text-text-secondary">No tokens found</p>
                   <p>Try searching by ticker, name, or paste a full contract address (CA).</p>
                 </div>
               ) : (
-                filtered.map((t) => (
-                  <TokenResultRow
-                    key={t.mint}
-                    token={t}
-                    onSelect={handleSelect}
-                    onCopy={handleCopy}
-                    isCopied={copiedMint === t.mint}
-                  />
-                ))
+                <div className="space-y-1">
+                  {caToken && !caSearching && (
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-accent px-2 pt-1 pb-0.5">
+                      Direct Contract Address Match
+                    </div>
+                  )}
+                  {displayList.map((t, idx) => (
+                    <TokenResultRow
+                      key={t.mint}
+                      token={t}
+                      isSelected={idx === selectedIndex}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      itemRef={(el) => {
+                        itemRefs.current[idx] = el;
+                      }}
+                      onSelect={handleSelect}
+                      onCopy={handleCopy}
+                      isCopied={copiedMint === t.mint}
+                    />
+                  ))}
+                </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-2.5 bg-bg/70 border-t border-border/60 flex items-center justify-between text-[11px] text-text-muted">
-              <span>{filtered.length} tokens found</span>
-              <span className="flex items-center gap-1.5">
-                <kbd className="px-1.5 py-0.5 rounded bg-bg-card border border-border text-[10px]">↵</kbd>
-                <span>to select</span>
-              </span>
+            <div className="px-5 py-2.5 bg-bg/70 border-t border-border/60 flex items-center justify-between text-[11px] text-text-muted select-none">
+              <span>{displayList.length} tokens found</span>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-bg-card border border-border text-[10px]">↑</kbd>
+                  <kbd className="px-1.5 py-0.5 rounded bg-bg-card border border-border text-[10px]">↓</kbd>
+                  <span className="hidden sm:inline">navigate</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-bg-card border border-border text-[10px]">↵</kbd>
+                  <span>view token</span>
+                </span>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -255,18 +310,31 @@ function TokenResultRow({
   onSelect,
   onCopy,
   isCopied,
+  isSelected,
+  onMouseEnter,
+  itemRef,
 }: {
   token: Token;
   onSelect: (mint: string) => void;
   onCopy: (e: React.MouseEvent, mint: string) => void;
   isCopied: boolean;
+  isSelected?: boolean;
+  onMouseEnter?: () => void;
+  itemRef?: (el: HTMLDivElement | null) => void;
 }) {
   const changeClass = deltaColorClass(token.priceChange24h ?? 0);
 
   return (
     <div
+      ref={itemRef}
       onClick={() => onSelect(token.mint)}
-      className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-bg-elevated transition-colors duration-150 cursor-pointer group"
+      onMouseEnter={onMouseEnter}
+      className={cn(
+        "flex items-center justify-between gap-3 p-3 rounded-xl transition-all duration-150 cursor-pointer group border",
+        isSelected
+          ? "bg-white/[0.08] border-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.18)] ring-1 ring-accent/30"
+          : "hover:bg-bg-elevated border-transparent"
+      )}
     >
       {/* Left: Avatar & Identity */}
       <div className="flex items-center gap-3 min-w-0">
@@ -274,12 +342,17 @@ function TokenResultRow({
           logoUri={token.logoUri}
           symbol={token.symbol}
           size={34}
-          className="border border-border"
+          className="border border-border flex-shrink-0"
         />
 
         <div className="min-w-0 flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">
+            <span
+              className={cn(
+                "text-sm font-bold tracking-tight transition-colors truncate",
+                isSelected ? "text-accent" : "text-text-primary group-hover:text-accent"
+              )}
+            >
               {token.symbol}
             </span>
             <span className="text-xs text-text-muted truncate hidden sm:inline">
@@ -318,7 +391,14 @@ function TokenResultRow({
           )}
         </div>
 
-        <div className="w-7 h-7 rounded-full bg-bg-card border border-border flex items-center justify-center text-text-muted group-hover:text-accent group-hover:border-accent/40 transition-colors">
+        <div
+          className={cn(
+            "w-7 h-7 rounded-full flex items-center justify-center transition-colors",
+            isSelected
+              ? "bg-accent text-[#08090C] border border-accent shadow-[0_0_10px_rgba(59,178,115,0.4)]"
+              : "bg-bg-card border border-border text-text-muted group-hover:text-accent group-hover:border-accent/40"
+          )}
+        >
           <i className="ri-arrow-right-line text-xs" />
         </div>
       </div>

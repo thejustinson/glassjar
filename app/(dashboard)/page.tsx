@@ -355,6 +355,7 @@ function SkeletonRow() {
 // ─── Main Discover Page ───────────────────────────────────────────────────────
 
 export default function DiscoverPage() {
+  const router = useRouter();
   const { publicKey } = useWallet();
   const { isWatched } = useWatchlist(publicKey?.toBase58());
 
@@ -489,27 +490,31 @@ export default function DiscoverPage() {
 
         {/* Search input & Quick Tools */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1 sm:flex-initial">
+          <div
+            onClick={() => setSearchModalOpen(true)}
+            className="relative flex-1 sm:flex-initial cursor-pointer"
+          >
             <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none" />
             <input
               type="text"
+              readOnly
               placeholder="Search token or address..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setSearchModalOpen(true);
-              }}
+              onClick={() => setSearchModalOpen(true)}
+              onFocus={() => setSearchModalOpen(true)}
               className={cn(
-                "h-9 pl-8 pr-10 sm:pr-12 w-full sm:w-64 text-xs font-medium",
+                "h-9 pl-8 pr-10 sm:pr-12 w-full sm:w-64 text-xs font-medium cursor-pointer select-none",
                 "glass-input rounded-xl",
                 "text-text-primary placeholder:text-text-muted",
-                "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
-                "transition-all duration-150"
+                "hover:border-accent/40 focus:outline-none transition-all duration-150"
               )}
             />
             <button
-              onClick={() => setSearchModalOpen(true)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-text-muted glass-pill hover:text-accent transition-colors"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSearchModalOpen(true);
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-text-muted glass-pill hover:text-accent transition-colors cursor-pointer"
               title="Global search (Ctrl+K)"
             >
               /
@@ -748,8 +753,8 @@ export default function DiscoverPage() {
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
         onSelectToken={(token: Token) => {
-          handleTradeToken(token);
           setSearchModalOpen(false);
+          router.push(`/token/${token.mint}`);
         }}
       />
       </div>
