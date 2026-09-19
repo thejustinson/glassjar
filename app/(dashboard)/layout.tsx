@@ -54,8 +54,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link href="/bridge" className="hover:text-accent transition-colors">
               Bridge
             </Link>
-            <Link href="/launch" className="hover:text-accent transition-colors">
+            {/* <Link href="/launch" className="hover:text-accent transition-colors">
               Launchpad
+            </Link> */}
+            <Link href="/faucet" className="hover:text-accent transition-colors">
+              Faucet
             </Link>
             <a
               href="https://docs.cookiechain.wtf"

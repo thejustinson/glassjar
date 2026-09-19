@@ -31,12 +31,44 @@ export const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqX
 
 let _connection: Connection | null = null;
 
+/**
+ * Robust fetch wrapper for Cookie Chain RPC.
+ * - Strips Node http.Agent (incompatible with undici / native fetch)
+ * - Aborts stalled / silent-drop connections after 3.5s (instead of 10s default)
+ * - Retries up to 3 times with a fresh connection on transient timeouts
+ */
+async function robustRpcFetch(url: string | URL | Request, options?: RequestInit): Promise<Response> {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+
+    try {
+      const opts: RequestInit = { ...options, signal: controller.signal };
+      if (opts && "agent" in opts) {
+        delete (opts as Record<string, unknown>).agent;
+      }
+      const res = await fetch(url, opts);
+      clearTimeout(timeout);
+      return res;
+    } catch (err) {
+      clearTimeout(timeout);
+      if (attempt === maxAttempts) {
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+  throw new Error("RPC request failed after retries");
+}
+
 /** Returns a singleton Connection pointed at the Cookie Chain RPC. */
 export function getConnection(): Connection {
   if (!_connection) {
     _connection = new Connection(COOKIE_RPC, {
       wsEndpoint: COOKIE_WSS,
       commitment: "confirmed",
+      fetch: robustRpcFetch,
     });
   }
   return _connection;

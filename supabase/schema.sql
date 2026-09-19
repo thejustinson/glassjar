@@ -126,6 +126,27 @@ CREATE POLICY "Allow anon select price_cache" ON public.price_cache FOR SELECT U
 DROP POLICY IF EXISTS "Allow anon upsert price_cache" ON public.price_cache;
 CREATE POLICY "Allow anon upsert price_cache" ON public.price_cache FOR ALL USING (true);
 
+-- 6. FAUCET_CLAIMS (Tracks COOK faucet drip claims per wallet)
+CREATE TABLE IF NOT EXISTS public.faucet_claims (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_address TEXT NOT NULL,
+  amount_lamports BIGINT NOT NULL,
+  amount_usd NUMERIC NOT NULL,
+  cook_price_usd NUMERIC NOT NULL,
+  tx_signature TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_faucet_claims_wallet ON public.faucet_claims(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_faucet_claims_created ON public.faucet_claims(created_at DESC);
+
+ALTER TABLE public.faucet_claims ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anon select faucet_claims" ON public.faucet_claims;
+CREATE POLICY "Allow anon select faucet_claims" ON public.faucet_claims FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow anon insert faucet_claims" ON public.faucet_claims;
+CREATE POLICY "Allow anon insert faucet_claims" ON public.faucet_claims FOR INSERT WITH CHECK (true);
+
 -- ─── HELPER VIEWS FOR DASHBOARD & METRICS ────────────────────────────────────
 CREATE OR REPLACE VIEW public.v_platform_stats AS
 SELECT

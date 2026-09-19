@@ -28,7 +28,7 @@ const NAV_LINKS = [
   { href: "/", label: "Discover" },
   { href: "/swap", label: "Swap" },
   { href: "/bridge", label: "Bridge" },
-  { href: "/launch", label: "Launch" },
+  // { href: "/launch", label: "Launch" }, // Commented out — re-enable in future iteration
   { href: "/watchlist", label: "Watchlist" },
 ] as const;
 

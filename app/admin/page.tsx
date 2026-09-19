@@ -27,6 +27,11 @@ interface AnalyticsData {
     totalWatchlists: number;
     totalCookVolume: number;
     totalSolVolume: number;
+    faucetClaims?: number;
+    faucetClaims24h?: number;
+    faucetCookDistributed?: number;
+    faucetUsdDistributed?: number;
+    faucetUniqueWallets?: number;
   };
   activeWallets: Array<{
     address: string;
@@ -62,6 +67,24 @@ interface AnalyticsData {
     logo_uri?: string;
     count: number;
   }>;
+  faucet?: {
+    metrics: {
+      totalClaims: number;
+      claims24h: number;
+      totalCookDistributed: number;
+      totalUsdDistributed: number;
+      uniqueWallets: number;
+    };
+    recentClaims: Array<{
+      id: string;
+      wallet_address: string;
+      amount_lamports: number;
+      amount_usd: number;
+      cook_price_usd: number;
+      tx_signature: string;
+      created_at: string;
+    }>;
+  };
 }
 
 export default function AdminPage() {
@@ -70,7 +93,7 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"tx" | "wallets" | "events" | "tokens">("tx");
+  const [activeTab, setActiveTab] = useState<"tx" | "wallets" | "faucet" | "events" | "tokens">("tx");
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -288,7 +311,7 @@ export default function AdminPage() {
       </div>
 
       {/* ─── TOP KPI METRICS GRID ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Total Wallets */}
         <div className="p-4 rounded-2xl bg-[#0E1015] border border-border space-y-1">
           <div className="flex items-center justify-between text-xs text-text-muted">
@@ -342,6 +365,27 @@ export default function AdminPage() {
           </span>
         </div>
 
+        {/* Faucet Claims */}
+        <div className="p-4 rounded-2xl bg-[#0E1015] border border-border space-y-1">
+          <div className="flex items-center justify-between text-xs text-text-muted">
+            <span className="font-bold uppercase tracking-wider text-[10px]">Faucet Claims</span>
+            <i className="ri-hand-coin-line text-secondary text-base" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-mono text-text-primary">
+              {metrics ? formatNumber(metrics.faucetClaims || 0, 0) : "—"}
+            </span>
+            {metrics && (metrics.faucetClaims24h || 0) > 0 && (
+              <span className="text-[11px] font-mono text-accent font-semibold">
+                +{metrics.faucetClaims24h} 24h
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-text-muted block truncate">
+            {metrics ? `${formatNumber(metrics.faucetCookDistributed || 0, 2)} COOK ($${formatNumber(metrics.faucetUsdDistributed || 0, 2)})` : "COOK distributed"}
+          </span>
+        </div>
+
         {/* Platform Events */}
         <div className="p-4 rounded-2xl bg-[#0E1015] border border-border space-y-1">
           <div className="flex items-center justify-between text-xs text-text-muted">
@@ -356,62 +400,75 @@ export default function AdminPage() {
               {metrics ? `${metrics.totalWatchlists} watches` : "—"}
             </span>
           </div>
-          <span className="text-[10px] text-text-muted block">Actions logged in Supabase</span>
+          <span className="text-[10px] text-text-muted block">Actions logged in DB</span>
         </div>
       </div>
 
       {/* ─── DATA VIEWS TAB SELECTOR ─── */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#0E1015] border border-border">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1 rounded-2xl bg-[#0E1015] border border-border">
         <button
           onClick={() => setActiveTab("tx")}
           className={cn(
-            "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+            "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
             activeTab === "tx"
               ? "bg-secondary text-black shadow-sm"
               : "text-text-muted hover:text-text-primary"
           )}
         >
           <i className="ri-history-line text-sm" />
-          <span>Recent Transactions ({analytics?.recentTx?.length || 0})</span>
+          <span>Transactions ({analytics?.recentTx?.length || 0})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("wallets")}
           className={cn(
-            "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+            "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
             activeTab === "wallets"
               ? "bg-secondary text-black shadow-sm"
               : "text-text-muted hover:text-text-primary"
           )}
         >
           <i className="ri-wallet-3-line text-sm" />
-          <span>Active Wallets ({analytics?.activeWallets?.length || 0})</span>
+          <span>Wallets ({analytics?.activeWallets?.length || 0})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("faucet")}
+          className={cn(
+            "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+            activeTab === "faucet"
+              ? "bg-secondary text-black shadow-sm"
+              : "text-text-muted hover:text-text-primary"
+          )}
+        >
+          <i className="ri-hand-coin-line text-sm" />
+          <span>Faucet Claims ({analytics?.faucet?.recentClaims?.length || 0})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("events")}
           className={cn(
-            "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+            "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
             activeTab === "events"
               ? "bg-secondary text-black shadow-sm"
               : "text-text-muted hover:text-text-primary"
           )}
         >
           <i className="ri-pulse-line text-sm" />
-          <span>Event Telemetry ({analytics?.recentEvents?.length || 0})</span>
+          <span>Telemetry ({analytics?.recentEvents?.length || 0})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("tokens")}
           className={cn(
-            "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+            "py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
             activeTab === "tokens"
               ? "bg-secondary text-black shadow-sm"
               : "text-text-muted hover:text-text-primary"
           )}
         >
           <i className="ri-star-line text-sm" />
-          <span>Popular Tokens ({analytics?.popularTokens?.length || 0})</span>
+          <span>Tokens ({analytics?.popularTokens?.length || 0})</span>
         </button>
       </div>
 
@@ -594,6 +651,180 @@ export default function AdminPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB: FAUCET CLAIMS ─── */}
+      {activeTab === "faucet" && (
+        <div className="space-y-4">
+          {/* Sub-KPIs for Faucet */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#0E1015] border border-border/80">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                Total Claims
+              </span>
+              <span className="text-xl font-black font-mono text-text-primary mt-1 block">
+                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.totalClaims, 0) : "—"}
+              </span>
+              <span className="text-[10px] text-accent font-mono font-medium">
+                {analytics?.faucet?.metrics?.claims24h ? `+${analytics.faucet.metrics.claims24h} in 24h` : "All time"}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#0E1015] border border-border/80">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                Total Distributed
+              </span>
+              <span className="text-xl font-black font-mono text-secondary mt-1 block">
+                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.totalCookDistributed, 2) : "—"} COOK
+              </span>
+              <span className="text-[10px] text-text-muted font-mono">
+                {analytics?.faucet?.metrics ? `≈ $${formatNumber(analytics.faucet.metrics.totalUsdDistributed, 2)} USD` : "—"}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#0E1015] border border-border/80">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                Unique Recipients
+              </span>
+              <span className="text-xl font-black font-mono text-text-primary mt-1 block">
+                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.uniqueWallets, 0) : "—"}
+              </span>
+              <span className="text-[10px] text-text-muted">Unique addresses</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#0E1015] border border-border/80">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                Average Payout
+              </span>
+              <span className="text-xl font-black font-mono text-text-primary mt-1 block">
+                {analytics?.faucet?.metrics && analytics.faucet.metrics.totalClaims > 0
+                  ? `$${formatNumber(analytics.faucet.metrics.totalUsdDistributed / analytics.faucet.metrics.totalClaims, 2)}`
+                  : "—"}
+              </span>
+              <span className="text-[10px] text-text-muted">Per claim average</span>
+            </div>
+          </div>
+
+          {/* Faucet Claims Table */}
+          <div className="rounded-3xl bg-[#0E1015] border border-border shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border/80 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-text-primary">Recent Faucet Claims</h2>
+                <p className="text-xs text-text-muted">
+                  Log of live test COOK payouts sent via the on-chain faucet.
+                </p>
+              </div>
+              <span className="text-[11px] text-text-muted font-mono">
+                Showing latest {analytics?.faucet?.recentClaims?.length || 0} claims
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#141720] text-[10px] uppercase font-bold text-text-muted border-b border-border/70">
+                  <tr>
+                    <th className="py-3 px-4">Time</th>
+                    <th className="py-3 px-4">Recipient Wallet</th>
+                    <th className="py-3 px-4">Payout (COOK)</th>
+                    <th className="py-3 px-4">USD Value</th>
+                    <th className="py-3 px-4">Spot Price</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Transaction</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {!analytics || !analytics.faucet?.recentClaims?.length ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-text-muted">
+                        No faucet claims logged yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    analytics.faucet.recentClaims.map((claim) => {
+                      const cookAmount = claim.amount_lamports ? Number(claim.amount_lamports) / 1e9 : 0;
+                      const explorerUrl = `https://cookiescan.io/tx/${claim.tx_signature}`;
+
+                      return (
+                        <tr key={claim.id} className="hover:bg-bg-elevated/50 transition-colors">
+                          <td className="py-3 px-4 text-text-muted font-mono text-[11px] whitespace-nowrap">
+                            {new Date(claim.created_at).toLocaleDateString([], {
+                              month: "short",
+                              day: "numeric",
+                            })}{" "}
+                            {new Date(claim.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+
+                          <td className="py-3 px-4 font-mono text-text-secondary">
+                            <button
+                              onClick={() => handleCopy(claim.wallet_address, `faucet-wallet-${claim.id}`)}
+                              className="hover:text-text-primary cursor-pointer flex items-center gap-1"
+                              title="Copy wallet address"
+                            >
+                              <span>{truncateAddress(claim.wallet_address, 4)}</span>
+                              {copiedId === `faucet-wallet-${claim.id}` ? (
+                                <i className="ri-check-line text-accent" />
+                              ) : (
+                                <i className="ri-file-copy-line text-text-muted hover:text-text-primary text-[11px]" />
+                              )}
+                            </button>
+                          </td>
+
+                          <td className="py-3 px-4 font-mono font-bold text-secondary">
+                            {formatNumber(cookAmount, 4)} COOK
+                          </td>
+
+                          <td className="py-3 px-4 font-mono text-text-primary">
+                            ${formatNumber(Number(claim.amount_usd || 0), 2)}
+                          </td>
+
+                          <td className="py-3 px-4 font-mono text-text-muted text-[11px]">
+                            ${formatNumber(Number(claim.cook_price_usd || 0), 4)}
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent border border-accent/30 flex items-center gap-1 w-fit">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                              <span>Confirmed</span>
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <a
+                                href={explorerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-text-secondary hover:text-secondary flex items-center gap-1 text-[11px]"
+                                title="View on CookieScan"
+                              >
+                                <span>{truncateAddress(claim.tx_signature, 4)}</span>
+                                <i className="ri-external-link-line text-[10px]" />
+                              </a>
+                              <button
+                                onClick={() => handleCopy(claim.tx_signature, `faucet-tx-${claim.id}`)}
+                                className="text-text-muted hover:text-text-primary cursor-pointer p-0.5"
+                                title="Copy signature"
+                              >
+                                {copiedId === `faucet-tx-${claim.id}` ? (
+                                  <i className="ri-check-line text-accent text-xs" />
+                                ) : (
+                                  <i className="ri-file-copy-line text-xs" />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

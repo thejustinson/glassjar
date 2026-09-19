@@ -404,3 +404,94 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
     };
   }
 }
+
+// ─── 6. FAUCET CLAIMS ─────────────────────────────────────────────────────────
+
+export interface FaucetClaimRecord {
+  id?: string;
+  wallet_address: string;
+  amount_lamports: number;
+  amount_usd: number;
+  cook_price_usd: number;
+  tx_signature?: string | null;
+  created_at: string;
+}
+
+/**
+ * Check if a wallet has already claimed from the faucet within the last 24 hours.
+ * Returns the most recent claim if one exists within the window, or null if eligible.
+ */
+export async function checkFaucetEligibility(
+  walletAddress: string
+): Promise<{ eligible: boolean; lastClaim?: FaucetClaimRecord; nextEligibleAt?: string }> {
+  const sb = getSupabase();
+  if (!sb || !walletAddress) {
+    return { eligible: false };
+  }
+
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await sb
+      .from("faucet_claims")
+      .select("*")
+      .eq("wallet_address", walletAddress)
+      .gte("created_at", twentyFourHoursAgo)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      return { eligible: true };
+    }
+
+    const lastClaim = data[0] as FaucetClaimRecord;
+    const nextEligible = new Date(new Date(lastClaim.created_at).getTime() + 24 * 60 * 60 * 1000);
+
+    return {
+      eligible: false,
+      lastClaim,
+      nextEligibleAt: nextEligible.toISOString(),
+    };
+  } catch (err) {
+    console.warn("[Supabase] Failed to check faucet eligibility:", err);
+    return { eligible: false };
+  }
+}
+
+/**
+ * Record a successful faucet claim.
+ */
+export async function recordFaucetClaim(
+  walletAddress: string,
+  amountLamports: number,
+  amountUsd: number,
+  cookPriceUsd: number,
+  txSignature: string
+): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+
+  try {
+    const { error } = await sb.from("faucet_claims").insert({
+      wallet_address: walletAddress,
+      amount_lamports: amountLamports,
+      amount_usd: amountUsd,
+      cook_price_usd: cookPriceUsd,
+      tx_signature: txSignature,
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error("[Supabase] Failed to insert faucet_claim:", error);
+    }
+
+    await logAnalyticsEvent(
+      "faucet_claim",
+      { amountLamports, amountUsd, cookPriceUsd, txSignature },
+      walletAddress
+    );
+  } catch (err) {
+    console.error("[Supabase] Failed to record faucet claim:", err);
+  }
+}
+

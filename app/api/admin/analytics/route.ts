@@ -71,6 +71,10 @@ export async function GET(request: Request) {
       recentEventsRes,
       watchlistTotalRes,
       topWatchlistRes,
+      faucetTotalRes,
+      faucet24hRes,
+      recentFaucetRes,
+      allFaucetStatsRes,
     ] = await Promise.allSettled([
       // Total Wallets
       sb.from("wallets").select("*", { count: "exact", head: true }),
@@ -97,6 +101,12 @@ export async function GET(request: Request) {
       sb.from("watchlists").select("*", { count: "exact", head: true }),
       // Top watchlisted tokens
       sb.from("watchlists").select("symbol, mint, name, logo_uri"),
+
+      // Faucet Claims
+      sb.from("faucet_claims").select("*", { count: "exact", head: true }),
+      sb.from("faucet_claims").select("*", { count: "exact", head: true }).gte("created_at", past24h),
+      sb.from("faucet_claims").select("*").order("created_at", { ascending: false }).limit(50),
+      sb.from("faucet_claims").select("amount_lamports, amount_usd, wallet_address"),
     ]);
 
     const totalWallets = walletsTotalRes.status === "fulfilled" ? walletsTotalRes.value.count || 0 : 0;
@@ -111,6 +121,27 @@ export async function GET(request: Request) {
     const totalEvents = eventsTotalRes.status === "fulfilled" ? eventsTotalRes.value.count || 0 : 0;
     const recentEvents = recentEventsRes.status === "fulfilled" ? recentEventsRes.value.data || [] : [];
     const totalWatchlists = watchlistTotalRes.status === "fulfilled" ? watchlistTotalRes.value.count || 0 : 0;
+
+    // Faucet aggregations
+    const totalFaucetClaims = faucetTotalRes.status === "fulfilled" ? faucetTotalRes.value.count || 0 : 0;
+    const faucetClaims24h = faucet24hRes.status === "fulfilled" ? faucet24hRes.value.count || 0 : 0;
+    const recentFaucetClaims = recentFaucetRes.status === "fulfilled" ? recentFaucetRes.value.data || [] : [];
+
+    let totalCookDistributed = 0;
+    let totalUsdDistributed = 0;
+    const uniqueFaucetWalletsSet = new Set<string>();
+
+    if (allFaucetStatsRes.status === "fulfilled" && allFaucetStatsRes.value.data) {
+      for (const claim of allFaucetStatsRes.value.data) {
+        if (claim.wallet_address) uniqueFaucetWalletsSet.add(claim.wallet_address);
+        if (claim.amount_lamports) {
+          totalCookDistributed += Number(claim.amount_lamports) / 1e9;
+        }
+        if (claim.amount_usd) {
+          totalUsdDistributed += Number(claim.amount_usd);
+        }
+      }
+    }
 
     // Aggregate Popular Tokens from Watchlist
     const tokenCounts: Record<string, { symbol: string; mint: string; name?: string; logo_uri?: string; count: number }> = {};
@@ -153,11 +184,26 @@ export async function GET(request: Request) {
         totalWatchlists,
         totalCookVolume,
         totalSolVolume,
+        faucetClaims: totalFaucetClaims,
+        faucetClaims24h,
+        faucetCookDistributed: totalCookDistributed,
+        faucetUsdDistributed: totalUsdDistributed,
+        faucetUniqueWallets: uniqueFaucetWalletsSet.size,
       },
       activeWallets,
       recentTx,
       recentEvents,
       popularTokens,
+      faucet: {
+        metrics: {
+          totalClaims: totalFaucetClaims,
+          claims24h: faucetClaims24h,
+          totalCookDistributed,
+          totalUsdDistributed,
+          uniqueWallets: uniqueFaucetWalletsSet.size,
+        },
+        recentClaims: recentFaucetClaims,
+      },
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
