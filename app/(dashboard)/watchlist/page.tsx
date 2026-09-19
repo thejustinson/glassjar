@@ -53,29 +53,36 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className="flex items-center gap-3.5 px-4 py-3 rounded-xl bg-bg-card/90 border border-border hover:border-border/80 transition-all duration-200 shadow-sm backdrop-blur-sm">
-      <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-        <i className={cn(icon, "text-accent text-base")} />
+    <div className="p-4 sm:p-4.5 squircle-md glass-card border border-white/8 transition-all hover:border-accent/30 group relative overflow-hidden shadow-lg">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-muted">{label}</p>
+        <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+          <i className={cn(icon, "text-accent text-xs")} />
+        </div>
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">{label}</p>
-        <div className="flex items-baseline gap-2">
-          <p
+      <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+        <p
+          className={cn(
+            "text-lg sm:text-xl font-extrabold tabular-nums font-mono tracking-tight",
+            valueColor || "text-text-primary"
+          )}
+        >
+          {value}
+        </p>
+        {delta !== undefined && (
+          <span
             className={cn(
-              "text-base font-bold tabular-nums font-mono",
-              valueColor || "text-text-primary"
+              "text-xs font-bold tabular-nums font-mono px-2 py-0.5 rounded-full",
+              delta >= 0
+                ? "bg-success/15 text-success border border-success/30"
+                : "bg-error/15 text-error border border-error/30"
             )}
           >
-            {value}
-          </p>
-          {delta !== undefined && (
-            <span className={cn("text-xs font-semibold tabular-nums", deltaColorClass(delta))}>
-              {formatPct(delta)}
-            </span>
-          )}
-        </div>
-        {sub && <p className="text-[10px] text-text-secondary truncate mt-0.5">{sub}</p>}
+            {formatPct(delta)}
+          </span>
+        )}
       </div>
+      {sub && <p className="text-[11px] text-text-secondary truncate mt-1">{sub}</p>}
     </div>
   );
 }
@@ -133,6 +140,16 @@ export default function WatchlistPage() {
   // Modals
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<WatchlistItem | null>(null);
+
+  // Copy CA feedback
+  const [copiedMint, setCopiedMint] = useState<string | null>(null);
+
+  const handleCopyCA = useCallback((mint: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyToClipboard(mint);
+    setCopiedMint(mint);
+    setTimeout(() => setCopiedMint(null), 1800);
+  }, []);
 
   // Suggested tokens for empty state
   const [suggestedTokens, setSuggestedTokens] = useState<Token[]>([]);
@@ -383,17 +400,25 @@ export default function WatchlistPage() {
       {/* ─── HEADER & REAL-TIME CONTROLS ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-              Watchlist
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-accent text-xs font-bold font-mono">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent" />
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">
+                Watchlist
+              </h1>
+            </div>
+            <span className="px-3 py-1 rounded-full glass-pill border border-accent/30 text-accent text-xs font-extrabold font-mono shadow-sm">
               {count} {count === 1 ? "Token" : "Tokens"}
             </span>
           </div>
-          <p className="text-xs text-text-muted mt-1">
-            Track real-time prices, 24h performance, and since-watched PnL on Cookie Chain.
-            {!walletAddress && " (Local storage — connect wallet to sync holdings)"}
+          <p className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <span>Track real-time prices, 24h performance, and since-watched PnL on Cookie Chain.</span>
+            <span className="text-[11px] text-text-secondary font-mono">
+              • {walletAddress ? "Live on-chain sync" : "Guest mode (stored locally)"}
+            </span>
           </p>
         </div>
 
@@ -402,7 +427,7 @@ export default function WatchlistPage() {
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="h-9 px-3 rounded-xl bg-bg-card border border-border text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-border/80 transition-colors flex items-center gap-1.5"
+            className="h-9 px-3.5 rounded-full glass-pill border border-white/10 text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-white/20 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
             title={`Last updated ${lastUpdated.toLocaleTimeString()}`}
           >
             <i
@@ -411,13 +436,13 @@ export default function WatchlistPage() {
                 refreshing ? "animate-spin text-accent" : ""
               )}
             />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{refreshing ? "Refreshing..." : "Refresh"}</span>
           </button>
 
           {/* Add Token Button */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="h-9 px-4 rounded-xl bg-accent text-[#08090C] text-xs font-bold hover:bg-accent/90 transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(59,178,115,0.25)] select-none"
+            className="h-9 px-4.5 rounded-full bg-accent text-[#08090C] text-xs font-extrabold hover:bg-[#45c381] transition-all flex items-center gap-1.5 shadow-[0_0_16px_rgba(59,178,115,0.35)] select-none cursor-pointer"
           >
             <i className="ri-add-line text-base font-bold" />
             <span>Add Token</span>
@@ -426,11 +451,11 @@ export default function WatchlistPage() {
       </div>
 
       {/* ─── SUMMARY STAT CARDS ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Tracked Assets"
           value={String(stats.count)}
-          sub={stats.count > 0 ? "Persisted per wallet" : "Empty watchlist"}
+          sub={stats.count > 0 ? (walletAddress ? "Synced with wallet" : "Stored locally") : "Empty watchlist"}
           icon="ri-bookmark-3-line"
         />
 
@@ -471,9 +496,9 @@ export default function WatchlistPage() {
 
       {/* ─── FILTER & SEARCH TOOLBAR ─── */}
       {items.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#111318] border border-border">
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="p-2 sm:p-2.5 squircle-md glass-panel border border-white/8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-md">
+          {/* Filter Pills with Sliding Active Indicator */}
+          <div className="relative flex items-center p-1 rounded-full bg-black/40 border border-white/5 overflow-x-auto">
             {(
               [
                 { id: "all", label: `All (${enrichedTokens.length})` },
@@ -490,36 +515,44 @@ export default function WatchlistPage() {
                   label: `Holdings (${enrichedTokens.filter((t) => t.walletBalance > 0).length})`,
                 },
               ] as const
-            ).map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setActiveFilter(f.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors select-none",
-                  activeFilter === f.id
-                    ? "bg-accent/20 text-accent border border-accent/40"
-                    : "text-text-muted hover:text-text-primary hover:bg-white/5"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
+            ).map((f) => {
+              const active = activeFilter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setActiveFilter(f.id)}
+                  className={cn(
+                    "relative px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors select-none cursor-pointer",
+                    active ? "text-accent font-bold" : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="watchlistFilterTab"
+                      className="absolute inset-0 rounded-full bg-accent/15 border border-accent/30 shadow-[0_0_12px_rgba(59,178,115,0.2)]"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative z-10">{f.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Search within watchlist */}
           <div className="relative w-full sm:w-64">
-            <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs" />
+            <i className="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-xs" />
             <input
               type="text"
               placeholder="Search watchlist..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-bg-card border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent"
+              className="w-full pl-9 pr-8 py-1.5 rounded-full glass-pill border border-white/10 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-all shadow-inner"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary p-0.5 rounded cursor-pointer"
               >
                 <i className="ri-close-line text-xs" />
               </button>
@@ -531,23 +564,26 @@ export default function WatchlistPage() {
       {/* ─── MAIN CONTENT: TABLE OR EMPTY STATE ─── */}
       {items.length === 0 ? (
         /* Empty Watchlist State with Quick Add */
-        <div className="rounded-2xl bg-[#0E1015] border border-border p-8 sm:p-12 text-center space-y-6">
-          <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto text-accent text-3xl">
+        <div className="squircle-lg glass-panel border border-white/10 p-8 sm:p-14 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          {/* Ambient radial blur */}
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto text-accent text-3xl shadow-[0_0_20px_rgba(59,178,115,0.25)] relative z-10">
             <i className="ri-bookmark-star-line" />
           </div>
 
-          <div className="max-w-md mx-auto space-y-2">
-            <h2 className="text-lg font-bold text-text-primary">Your Watchlist is Empty</h2>
+          <div className="max-w-md mx-auto space-y-2 relative z-10">
+            <h2 className="text-xl font-extrabold text-text-primary tracking-tight">Your Watchlist is Empty</h2>
             <p className="text-xs text-text-muted leading-relaxed">
               Track token price movements, calculate your since-watched returns, and monitor your
               Cookie Chain portfolio in real time.
             </p>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center relative z-10">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="px-6 py-2.5 rounded-xl bg-accent text-[#08090C] text-xs font-bold hover:bg-accent/90 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,178,115,0.3)]"
+              className="px-6 py-2.5 rounded-full bg-accent text-[#08090C] text-xs font-bold hover:bg-[#45c381] transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(59,178,115,0.35)] cursor-pointer"
             >
               <i className="ri-search-line text-sm" />
               <span>Search & Add Tokens</span>
@@ -556,7 +592,7 @@ export default function WatchlistPage() {
 
           {/* Quick Add Popular Chips */}
           {suggestedTokens.length > 0 && (
-            <div className="pt-6 border-t border-border/60 max-w-xl mx-auto space-y-3">
+            <div className="pt-8 border-t border-white/8 max-w-xl mx-auto space-y-3.5 relative z-10">
               <p className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                 Popular on Cookie Chain
               </p>
@@ -565,13 +601,13 @@ export default function WatchlistPage() {
                   <button
                     key={st.mint}
                     onClick={() => handleAddFromSearch(st)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-bg-card border border-border hover:border-accent/50 text-xs font-medium text-text-primary transition-all group shadow-sm"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-pill border border-white/8 hover:border-accent/50 text-xs font-medium text-text-primary transition-all group shadow-sm cursor-pointer"
                   >
                     <TokenAvatar
                       logoUri={st.logoUri}
                       symbol={st.symbol}
-                      size={18}
-                      className="border border-border/60"
+                      size={20}
+                      className="squircle-xs"
                     />
                     <span className="font-bold">{st.symbol}</span>
                     {st.price !== undefined && (
@@ -587,267 +623,396 @@ export default function WatchlistPage() {
           )}
         </div>
       ) : (
-        /* Dense Trading Table */
-        <div className="rounded-2xl bg-[#0E1015] border border-border overflow-hidden shadow-xl">
-          {/* Table Header */}
-          <div
-            style={{ gridTemplateColumns: COLS }}
-            className="grid items-center gap-x-3 px-4 py-3 bg-[#12151D] border-b border-border text-[11px] font-bold uppercase tracking-wider text-text-muted select-none"
-          >
-            <span className="text-center">★</span>
+        <>
+          {/* ─── DESKTOP TABLE VIEW (md+) ─── */}
+          <div className="hidden md:block squircle-lg glass-panel border border-white/10 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto custom-scrollbar">
+              <div className="min-w-[1020px]">
+                {/* Table Header */}
+                <div
+                  style={{ gridTemplateColumns: COLS }}
+                  className="grid items-center gap-x-3 px-4 py-3 bg-white/[0.03] border-b border-white/8 text-[11px] font-bold uppercase tracking-wider text-text-muted select-none"
+                >
+                  <span className="text-center">★</span>
+                  <span>Token</span>
+                  <button
+                    onClick={() => handleSort("price")}
+                    className="flex items-center justify-end gap-1 hover:text-text-primary text-right cursor-pointer"
+                  >
+                    <span>Price</span>
+                    {sortKey === "price" && (
+                      <i className={cn("text-[10px]", sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleSort("change24h")}
+                    className="flex items-center justify-end gap-1 hover:text-text-primary text-right cursor-pointer"
+                  >
+                    <span>24h Change</span>
+                    {sortKey === "change24h" && (
+                      <i className={cn("text-[10px]", sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                    )}
+                  </button>
+                  <span className="text-right">Added At</span>
+                  <button
+                    onClick={() => handleSort("sinceWatched")}
+                    className="flex items-center justify-end gap-1 hover:text-text-primary text-right text-accent font-extrabold cursor-pointer"
+                  >
+                    <span>Since Added</span>
+                    {sortKey === "sinceWatched" && (
+                      <i className={cn("text-[10px]", sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                    )}
+                  </button>
+                  <span className="text-right">Target</span>
+                  <button
+                    onClick={() => handleSort("value")}
+                    className="flex items-center justify-end gap-1 hover:text-text-primary text-right cursor-pointer"
+                  >
+                    <span>Holdings / PnL</span>
+                    {sortKey === "value" && (
+                      <i className={cn("text-[10px]", sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                    )}
+                  </button>
+                  <span className="text-right">Actions</span>
+                </div>
 
-            <span>Token</span>
+                {/* Table Body */}
+                <div className="divide-y divide-white/5">
+                  {filteredTokens.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-text-muted">
+                      No tokens match your search filter.
+                    </div>
+                  ) : (
+                    filteredTokens.map((entry) => {
+                      const { item, currentPrice, priceChange24h, sinceWatchedPct, walletBalance, positionValue, unrealizedPnl, timeAgo } = entry;
+                      const changeClass = deltaColorClass(priceChange24h);
 
-            <button
-              onClick={() => handleSort("price")}
-              className="flex items-center justify-end gap-1 hover:text-text-primary text-right"
-            >
-              <span>Price</span>
-              {sortKey === "price" && (
-                <i
-                  className={cn(
-                    "text-[10px]",
-                    sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill"
+                      return (
+                        <div
+                          key={item.mint}
+                          style={{ gridTemplateColumns: COLS }}
+                          onClick={() => router.push(`/token/${item.mint}`)}
+                          className="grid items-center gap-x-3 px-4 h-[64px] hover:bg-white/[0.04] transition-colors cursor-pointer group select-none text-xs"
+                        >
+                          {/* Star Button (Remove) */}
+                          <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => remove(item.mint)}
+                              className="text-amber-400 hover:text-amber-300 p-1.5 rounded-full hover:bg-amber-400/10 transition-all hover:scale-110 cursor-pointer"
+                              title="Remove from watchlist"
+                            >
+                              <i className="ri-star-fill text-sm shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
+                            </button>
+                          </div>
+
+                          {/* Token Identity */}
+                          <div className="flex items-center gap-3 min-w-0 pr-2">
+                            <div className="squircle-sm p-0.5 bg-white/[0.04] border border-white/10 shadow-sm shrink-0">
+                              <TokenAvatar
+                                logoUri={item.logoUri}
+                                symbol={item.symbol}
+                                size={34}
+                                className="squircle-xs"
+                              />
+                            </div>
+                            <div className="min-w-0 flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-text-primary group-hover:text-accent transition-colors truncate">
+                                  {item.symbol}
+                                </span>
+                                <span className="text-[11px] text-text-muted truncate hidden xl:inline">
+                                  {item.name}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono mt-0.5">
+                                <span>{truncateAddress(item.mint, 4)}</span>
+                                <button
+                                  onClick={(e) => handleCopyCA(item.mint, e)}
+                                  className="hover:text-accent transition-colors p-0.5 rounded cursor-pointer flex items-center gap-1"
+                                  title="Copy Contract Address"
+                                >
+                                  <i className={cn(copiedMint === item.mint ? "ri-check-line text-accent" : "ri-file-copy-line text-[10px]")} />
+                                  {copiedMint === item.mint && <span className="text-accent text-[9px] font-bold">Copied</span>}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Current Price */}
+                          <div className="text-right font-mono font-bold text-text-primary tabular-nums">
+                            {currentPrice > 0 ? formatPrice(currentPrice) : <span className="text-text-muted">—</span>}
+                          </div>
+
+                          {/* 24h Change */}
+                          <div className="text-right">
+                            <span className={cn("font-mono font-bold tabular-nums inline-flex items-center gap-0.5", changeClass)}>
+                              <i className={cn("text-[10px]", priceChange24h >= 0 ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                              <span>{formatPct(Math.abs(priceChange24h))}</span>
+                            </span>
+                          </div>
+
+                          {/* Added Price */}
+                          <div className="text-right flex flex-col justify-center">
+                            <span className="font-mono text-text-secondary tabular-nums font-medium">
+                              {item.addedPrice > 0 ? formatPrice(item.addedPrice) : "—"}
+                            </span>
+                            <span className="text-[10px] text-text-muted">{timeAgo}</span>
+                          </div>
+
+                          {/* Since Added Return % */}
+                          <div className="text-right flex items-center justify-end">
+                            {sinceWatchedPct !== null ? (
+                              <div
+                                className={cn(
+                                  "px-2.5 py-0.5 rounded-full font-mono font-bold text-xs inline-flex items-center gap-1 tabular-nums shadow-sm",
+                                  sinceWatchedPct >= 0
+                                    ? "bg-accent/15 text-accent border border-accent/30 shadow-[0_0_10px_rgba(59,178,115,0.15)]"
+                                    : "bg-error/15 text-error border border-error/30"
+                                )}
+                                title={`Added at ${formatPrice(item.addedPrice)} • Current ${formatPrice(currentPrice)}`}
+                              >
+                                <i
+                                  className={cn(
+                                    "text-[10px]",
+                                    sinceWatchedPct >= 0 ? "ri-arrow-up-line" : "ri-arrow-down-line"
+                                  )}
+                                />
+                                <span>{formatPct(Math.abs(sinceWatchedPct))}</span>
+                              </div>
+                            ) : (
+                              <span className="text-text-muted text-[11px] font-mono">—</span>
+                            )}
+                          </div>
+
+                          {/* Target Price */}
+                          <div className="text-right font-mono">
+                            {item.targetPrice ? (
+                              <span
+                                className={cn(
+                                  "text-[11px] font-semibold",
+                                  currentPrice >= item.targetPrice ? "text-accent font-bold" : "text-text-secondary"
+                                )}
+                              >
+                                ${formatNumber(item.targetPrice, 4)}
+                                {currentPrice >= item.targetPrice && " ✓"}
+                              </span>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingItem(item);
+                                }}
+                                className="text-[10px] text-text-muted hover:text-accent transition-colors cursor-pointer"
+                              >
+                                + Set
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Holdings / PnL */}
+                          <div className="text-right flex flex-col justify-center font-mono">
+                            {walletBalance > 0 ? (
+                              <>
+                                <span className="font-semibold text-text-primary tabular-nums">
+                                  {formatNumber(walletBalance, 2)} {item.symbol}
+                                </span>
+                                <span className="text-[10px] text-text-muted tabular-nums">
+                                  ${formatNumber(positionValue, 2)}
+                                  {unrealizedPnl !== null && (
+                                    <span className={cn("ml-1 font-semibold", deltaColorClass(unrealizedPnl))}>
+                                      ({unrealizedPnl >= 0 ? "+" : ""}${formatNumber(unrealizedPnl, 2)})
+                                    </span>
+                                  )}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-text-muted text-[11px]">0 {item.symbol}</span>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div
+                            className="flex items-center justify-end gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Trade Button */}
+                            <Link
+                              href={`/swap?outputMint=${item.mint}`}
+                              className="h-7 px-3 rounded-full bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-[#08090C] text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                              title="Swap on Cookieswap"
+                            >
+                              <i className="ri-arrow-left-right-line text-[10px]" />
+                              <span>Trade</span>
+                            </Link>
+
+                            {/* Edit Notes / Target */}
+                            <button
+                              onClick={() => setEditingItem(item)}
+                              className="w-7 h-7 rounded-full glass-pill border border-white/10 text-text-muted hover:text-text-primary hover:border-white/20 flex items-center justify-center transition-all cursor-pointer"
+                              title="Edit Strategy Notes or Target Price"
+                            >
+                              <i className="ri-edit-line text-xs" />
+                            </button>
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => remove(item.mint)}
+                              className="w-7 h-7 rounded-full glass-pill border border-white/10 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-all cursor-pointer"
+                              title="Remove"
+                            >
+                              <i className="ri-delete-bin-line text-xs" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
-                />
-              )}
-            </button>
-
-            <button
-              onClick={() => handleSort("change24h")}
-              className="flex items-center justify-end gap-1 hover:text-text-primary text-right"
-            >
-              <span>24h Change</span>
-              {sortKey === "change24h" && (
-                <i
-                  className={cn(
-                    "text-[10px]",
-                    sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill"
-                  )}
-                />
-              )}
-            </button>
-
-            <span className="text-right">Added At</span>
-
-            <button
-              onClick={() => handleSort("sinceWatched")}
-              className="flex items-center justify-end gap-1 hover:text-text-primary text-right text-accent font-extrabold"
-            >
-              <span>Since Added</span>
-              {sortKey === "sinceWatched" && (
-                <i
-                  className={cn(
-                    "text-[10px]",
-                    sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill"
-                  )}
-                />
-              )}
-            </button>
-
-            <span className="text-right">Target</span>
-
-            <button
-              onClick={() => handleSort("value")}
-              className="flex items-center justify-end gap-1 hover:text-text-primary text-right"
-            >
-              <span>Holdings / PnL</span>
-              {sortKey === "value" && (
-                <i
-                  className={cn(
-                    "text-[10px]",
-                    sortDir === "asc" ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill"
-                  )}
-                />
-              )}
-            </button>
-
-            <span className="text-right">Actions</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Table Body */}
-          <div className="divide-y divide-border/40">
+          {/* ─── MOBILE CARD VIEW (< md) ─── */}
+          <div className="md:hidden space-y-3">
             {filteredTokens.length === 0 ? (
-              <div className="py-12 text-center text-xs text-text-muted">
+              <div className="py-12 text-center text-xs text-text-muted squircle-lg glass-panel border border-white/10">
                 No tokens match your search filter.
               </div>
             ) : (
               filteredTokens.map((entry) => {
                 const { item, currentPrice, priceChange24h, sinceWatchedPct, walletBalance, positionValue, unrealizedPnl, timeAgo } = entry;
                 const changeClass = deltaColorClass(priceChange24h);
-                const sinceClass = sinceWatchedPct !== null ? deltaColorClass(sinceWatchedPct) : "text-text-muted";
 
                 return (
                   <div
                     key={item.mint}
-                    style={{ gridTemplateColumns: COLS }}
                     onClick={() => router.push(`/token/${item.mint}`)}
-                    className="grid items-center gap-x-3 px-4 h-[62px] hover:bg-bg-elevated/70 transition-colors cursor-pointer group select-none text-xs"
+                    className="p-4 squircle-md glass-card border border-white/8 space-y-3 shadow-lg transition-all hover:border-accent/30 cursor-pointer select-none"
                   >
-                    {/* Star Button (Remove) */}
-                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => remove(item.mint)}
-                        className="text-amber-400 hover:text-amber-300 p-1 rounded transition-transform hover:scale-110"
-                        title="Remove from watchlist"
-                      >
-                        <i className="ri-star-fill text-sm" />
-                      </button>
-                    </div>
-
-                    {/* Token Identity */}
-                    <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <TokenAvatar
-                        logoUri={item.logoUri}
-                        symbol={item.symbol}
-                        size={32}
-                        className="border border-border flex-shrink-0"
-                      />
-                      <div className="min-w-0 flex flex-col">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-text-primary group-hover:text-accent transition-colors truncate">
-                            {item.symbol}
-                          </span>
-                          <span className="text-[11px] text-text-muted truncate hidden xl:inline">
-                            {item.name}
-                          </span>
+                    {/* Top Row: Token Identity + Price & Delta */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            remove(item.mint);
+                          }}
+                          className="text-amber-400 p-1 rounded-full hover:bg-amber-400/10 cursor-pointer shrink-0"
+                          title="Remove"
+                        >
+                          <i className="ri-star-fill text-sm" />
+                        </button>
+                        <div className="squircle-sm p-0.5 bg-white/[0.04] border border-white/10 shrink-0">
+                          <TokenAvatar logoUri={item.logoUri} symbol={item.symbol} size={32} className="squircle-xs" />
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-text-muted font-mono">
-                          <span>{truncateAddress(item.mint, 4)}</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(item.mint);
-                            }}
-                            className="hover:text-accent transition-colors"
-                            title="Copy CA"
-                          >
-                            <i className="ri-file-copy-line text-[10px]" />
-                          </button>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-extrabold text-sm text-text-primary truncate">{item.symbol}</span>
+                            <span className="text-[11px] text-text-muted truncate">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-text-muted font-mono">
+                            <span>{truncateAddress(item.mint, 4)}</span>
+                            <button
+                              onClick={(e) => handleCopyCA(item.mint, e)}
+                              className="hover:text-accent p-0.5 cursor-pointer"
+                            >
+                              <i className={cn(copiedMint === item.mint ? "ri-check-line text-accent" : "ri-file-copy-line text-[10px]")} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Price & 24h delta */}
+                      <div className="text-right shrink-0">
+                        <div className="font-mono font-bold text-sm text-text-primary tabular-nums">
+                          {currentPrice > 0 ? formatPrice(currentPrice) : "—"}
+                        </div>
+                        <div className={cn("text-xs font-mono font-bold inline-flex items-center gap-0.5 tabular-nums", changeClass)}>
+                          <i className={cn("text-[9px]", priceChange24h >= 0 ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+                          <span>{formatPct(Math.abs(priceChange24h))}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Current Price */}
-                    <div className="text-right font-mono font-semibold text-text-primary tabular-nums">
-                      {currentPrice > 0 ? formatPrice(currentPrice) : <span className="text-text-muted">—</span>}
-                    </div>
-
-                    {/* 24h Change */}
-                    <div className="text-right">
-                      <span className={cn("font-mono font-semibold tabular-nums inline-flex items-center gap-0.5", changeClass)}>
-                        <i className={cn("text-[10px]", priceChange24h >= 0 ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
-                        <span>{formatPct(Math.abs(priceChange24h))}</span>
-                      </span>
-                    </div>
-
-                    {/* Added Price */}
-                    <div className="text-right flex flex-col justify-center">
-                      <span className="font-mono text-text-secondary tabular-nums">
-                        {item.addedPrice > 0 ? formatPrice(item.addedPrice) : "—"}
-                      </span>
-                      <span className="text-[10px] text-text-muted">{timeAgo}</span>
-                    </div>
-
-                    {/* Since Added Return % */}
-                    <div className="text-right flex items-center justify-end">
-                      {sinceWatchedPct !== null ? (
-                        <div
-                          className={cn(
-                            "px-2 py-0.5 rounded-md font-mono font-bold text-xs inline-flex items-center gap-1 tabular-nums shadow-sm",
-                            sinceWatchedPct >= 0
-                              ? "bg-accent/15 text-accent border border-accent/30"
-                              : "bg-error/15 text-error border border-error/30"
-                          )}
-                          title={`Added at ${formatPrice(item.addedPrice)} • Current ${formatPrice(currentPrice)}`}
-                        >
-                          <i
-                            className={cn(
-                              "text-[10px]",
-                              sinceWatchedPct >= 0 ? "ri-arrow-up-line" : "ri-arrow-down-line"
-                            )}
-                          />
-                          <span>{formatPct(Math.abs(sinceWatchedPct))}</span>
+                    {/* Mini 3-col Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5 text-center text-xs">
+                      <div>
+                        <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Added At</div>
+                        <div className="font-mono text-text-secondary mt-0.5 text-[11px]">
+                          {item.addedPrice > 0 ? formatPrice(item.addedPrice) : "—"}
                         </div>
-                      ) : (
-                        <span className="text-text-muted text-[11px] font-mono">—</span>
-                      )}
-                    </div>
+                        <div className="text-[9px] text-text-muted">{timeAgo}</div>
+                      </div>
 
-                    {/* Target Price */}
-                    <div className="text-right font-mono">
-                      {item.targetPrice ? (
-                        <span
-                          className={cn(
-                            "text-[11px] font-semibold",
-                            currentPrice >= item.targetPrice ? "text-accent font-bold" : "text-text-secondary"
+                      <div>
+                        <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Since Added</div>
+                        <div className="mt-1">
+                          {sinceWatchedPct !== null ? (
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full font-mono font-bold text-[10px] inline-flex items-center gap-0.5",
+                                sinceWatchedPct >= 0
+                                  ? "bg-accent/15 text-accent border border-accent/30"
+                                  : "bg-error/15 text-error border border-error/30"
+                              )}
+                            >
+                              <i className={cn("text-[8px]", sinceWatchedPct >= 0 ? "ri-arrow-up-line" : "ri-arrow-down-line")} />
+                              {formatPct(Math.abs(sinceWatchedPct))}
+                            </span>
+                          ) : (
+                            <span className="text-text-muted font-mono text-[11px]">—</span>
                           )}
-                        >
-                          ${formatNumber(item.targetPrice, 4)}
-                          {currentPrice >= item.targetPrice && " ✓"}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingItem(item);
-                          }}
-                          className="text-[10px] text-text-muted hover:text-accent transition-colors"
-                        >
-                          + Set
-                        </button>
-                      )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Target / Holdings</div>
+                        <div className="font-mono text-text-primary mt-0.5 text-[11px] truncate">
+                          {walletBalance > 0 ? (
+                            <span className="font-bold text-accent">${formatNumber(positionValue, 2)}</span>
+                          ) : item.targetPrice ? (
+                            <span>${formatNumber(item.targetPrice, 4)}</span>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingItem(item);
+                              }}
+                              className="text-text-muted hover:text-accent text-[10px] cursor-pointer"
+                            >
+                              + Set
+                            </button>
+                          )}
+                        </div>
+                        {walletBalance > 0 && unrealizedPnl !== null && (
+                          <div className={cn("text-[9px] font-mono", deltaColorClass(unrealizedPnl))}>
+                            {unrealizedPnl >= 0 ? "+" : ""}${formatNumber(unrealizedPnl, 2)}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Holdings / PnL */}
-                    <div className="text-right flex flex-col justify-center font-mono">
-                      {walletBalance > 0 ? (
-                        <>
-                          <span className="font-semibold text-text-primary tabular-nums">
-                            {formatNumber(walletBalance, 2)} {item.symbol}
-                          </span>
-                          <span className="text-[10px] text-text-muted tabular-nums">
-                            ${formatNumber(positionValue, 2)}
-                            {unrealizedPnl !== null && (
-                              <span className={cn("ml-1 font-semibold", deltaColorClass(unrealizedPnl))}>
-                                ({unrealizedPnl >= 0 ? "+" : ""}${formatNumber(unrealizedPnl, 2)})
-                              </span>
-                            )}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-text-muted text-[11px]">0 {item.symbol}</span>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div
-                      className="flex items-center justify-end gap-1.5"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Trade Button */}
+                    {/* Mobile Action Row */}
+                    <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
                       <Link
                         href={`/swap?outputMint=${item.mint}`}
-                        className="h-7 px-2.5 rounded-lg bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-[#08090C] text-[11px] font-bold inline-flex items-center gap-1 transition-all"
-                        title="Swap on Cookieswap"
+                        className="flex-1 h-8 rounded-full bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-[#08090C] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                       >
-                        <i className="ri-arrow-left-right-line text-[10px]" />
+                        <i className="ri-arrow-left-right-line text-xs" />
                         <span>Trade</span>
                       </Link>
 
-                      {/* Edit Notes / Target */}
                       <button
                         onClick={() => setEditingItem(item)}
-                        className="w-7 h-7 rounded-lg bg-bg-card border border-border text-text-muted hover:text-text-primary hover:border-border/80 flex items-center justify-center transition-colors"
-                        title="Edit Strategy Notes or Target Price"
+                        className="h-8 px-3.5 rounded-full glass-pill border border-white/10 text-text-secondary hover:text-text-primary text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <i className="ri-edit-line text-xs" />
+                        <span>Target</span>
                       </button>
 
-                      {/* Delete */}
                       <button
                         onClick={() => remove(item.mint)}
-                        className="w-7 h-7 rounded-lg bg-bg-card border border-border text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-colors"
+                        className="w-8 h-8 rounded-full glass-pill border border-white/10 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-colors cursor-pointer"
                         title="Remove"
                       >
                         <i className="ri-delete-bin-line text-xs" />
@@ -858,7 +1023,7 @@ export default function WatchlistPage() {
               })
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* ─── SEARCH & ADD MODAL ─── */}
