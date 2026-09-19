@@ -47,16 +47,16 @@ export function ConnectButton({ className }: { className?: string }) {
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
           onClick={() => setModalOpen(true)}
           className={cn(
-            "h-9 px-5 rounded-full text-xs font-bold tracking-wider uppercase",
+            "h-9 px-3.5 sm:px-5 rounded-full text-xs font-bold tracking-wider uppercase",
             "bg-accent text-[#08090C] border border-accent",
             "shadow-[0_0_16px_rgba(59,178,115,0.35)] hover:shadow-[0_0_24px_rgba(59,178,115,0.6)]",
             "hover:bg-[#45c381] active:bg-accent-muted",
-            "transition-all duration-200 inline-flex items-center gap-2 select-none",
+            "transition-all duration-200 inline-flex items-center gap-1.5 sm:gap-2 select-none",
             className
           )}
         >
           <i className="ri-wallet-3-line text-[14px]" />
-          Connect Wallet
+          <span>Connect<span className="hidden sm:inline"> Wallet</span></span>
         </motion.button>
       )}
 

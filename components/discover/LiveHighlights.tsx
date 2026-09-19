@@ -77,8 +77,8 @@ export function LiveHighlights({
         </div>
       </div>
 
-      {/* 3-Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      {/* 3-Card Grid (Horizontal Snap-Scroll on Mobile, Multi-col on Desktop) */}
+      <div className="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:overflow-visible no-scrollbar">
         {highlightCards.map(({ token, badge }) => {
           const isPos = (token.priceChange24h || 0) >= 0;
           const isSelected = selectedMint === token.mint;
@@ -88,7 +88,8 @@ export function LiveHighlights({
               key={token.mint + badge}
               onClick={() => onTradeToken?.(token)}
               className={cn(
-                "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between",
+                "w-[84vw] sm:w-auto shrink-0 sm:shrink snap-center",
+                "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[165px]",
                 "hover:border-accent/50 hover:bg-white/[0.06] hover:shadow-[0_12px_36px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]",
                 isSelected && "border-accent/70 ring-1 ring-accent/30 bg-white/[0.06]"
               )}

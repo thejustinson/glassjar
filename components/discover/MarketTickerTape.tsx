@@ -26,13 +26,13 @@ export function MarketTickerTape({ tokens, onSelectToken }: MarketTickerTapeProp
     <div className="relative w-full overflow-hidden py-2 border-b border-white/[0.08] bg-[#090b10]/70 backdrop-blur-xl select-none group">
       {/* Left gradient fade mask */}
       <div
-        className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg via-bg/80 to-transparent z-10"
+        className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-r from-bg via-bg/80 to-transparent z-10"
         aria-hidden="true"
       />
 
       {/* Right gradient fade mask */}
       <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg via-bg/80 to-transparent z-10"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-l from-bg via-bg/80 to-transparent z-10"
         aria-hidden="true"
       />
 

@@ -105,7 +105,7 @@ export function TopNav() {
             href="https://cookiescan.io"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-9 w-9 rounded-full flex items-center justify-center glass-pill text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            className="hidden sm:flex h-9 w-9 rounded-full items-center justify-center glass-pill text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
             title="Open CookieScan Explorer"
           >
             <i className="ri-external-link-line text-[15px]" />
@@ -115,7 +115,7 @@ export function TopNav() {
           <Link
             href="/profile"
             className={cn(
-              "h-9 w-9 rounded-full flex items-center justify-center bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors",
+              "hidden sm:flex h-9 w-9 rounded-full items-center justify-center bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors",
               pathname === "/profile" && "text-accent border-accent/40 bg-accent/10"
             )}
             title="Portfolio & Activity"

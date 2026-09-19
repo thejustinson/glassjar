@@ -6,6 +6,7 @@
  */
 
 import { TopNav } from "@/components/ui/TopNav";
+import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import Link from "next/link";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,9 +44,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <TopNav />
 
-      <main className="relative z-10 flex-1 w-full">
+      <main className="relative z-10 flex-1 w-full pb-24 md:pb-0">
         {children}
       </main>
+
+      <MobileBottomNav />
 
       {/* Global Terminal Footer (Matches Reference) */}
       <footer className="relative z-10 border-t border-border/70 bg-bg-card/40 backdrop-blur-sm mt-12">

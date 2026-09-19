@@ -500,7 +500,7 @@ export default function DiscoverPage() {
                 if (e.key === "Enter") setSearchModalOpen(true);
               }}
               className={cn(
-                "h-9 pl-8 pr-12 w-full sm:w-64 text-xs font-medium",
+                "h-9 pl-8 pr-10 sm:pr-12 w-full sm:w-64 text-xs font-medium",
                 "glass-input rounded-xl",
                 "text-text-primary placeholder:text-text-muted",
                 "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
@@ -519,7 +519,7 @@ export default function DiscoverPage() {
           <button
             onClick={load}
             disabled={loading}
-            className="h-9 px-3 rounded-xl text-xs font-bold glass-pill text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+            className="h-9 px-2.5 sm:px-3 rounded-xl text-xs font-bold glass-pill text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer flex-shrink-0"
             title="Refresh market data"
           >
             <i className={cn("ri-refresh-line text-xs", loading && "animate-spin text-accent")} />
@@ -530,10 +530,10 @@ export default function DiscoverPage() {
             href="https://t.me"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-9 px-3.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_16px_rgba(59,178,115,0.4)] transition-all duration-200 inline-flex items-center gap-1.5 select-none"
+            className="h-9 px-3 sm:px-3.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_16px_rgba(59,178,115,0.4)] transition-all duration-200 inline-flex items-center gap-1.5 select-none flex-shrink-0"
           >
             <i className="ri-notification-3-line text-xs" />
-            <span>Alerts</span>
+            <span className="hidden xs:inline">Alerts</span>
           </a>
         </div>
       </div>
@@ -563,7 +563,7 @@ export default function DiscoverPage() {
               </div>
 
               {/* Filter Pills with Smooth Sliding Background Animation */}
-              <div className="flex items-center gap-1 p-1 rounded-full glass-pill overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1 p-1 rounded-full glass-pill overflow-x-auto no-scrollbar max-w-full">
                 {(
                   [
                     { id: "all", label: "All" },
@@ -600,89 +600,105 @@ export default function DiscoverPage() {
 
             {/* Market Table Card Container */}
             <div className="squircle glass-panel overflow-hidden">
-              {/* Table Column Headers */}
-              <div
-                style={{ gridTemplateColumns: COLS }}
-                className="grid items-center gap-x-3 px-4 bg-white/[0.03] backdrop-blur-md border-b border-white/[0.08] text-xs text-text-muted font-bold"
-              >
-                <span className="text-[10px] uppercase font-bold text-text-muted flex items-center gap-1">
-                  <span>#</span>
+              {/* Mobile Horizontal Scroll Hint */}
+              <div className="md:hidden flex items-center justify-between px-3.5 py-2 border-b border-white/[0.06] bg-white/[0.02] text-[11px] text-text-muted select-none">
+                <span className="flex items-center gap-1.5">
+                  <i className="ri-arrow-left-right-line text-accent text-xs" />
+                  <span>Scroll sideways for all metrics & trade</span>
                 </span>
-                <TableHeaderCol label="Coin Name" sortKey="marketCap" current={sort} onSort={handleSort} align="left" />
-                <TableHeaderCol label="Price" sortKey="price" current={sort} onSort={handleSort} />
-                <TableHeaderCol label="24h %" sortKey="priceChange24h" current={sort} onSort={handleSort} />
-                <TableHeaderCol label="Market Cap" sortKey="marketCap" current={sort} onSort={handleSort} />
-                <TableHeaderCol label="Volume (24h)" sortKey="volume24h" current={sort} onSort={handleSort} />
-                <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3 pr-2">
-                  Trend
-                </span>
-                <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3">
-                  Action
+                <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-accent">
+                  Swipe →
                 </span>
               </div>
 
-              {/* Table Rows */}
-              <div className="divide-y divide-white/[0.04] min-h-[360px]">
-                <AnimatePresence mode="wait">
-                  {loading ? (
-                    <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <SkeletonRow key={i} />
-                      ))}
-                    </motion.div>
-                  ) : error ? (
-                    <motion.div
-                      key="error"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="py-20 text-center space-y-3"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-error/10 border border-error/30 flex items-center justify-center mx-auto text-error text-2xl">
-                        <i className="ri-error-warning-line" />
-                      </div>
-                      <p className="text-sm font-semibold text-text-primary">Failed to load market data</p>
-                      <p className="text-xs text-text-muted max-w-md mx-auto">{error}</p>
-                      <button
-                        onClick={load}
-                        className="mt-2 h-8 px-5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] transition-colors"
-                      >
-                        Retry
-                      </button>
-                    </motion.div>
-                  ) : displayed.length === 0 ? (
-                    <motion.div
-                      key="empty"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="py-20 text-center space-y-2"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mx-auto text-text-muted text-xl">
-                        <i className="ri-search-line" />
-                      </div>
-                      <p className="text-sm font-semibold text-text-primary">No tokens found</p>
-                      <p className="text-xs text-text-muted">
-                        No tokens matched your filter criteria.
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="list"
-                      variants={variants.staggerChildren}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {displayed.map((token, i) => (
-                        <TokenRow
-                          key={token.mint}
-                          token={token}
-                          rank={i + 1}
-                          onTrade={handleTradeToken}
-                          isSelected={selectedTradeToken?.mint === token.mint}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              {/* Responsive Horizontal Scroll Container */}
+              <div className="overflow-x-auto no-scrollbar touch-pan-x">
+                <div className="min-w-[760px]">
+                  {/* Table Column Headers */}
+                  <div
+                    style={{ gridTemplateColumns: COLS }}
+                    className="grid items-center gap-x-3 px-4 bg-white/[0.03] backdrop-blur-md border-b border-white/[0.08] text-xs text-text-muted font-bold select-none"
+                  >
+                    <span className="text-[10px] uppercase font-bold text-text-muted flex items-center gap-1">
+                      <span>#</span>
+                    </span>
+                    <TableHeaderCol label="Coin Name" sortKey="marketCap" current={sort} onSort={handleSort} align="left" />
+                    <TableHeaderCol label="Price" sortKey="price" current={sort} onSort={handleSort} />
+                    <TableHeaderCol label="24h %" sortKey="priceChange24h" current={sort} onSort={handleSort} />
+                    <TableHeaderCol label="Market Cap" sortKey="marketCap" current={sort} onSort={handleSort} />
+                    <TableHeaderCol label="Volume (24h)" sortKey="volume24h" current={sort} onSort={handleSort} />
+                    <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3 pr-2">
+                      Trend
+                    </span>
+                    <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3">
+                      Action
+                    </span>
+                  </div>
+
+                  {/* Table Rows */}
+                  <div className="divide-y divide-white/[0.04] min-h-[360px]">
+                    <AnimatePresence mode="wait">
+                      {loading ? (
+                        <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                          {Array.from({ length: 10 }).map((_, i) => (
+                            <SkeletonRow key={i} />
+                          ))}
+                        </motion.div>
+                      ) : error ? (
+                        <motion.div
+                          key="error"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="py-20 text-center space-y-3"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-error/10 border border-error/30 flex items-center justify-center mx-auto text-error text-2xl">
+                            <i className="ri-error-warning-line" />
+                          </div>
+                          <p className="text-sm font-semibold text-text-primary">Failed to load market data</p>
+                          <p className="text-xs text-text-muted max-w-md mx-auto">{error}</p>
+                          <button
+                            onClick={load}
+                            className="mt-2 h-8 px-5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] transition-colors"
+                          >
+                            Retry
+                          </button>
+                        </motion.div>
+                      ) : displayed.length === 0 ? (
+                        <motion.div
+                          key="empty"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="py-20 text-center space-y-2"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mx-auto text-text-muted text-xl">
+                            <i className="ri-search-line" />
+                          </div>
+                          <p className="text-sm font-semibold text-text-primary">No tokens found</p>
+                          <p className="text-xs text-text-muted">
+                            No tokens matched your filter criteria.
+                          </p>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="list"
+                          variants={variants.staggerChildren}
+                          initial="hidden"
+                          animate="visible"
+                        >
+                          {displayed.map((token, i) => (
+                            <TokenRow
+                              key={token.mint}
+                              token={token}
+                              rank={i + 1}
+                              onTrade={handleTradeToken}
+                              isSelected={selectedTradeToken?.mint === token.mint}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
