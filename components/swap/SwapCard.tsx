@@ -103,6 +103,39 @@ export function SwapCard({
   const [txSignature, setTxSignature] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // Auto-dismiss bounce timer for success banner (6 seconds)
+  const [isBouncingOut, setIsBouncingOut] = useState(false);
+  const [isStatusHovered, setIsStatusHovered] = useState(false);
+
+  useEffect(() => {
+    if (txStatus !== "success") {
+      setIsBouncingOut(false);
+      return;
+    }
+
+    if (isStatusHovered) {
+      setIsBouncingOut(false);
+      return;
+    }
+
+    // Begin bounce-out exit at 5.4s, complete removal at 6.0s
+    const bounceTimer = setTimeout(() => {
+      setIsBouncingOut(true);
+    }, 5400);
+
+    const dismissTimer = setTimeout(() => {
+      setTxStatus("idle");
+      setStatusMessage(null);
+      setIsBouncingOut(false);
+    }, 6000);
+
+    return () => {
+      clearTimeout(bounceTimer);
+      clearTimeout(dismissTimer);
+    };
+  }, [txStatus, isStatusHovered]);
+
+
   // Drag & Drop State
   const [isCardDragOver, setIsCardDragOver] = useState(false);
   const [payDragOver, setPayDragOver] = useState(false);
@@ -690,8 +723,12 @@ export function SwapCard({
       {/* ─── TRANSACTION STATUS BANNER ─── */}
       {txStatus !== "idle" && (
         <div
+          onMouseEnter={() => setIsStatusHovered(true)}
+          onMouseLeave={() => setIsStatusHovered(false)}
           className={cn(
-            "p-3 rounded-xl border text-xs space-y-1.5 transition-all animate-in fade-in slide-in-from-top-1",
+            "p-3 rounded-xl border text-xs space-y-1.5 transition-all",
+            !isBouncingOut && "animate-in fade-in slide-in-from-top-1",
+            isBouncingOut && "animate-bounce-out pointer-events-none",
             txStatus === "success" && "bg-success/10 border-success/30 text-success",
             txStatus === "error" && "bg-error/10 border-error/30 text-error",
             (txStatus === "simulating" || txStatus === "signing" || txStatus === "confirming") &&
@@ -725,8 +762,12 @@ export function SwapCard({
               <button
                 type="button"
                 onClick={() => {
-                  setTxStatus("idle");
-                  setStatusMessage(null);
+                  setIsBouncingOut(true);
+                  setTimeout(() => {
+                    setTxStatus("idle");
+                    setStatusMessage(null);
+                    setIsBouncingOut(false);
+                  }, 500);
                 }}
                 className="text-text-muted hover:text-text-primary p-0.5 shrink-0 transition-colors"
                 title="Dismiss"
