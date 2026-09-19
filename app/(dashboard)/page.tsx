@@ -593,7 +593,7 @@ export default function DiscoverPage() {
             </div>
 
             {/* Market Table Card Container */}
-            <div className="rounded-2xl glass-panel overflow-hidden">
+            <div className="squircle glass-panel overflow-hidden">
               {/* Table Column Headers */}
               <div
                 style={{ gridTemplateColumns: COLS }}
@@ -705,7 +705,7 @@ export default function DiscoverPage() {
           </div>
 
           {/* Embedded Real Swap Card */}
-          <div className="rounded-2xl glass-panel overflow-hidden p-1">
+          <div className="squircle glass-panel overflow-hidden p-1">
             <SwapCard
               initialOutputToken={selectedTradeToken}
               className="border-0 shadow-none bg-transparent p-3"

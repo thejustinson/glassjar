@@ -294,7 +294,7 @@ export function SwapCard({
   return (
     <div
       className={cn(
-        "rounded-2xl glass-panel p-5 flex flex-col gap-4 relative",
+        "squircle glass-panel p-5 flex flex-col gap-4 relative",
         className
       )}
     >
@@ -323,7 +323,7 @@ export function SwapCard({
                   initial={{ opacity: 0, scale: 0.95, y: -4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  className="absolute right-0 top-full mt-2 z-50 w-64 p-3.5 rounded-xl glass-panel backdrop-blur-2xl shadow-2xl space-y-3"
+                  className="absolute right-0 top-full mt-2 z-50 w-64 p-3.5 squircle-md glass-panel backdrop-blur-2xl shadow-2xl space-y-3"
                 >
                   <p className="text-xs font-bold uppercase tracking-wider text-text-muted">
                     Slippage Tolerance
@@ -357,7 +357,7 @@ export function SwapCard({
       {/* ─── YOU PAY CONTAINER ─── */}
       <div
         className={cn(
-          "p-4 rounded-xl glass-card transition-all duration-150 space-y-2.5",
+          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5",
           activeInput === "pay"
             ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
             : "hover:border-white/15"
@@ -430,7 +430,7 @@ export function SwapCard({
       {/* ─── YOU RECEIVE CONTAINER ─── */}
       <div
         className={cn(
-          "p-4 rounded-xl glass-card transition-all duration-150 space-y-2.5",
+          "p-4 squircle-md glass-card transition-all duration-150 space-y-2.5",
           activeInput === "receive"
             ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
             : "hover:border-white/15"
@@ -494,7 +494,7 @@ export function SwapCard({
 
       {/* ─── QUOTE DETAILS ─── */}
       {quote && (
-        <div className="p-3.5 rounded-xl glass-card text-xs space-y-2 text-text-muted">
+        <div className="p-3.5 squircle-sm glass-card text-xs space-y-2 text-text-muted">
           <div className="flex items-center justify-between">
             <span>Price Impact</span>
             <span

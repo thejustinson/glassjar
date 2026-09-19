@@ -208,8 +208,25 @@ input[type="number"] {
   animation-play-state: paused;
 }
 
-/* ─── Glassmorphism Design Tokens & Utilities ────────────────────────────── */
+/* ─── Squircle & Glassmorphism Design Tokens ─────────────────────────────── */
+.squircle {
+  border-radius: 26px;
+}
+
+.squircle-lg {
+  border-radius: 32px;
+}
+
+.squircle-md {
+  border-radius: 20px;
+}
+
+.squircle-sm {
+  border-radius: 16px;
+}
+
 .glass-panel {
+  border-radius: 26px;
   background: rgba(13, 16, 23, 0.62);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -218,6 +235,7 @@ input[type="number"] {
 }
 
 .glass-card {
+  border-radius: 20px;
   background: rgba(20, 24, 35, 0.48);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

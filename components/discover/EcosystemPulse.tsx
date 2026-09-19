@@ -14,7 +14,7 @@ export function EcosystemPulse({
   trackedTokensCount = 0,
 }: EcosystemPulseProps) {
   return (
-    <div className="rounded-2xl glass-panel p-4 space-y-3.5">
+    <div className="squircle glass-panel p-4 space-y-3.5">
       <div className="flex items-center justify-between">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
@@ -41,7 +41,7 @@ export function EcosystemPulse({
       </div>
 
       <div className="grid grid-cols-2 gap-2 pt-1">
-        <div className="p-2.5 rounded-xl glass-card space-y-0.5">
+        <div className="p-2.5 squircle-sm glass-card space-y-0.5">
           <span className="text-[10px] uppercase font-semibold text-text-muted block">
             Indexed Pairs
           </span>
@@ -49,7 +49,7 @@ export function EcosystemPulse({
             {trackedTokensCount} Tokens
           </span>
         </div>
-        <div className="p-2.5 rounded-xl glass-card space-y-0.5">
+        <div className="p-2.5 squircle-sm glass-card space-y-0.5">
           <span className="text-[10px] uppercase font-semibold text-text-muted block">
             Finality Speed
           </span>

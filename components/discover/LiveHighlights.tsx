@@ -88,7 +88,7 @@ export function LiveHighlights({
               key={token.mint + badge}
               onClick={() => onTradeToken?.(token)}
               className={cn(
-                "group relative rounded-2xl glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between",
+                "group relative squircle glass-panel p-4 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between",
                 "hover:border-accent/50 hover:bg-white/[0.06] hover:shadow-[0_12px_36px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]",
                 isSelected && "border-accent/70 ring-1 ring-accent/30 bg-white/[0.06]"
               )}
@@ -116,7 +116,7 @@ export function LiveHighlights({
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md glass-pill text-text-muted">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full glass-pill text-text-muted">
                     {badge}
                   </span>
                   <button
@@ -125,7 +125,7 @@ export function LiveHighlights({
                       onTradeToken?.(token);
                     }}
                     title="Quick Trade"
-                    className="w-7 h-7 rounded-lg glass-pill hover:bg-accent/20 hover:text-accent hover:border-accent/30 text-text-muted flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 rounded-full glass-pill hover:bg-accent/20 hover:text-accent hover:border-accent/30 text-text-muted flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <i className="ri-swap-line text-xs" />
                   </button>
@@ -140,7 +140,7 @@ export function LiveHighlights({
                   </span>
                   <span
                     className={cn(
-                      "text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono leading-none",
+                      "text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono leading-none",
                       isPos
                         ? "bg-accent/15 text-accent border border-accent/25"
                         : "bg-error/15 text-error border border-error/25"
