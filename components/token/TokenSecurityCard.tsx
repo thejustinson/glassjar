@@ -78,7 +78,7 @@ function MetricCard({
   return (
     <div className="relative group">
       {/* Metric Cell */}
-      <div className="p-2.5 rounded-xl bg-[#141720] border border-border/80 hover:border-accent/40 transition-colors flex flex-col items-center justify-center min-h-[58px] cursor-help">
+      <div className="p-2.5 squircle-sm glass-card border border-white/8 hover:border-accent/40 transition-all flex flex-col items-center justify-center min-h-[58px] cursor-help">
         <div className="flex items-center gap-1">
           {icon && <i className={cn(icon, "text-[11px]", iconColor)} />}
           <span className={cn("text-xs font-bold font-mono", valueColor)}>{value}</span>
@@ -91,12 +91,12 @@ function MetricCard({
       {/* Custom Floating Tooltip */}
       <div
         className={cn(
-          "absolute z-50 hidden group-hover:flex flex-col gap-1.5 p-3 rounded-xl bg-[#13161F] border border-border/90 shadow-2xl shadow-black text-left w-64 pointer-events-none transition-all duration-150 backdrop-blur-md",
+          "absolute z-50 hidden group-hover:flex flex-col gap-1.5 p-3.5 squircle-sm glass-panel border border-white/10 shadow-2xl text-left w-64 pointer-events-none transition-all duration-150 backdrop-blur-xl",
           positionClasses
         )}
       >
         {/* Tooltip Header */}
-        <div className="flex items-center justify-between gap-1.5 border-b border-border/60 pb-1.5">
+        <div className="flex items-center justify-between gap-1.5 border-b border-white/10 pb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             {icon && <i className={cn(icon, "text-xs", iconColor || "text-accent")} />}
             <span className="text-xs font-bold text-text-primary truncate">{tooltipTitle}</span>
@@ -244,7 +244,7 @@ export function TokenSecurityCard({ token, className }: TokenSecurityCardProps) 
   return (
     <div
       className={cn(
-        "rounded-2xl bg-[#0E1015] border border-border shadow-xl select-none transition-all relative",
+        "squircle-md glass-panel overflow-hidden select-none transition-all relative",
         className
       )}
     >
@@ -252,11 +252,11 @@ export function TokenSecurityCard({ token, className }: TokenSecurityCardProps) 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 bg-[#12151D] border-b border-border/70 rounded-t-2xl flex items-center justify-between text-xs font-bold uppercase tracking-wider text-text-primary hover:bg-[#161a24] transition-colors"
+        className="w-full px-4 py-3 border-b border-white/8 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-text-primary hover:bg-white/[0.03] transition-colors cursor-pointer"
       >
         <span className="flex items-center gap-2">
           <i className="ri-shield-check-line text-accent text-sm" />
-          <span>Token Info</span>
+          <span>Token Info & Security</span>
         </span>
         <i
           className={cn(
@@ -441,7 +441,7 @@ export function TokenSecurityCard({ token, className }: TokenSecurityCardProps) 
           </div>
 
           {/* CA Box */}
-          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#141720] border border-border/80 text-xs font-mono">
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl glass-pill border border-white/8 text-xs font-mono">
             <div className="flex items-center gap-1.5 min-w-0">
               <i className="ri-terminal-box-line text-text-muted text-xs" />
               <span className="text-text-muted">CA:</span>
@@ -450,7 +450,7 @@ export function TokenSecurityCard({ token, className }: TokenSecurityCardProps) 
               </span>
               <button
                 onClick={handleCopyCA}
-                className="text-text-muted hover:text-accent transition-colors ml-1"
+                className="text-text-muted hover:text-accent transition-colors ml-1 cursor-pointer"
                 title="Copy full contract address"
               >
                 <i className={cn(copied ? "ri-check-line text-accent" : "ri-file-copy-line")} />
@@ -461,7 +461,7 @@ export function TokenSecurityCard({ token, className }: TokenSecurityCardProps) 
               href={explorerTokenUrl(token.mint)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-text-muted hover:text-accent transition-colors"
+              className="text-text-muted hover:text-accent transition-colors cursor-pointer"
               title="View on Cookiescan Explorer"
             >
               <i className="ri-external-link-line text-sm" />
