@@ -96,7 +96,7 @@ export function PortfolioMetrics({
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Card 1: Total Net Worth */}
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 relative overflow-hidden">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border relative overflow-hidden">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Total Net Worth</span>
             <i className="ri-wallet-line text-accent text-sm" />
@@ -115,7 +115,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 2: Native COOK Holdings */}
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Native COOK</span>
             <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded">
@@ -131,7 +131,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 3: SPL Token Holdings */}
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Token Assets</span>
             <i className="ri-coins-line text-text-muted text-sm" />
@@ -145,7 +145,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 4: Total Assets Count */}
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Active Assets</span>
             <i className="ri-pie-chart-line text-text-muted text-sm" />

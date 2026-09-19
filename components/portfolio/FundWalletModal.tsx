@@ -84,7 +84,7 @@ export function FundWalletModal({
         {/* 2-Column Horizontally Aligned Body */}
         <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 items-center">
           {/* Left Column: QR Code Card */}
-          <div className="flex flex-col items-center justify-center p-3 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 text-center">
+          <div className="flex flex-col items-center justify-center p-3 squircle-md bg-[#0E1015] border border-border text-center">
             <div className="p-2.5 bg-white rounded-xl">
               {qrDataUrl ? (
                 <img
@@ -107,7 +107,7 @@ export function FundWalletModal({
           {/* Right Column: Address, Copy, and Actions */}
           <div className="space-y-4">
             {/* Wallet Address Container */}
-            <div className="p-3.5 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+            <div className="p-3.5 squircle-md bg-[#0E1015] border border-border">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-text-muted">
                   Your Address

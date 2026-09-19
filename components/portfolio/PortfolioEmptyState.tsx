@@ -36,7 +36,7 @@ export function PortfolioEmptyState() {
 
       {/* Feature Highlights Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mt-12 text-left">
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="w-8 h-8 squircle-xs bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-3">
             <i className="ri-coins-line text-base" />
           </div>
@@ -46,7 +46,7 @@ export function PortfolioEmptyState() {
           </p>
         </div>
 
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="w-8 h-8 squircle-xs bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-3">
             <i className="ri-pie-chart-line text-base" />
           </div>
@@ -56,7 +56,7 @@ export function PortfolioEmptyState() {
           </p>
         </div>
 
-        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
+        <div className="p-4 squircle-md bg-[#0E1015] border border-border">
           <div className="w-8 h-8 squircle-xs bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-3">
             <i className="ri-history-line text-base" />
           </div>

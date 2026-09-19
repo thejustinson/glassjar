@@ -53,10 +53,10 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className="p-4 sm:p-4.5 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 transition-all hover:border-accent/40 group relative overflow-hidden">
+    <div className="p-4 sm:p-4.5 squircle-md bg-[#0E1015] border border-border transition-all hover:border-accent/40 group relative overflow-hidden">
       <div className="flex items-center justify-between">
         <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-muted">{label}</p>
-        <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+        <div className="w-7 h-7 squircle-xs bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
           <i className={cn(icon, "text-accent text-xs")} />
         </div>
       </div>
@@ -887,7 +887,7 @@ export default function WatchlistPage() {
                   <div
                     key={item.mint}
                     onClick={() => router.push(`/token/${item.mint}`)}
-                    className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 space-y-3 transition-all hover:border-accent/40 cursor-pointer select-none"
+                    className="p-4 squircle-md bg-[#0E1015] border border-border space-y-3 transition-all hover:border-accent/40 cursor-pointer select-none"
                   >
                     {/* Top Row: Token Identity + Price & Delta */}
                     <div className="flex items-center justify-between gap-3">
