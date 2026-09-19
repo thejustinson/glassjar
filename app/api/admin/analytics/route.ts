@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import bs58 from "bs58";
+import { getConnection } from "@/lib/chain";
+import { getCookPrice } from "@/lib/das";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_COOKIE_NAME = "glassjar_admin_session";
@@ -12,6 +17,28 @@ const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.SUPABASE_ANON_KEY;
+
+function decodeBase58(raw: string): Uint8Array {
+  const fn = (bs58 as any).decode || (bs58 as any).default?.decode;
+  if (typeof fn !== "function") {
+    throw new Error("bs58 decode function not available");
+  }
+  return fn(raw);
+}
+
+function getFaucetPublicKey(): PublicKey | null {
+  const raw = process.env.FAUCET_PAYER_PRIVATE_KEY;
+  if (!raw) return null;
+  try {
+    if (raw.startsWith("[")) {
+      const arr = JSON.parse(raw) as number[];
+      return Keypair.fromSecretKey(Uint8Array.from(arr)).publicKey;
+    }
+    return Keypair.fromSecretKey(decodeBase58(raw)).publicKey;
+  } catch {
+    return null;
+  }
+}
 
 function verifySessionToken(token: string, password?: string): boolean {
   if (!token || !password) return false;
@@ -58,6 +85,8 @@ export async function GET(request: Request) {
     const past24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const past7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
+    const faucetPubkey = getFaucetPublicKey();
+
     // 2. Query Wallets
     const [
       walletsTotalRes,
@@ -75,6 +104,8 @@ export async function GET(request: Request) {
       faucet24hRes,
       recentFaucetRes,
       allFaucetStatsRes,
+      faucetBalanceRes,
+      cookPriceRes,
     ] = await Promise.allSettled([
       // Total Wallets
       sb.from("wallets").select("*", { count: "exact", head: true }),
@@ -107,6 +138,10 @@ export async function GET(request: Request) {
       sb.from("faucet_claims").select("*", { count: "exact", head: true }).gte("created_at", past24h),
       sb.from("faucet_claims").select("*").order("created_at", { ascending: false }).limit(50),
       sb.from("faucet_claims").select("amount_lamports, amount_usd, wallet_address"),
+
+      // Faucet live on-chain balance & spot price
+      faucetPubkey ? getConnection().getBalance(faucetPubkey) : Promise.resolve(null),
+      getCookPrice().catch(() => 0),
     ]);
 
     const totalWallets = walletsTotalRes.status === "fulfilled" ? walletsTotalRes.value.count || 0 : 0;
@@ -142,6 +177,19 @@ export async function GET(request: Request) {
         }
       }
     }
+
+    // Faucet live balance & spot price calculation
+    const faucetBalanceLamports =
+      faucetBalanceRes.status === "fulfilled" && typeof faucetBalanceRes.value === "number"
+        ? faucetBalanceRes.value
+        : null;
+    const cookPrice =
+      cookPriceRes.status === "fulfilled" && typeof cookPriceRes.value === "number"
+        ? cookPriceRes.value
+        : 0;
+    const faucetBalanceCook = faucetBalanceLamports !== null ? faucetBalanceLamports / 1e9 : null;
+    const faucetBalanceUsd =
+      faucetBalanceCook !== null && cookPrice > 0 ? faucetBalanceCook * cookPrice : null;
 
     // Aggregate Popular Tokens from Watchlist
     const tokenCounts: Record<string, { symbol: string; mint: string; name?: string; logo_uri?: string; count: number }> = {};
@@ -189,12 +237,22 @@ export async function GET(request: Request) {
         faucetCookDistributed: totalCookDistributed,
         faucetUsdDistributed: totalUsdDistributed,
         faucetUniqueWallets: uniqueFaucetWalletsSet.size,
+        faucetWalletAddress: faucetPubkey ? faucetPubkey.toBase58() : null,
+        faucetWalletBalanceCook: faucetBalanceCook,
+        faucetWalletBalanceUsd: faucetBalanceUsd,
+        cookPriceUsd: cookPrice,
       },
       activeWallets,
       recentTx,
       recentEvents,
       popularTokens,
       faucet: {
+        wallet: {
+          address: faucetPubkey ? faucetPubkey.toBase58() : null,
+          balanceCook: faucetBalanceCook,
+          balanceUsd: faucetBalanceUsd,
+          cookPriceUsd: cookPrice,
+        },
         metrics: {
           totalClaims: totalFaucetClaims,
           claims24h: faucetClaims24h,

@@ -32,6 +32,10 @@ interface AnalyticsData {
     faucetCookDistributed?: number;
     faucetUsdDistributed?: number;
     faucetUniqueWallets?: number;
+    faucetWalletAddress?: string | null;
+    faucetWalletBalanceCook?: number | null;
+    faucetWalletBalanceUsd?: number | null;
+    cookPriceUsd?: number;
   };
   activeWallets: Array<{
     address: string;
@@ -68,6 +72,12 @@ interface AnalyticsData {
     count: number;
   }>;
   faucet?: {
+    wallet?: {
+      address?: string | null;
+      balanceCook?: number | null;
+      balanceUsd?: number | null;
+      cookPriceUsd?: number;
+    };
     metrics: {
       totalClaims: number;
       claims24h: number;
@@ -270,6 +280,8 @@ export default function AdminPage() {
 
   // ─── AUTHENTICATED DASHBOARD ───
   const metrics = analytics?.metrics;
+  const faucetWallet = analytics?.faucet?.wallet;
+  const faucetMetrics = analytics?.faucet?.metrics;
 
   return (
     <div className="w-full max-w-6xl mx-auto py-6 px-4 space-y-6 select-none">
@@ -382,7 +394,11 @@ export default function AdminPage() {
             )}
           </div>
           <span className="text-[10px] text-text-muted block truncate">
-            {metrics ? `${formatNumber(metrics.faucetCookDistributed || 0, 2)} COOK ($${formatNumber(metrics.faucetUsdDistributed || 0, 2)})` : "COOK distributed"}
+            {metrics?.faucetWalletBalanceCook !== undefined && metrics?.faucetWalletBalanceCook !== null
+              ? `Reserve: ${formatNumber(metrics.faucetWalletBalanceCook, 2)} COOK ($${formatNumber(metrics.faucetWalletBalanceUsd || 0, 2)})`
+              : metrics?.faucetCookDistributed
+              ? `${formatNumber(metrics.faucetCookDistributed, 2)} COOK dist.`
+              : "COOK distributed"}
           </span>
         </div>
 
@@ -658,6 +674,71 @@ export default function AdminPage() {
       {/* ─── TAB: FAUCET CLAIMS ─── */}
       {activeTab === "faucet" && (
         <div className="space-y-4">
+          {/* Faucet Wallet Reserve Banner */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#141720] to-[#0E1015] border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-secondary/15 border border-secondary/30 flex items-center justify-center text-secondary flex-shrink-0">
+                <i className="ri-wallet-3-line text-xl" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-text-primary">Faucet Payer Wallet</span>
+                  <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 text-[10px] font-bold uppercase tracking-wider">
+                    On-Chain Reserve
+                  </span>
+                </div>
+                {faucetWallet?.address ? (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[11px] font-mono text-text-muted truncate max-w-[240px] sm:max-w-none">
+                      {faucetWallet.address}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(faucetWallet.address!, "faucet-payer-wallet")}
+                      className="text-text-muted hover:text-text-primary cursor-pointer p-0.5"
+                      title="Copy faucet wallet address"
+                    >
+                      {copiedId === "faucet-payer-wallet" ? (
+                        <i className="ri-check-line text-accent text-xs" />
+                      ) : (
+                        <i className="ri-file-copy-line text-xs" />
+                      )}
+                    </button>
+                    <a
+                      href={`https://cookiescan.io/address/${faucetWallet.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-text-muted hover:text-secondary p-0.5"
+                      title="View on CookieScan"
+                    >
+                      <i className="ri-external-link-line text-xs" />
+                    </a>
+                  </div>
+                ) : (
+                  <span className="text-[11px] text-text-muted">No faucet payer wallet configured</span>
+                )}
+              </div>
+            </div>
+
+            <div className="text-left sm:text-right flex-shrink-0">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                Faucet Wallet Balance
+              </span>
+              <div className="flex items-baseline sm:justify-end gap-1.5 mt-0.5">
+                <span className="text-2xl font-black font-mono text-secondary">
+                  {faucetWallet?.balanceCook !== null && faucetWallet?.balanceCook !== undefined
+                    ? formatNumber(faucetWallet.balanceCook, 4)
+                    : "—"}
+                </span>
+                <span className="text-xs font-bold font-mono text-secondary">COOK</span>
+              </div>
+              <span className="text-[11px] font-mono text-text-muted block">
+                {faucetWallet?.balanceUsd !== null && faucetWallet?.balanceUsd !== undefined
+                  ? `≈ $${formatNumber(faucetWallet.balanceUsd, 2)} USD`
+                  : "—"}
+              </span>
+            </div>
+          </div>
+
           {/* Sub-KPIs for Faucet */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3.5 rounded-2xl bg-[#0E1015] border border-border/80">
@@ -665,10 +746,10 @@ export default function AdminPage() {
                 Total Claims
               </span>
               <span className="text-xl font-black font-mono text-text-primary mt-1 block">
-                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.totalClaims, 0) : "—"}
+                {faucetMetrics ? formatNumber(faucetMetrics.totalClaims, 0) : "—"}
               </span>
               <span className="text-[10px] text-accent font-mono font-medium">
-                {analytics?.faucet?.metrics?.claims24h ? `+${analytics.faucet.metrics.claims24h} in 24h` : "All time"}
+                {faucetMetrics?.claims24h ? `+${faucetMetrics.claims24h} in 24h` : "All time"}
               </span>
             </div>
 
@@ -677,10 +758,10 @@ export default function AdminPage() {
                 Total Distributed
               </span>
               <span className="text-xl font-black font-mono text-secondary mt-1 block">
-                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.totalCookDistributed, 2) : "—"} COOK
+                {faucetMetrics ? formatNumber(faucetMetrics.totalCookDistributed, 2) : "—"} COOK
               </span>
               <span className="text-[10px] text-text-muted font-mono">
-                {analytics?.faucet?.metrics ? `≈ $${formatNumber(analytics.faucet.metrics.totalUsdDistributed, 2)} USD` : "—"}
+                {faucetMetrics ? `≈ $${formatNumber(faucetMetrics.totalUsdDistributed, 2)} USD` : "—"}
               </span>
             </div>
 
@@ -689,7 +770,7 @@ export default function AdminPage() {
                 Unique Recipients
               </span>
               <span className="text-xl font-black font-mono text-text-primary mt-1 block">
-                {analytics?.faucet?.metrics ? formatNumber(analytics.faucet.metrics.uniqueWallets, 0) : "—"}
+                {faucetMetrics ? formatNumber(faucetMetrics.uniqueWallets, 0) : "—"}
               </span>
               <span className="text-[10px] text-text-muted">Unique addresses</span>
             </div>
@@ -699,8 +780,8 @@ export default function AdminPage() {
                 Average Payout
               </span>
               <span className="text-xl font-black font-mono text-text-primary mt-1 block">
-                {analytics?.faucet?.metrics && analytics.faucet.metrics.totalClaims > 0
-                  ? `$${formatNumber(analytics.faucet.metrics.totalUsdDistributed / analytics.faucet.metrics.totalClaims, 2)}`
+                {faucetMetrics && faucetMetrics.totalClaims > 0
+                  ? `$${formatNumber(faucetMetrics.totalUsdDistributed / faucetMetrics.totalClaims, 2)}`
                   : "—"}
               </span>
               <span className="text-[10px] text-text-muted">Per claim average</span>
