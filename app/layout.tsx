@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { AppWalletProvider } from "@/components/wallet/WalletProvider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
-  axes: ["opsz"],
   display: "swap",
 });
 
@@ -21,10 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} font-sans h-full antialiased`}
+      className={`${outfit.variable} ${outfit.className} font-sans h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-text-primary font-sans">
+      <body className={`${outfit.className} min-h-full flex flex-col bg-bg text-text-primary font-sans`}>
         <AppWalletProvider>
           {children}
         </AppWalletProvider>

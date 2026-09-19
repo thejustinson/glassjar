@@ -69,6 +69,14 @@ export function SwapCard({
     }
   );
 
+  useEffect(() => {
+    if (initialInputToken) setInputToken(initialInputToken);
+  }, [initialInputToken]);
+
+  useEffect(() => {
+    if (initialOutputToken) setOutputToken(initialOutputToken);
+  }, [initialOutputToken]);
+
   // Modals
   const [selectorTarget, setSelectorTarget] = useState<"input" | "output" | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -286,12 +294,12 @@ export function SwapCard({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-[#0E1015] border border-border shadow-2xl p-5 flex flex-col gap-4 relative",
+        "rounded-2xl glass-panel p-5 flex flex-col gap-4 relative",
         className
       )}
     >
       {/* Top Header & Settings Trigger */}
-      <div className="flex items-center justify-between pb-1 border-b border-border/60">
+      <div className="flex items-center justify-between pb-1 border-b border-white/[0.07]">
         <div>
           <h2 className="text-base font-bold text-text-primary tracking-wide">Swap Terminal</h2>
           <p className="text-xs text-text-muted">Cookieswap & Cookiebox Aggregator</p>
@@ -300,7 +308,7 @@ export function SwapCard({
         <div className="relative">
           <button
             onClick={() => setSettingsOpen((v) => !v)}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-bg-card border border-border text-text-muted hover:text-text-primary hover:border-accent/40 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center glass-pill text-text-muted hover:text-text-primary hover:border-accent/40 transition-colors cursor-pointer"
             title="Swap Settings"
           >
             <i className="ri-settings-3-line text-sm" />
@@ -315,7 +323,7 @@ export function SwapCard({
                   initial={{ opacity: 0, scale: 0.95, y: -4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  className="absolute right-0 top-full mt-2 z-50 w-64 p-3.5 rounded-xl bg-bg-card border border-border shadow-2xl space-y-3"
+                  className="absolute right-0 top-full mt-2 z-50 w-64 p-3.5 rounded-xl glass-panel backdrop-blur-2xl shadow-2xl space-y-3"
                 >
                   <p className="text-xs font-bold uppercase tracking-wider text-text-muted">
                     Slippage Tolerance
@@ -329,10 +337,10 @@ export function SwapCard({
                           setSettingsOpen(false);
                         }}
                         className={cn(
-                          "h-7 rounded-lg text-xs font-mono font-bold transition-colors",
+                          "h-7 rounded-lg text-xs font-mono font-bold transition-colors cursor-pointer",
                           slippageBps === bps
-                            ? "bg-accent text-[#08090C]"
-                            : "bg-bg-elevated border border-border text-text-muted hover:text-text-primary"
+                            ? "bg-accent text-[#08090C] shadow-sm"
+                            : "glass-pill text-text-muted hover:text-text-primary"
                         )}
                       >
                         {bps / 100}%
@@ -349,10 +357,10 @@ export function SwapCard({
       {/* ─── YOU PAY CONTAINER ─── */}
       <div
         className={cn(
-          "p-4 rounded-xl bg-bg-elevated border transition-all duration-150 space-y-2.5 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent",
+          "p-4 rounded-xl glass-card transition-all duration-150 space-y-2.5",
           activeInput === "pay"
-            ? "border-accent ring-1 ring-accent"
-            : "border-border/80 hover:border-border"
+            ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
+            : "hover:border-white/15"
         )}
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
@@ -376,7 +384,7 @@ export function SwapCard({
           {/* Token Selector Pill */}
           <button
             onClick={() => setSelectorTarget("input")}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-card border border-border hover:border-accent/40 text-xs font-bold flex-shrink-0 transition-colors select-none group"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-pill hover:border-accent/40 text-xs font-bold flex-shrink-0 transition-colors select-none group cursor-pointer"
           >
             <TokenAvatar
               logoUri={inputToken.logoUri}
@@ -399,7 +407,7 @@ export function SwapCard({
               <button
                 key={p}
                 onClick={() => handlePercent(p)}
-                className="px-2 py-0.5 rounded bg-bg-card border border-border/70 text-[10px] font-bold text-text-muted hover:text-text-primary hover:border-accent/40 transition-colors"
+                className="px-2 py-0.5 rounded glass-pill text-[10px] font-bold text-text-muted hover:text-text-primary hover:border-accent/40 transition-colors cursor-pointer"
               >
                 {p === 100 ? "MAX" : `${p}%`}
               </button>
@@ -412,7 +420,7 @@ export function SwapCard({
       <div className="flex justify-center -my-2 relative z-10">
         <button
           onClick={handleInvertPair}
-          className="w-9 h-9 rounded-full bg-bg-card border border-border flex items-center justify-center text-accent hover:border-accent hover:shadow-[0_0_12px_rgba(59,178,115,0.35)] transition-all"
+          className="w-9 h-9 rounded-full glass-pill flex items-center justify-center text-accent hover:border-accent hover:shadow-[0_0_16px_rgba(59,178,115,0.4)] transition-all cursor-pointer"
           title="Invert swap tokens"
         >
           <i className="ri-arrow-up-down-line text-base" />
@@ -422,10 +430,10 @@ export function SwapCard({
       {/* ─── YOU RECEIVE CONTAINER ─── */}
       <div
         className={cn(
-          "p-4 rounded-xl bg-bg-elevated border transition-all duration-150 space-y-2.5 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent",
+          "p-4 rounded-xl glass-card transition-all duration-150 space-y-2.5",
           activeInput === "receive"
-            ? "border-accent ring-1 ring-accent"
-            : "border-border/80 hover:border-border"
+            ? "border-accent ring-1 ring-accent/50 shadow-[0_0_16px_rgba(59,178,115,0.15)]"
+            : "hover:border-white/15"
         )}
       >
         <div className="flex items-center justify-between text-xs text-text-muted">
@@ -455,7 +463,7 @@ export function SwapCard({
           {/* Token Selector Pill */}
           <button
             onClick={() => setSelectorTarget("output")}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-card border border-border hover:border-accent/40 text-xs font-bold flex-shrink-0 transition-colors select-none group"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-pill hover:border-accent/40 text-xs font-bold flex-shrink-0 transition-colors select-none group cursor-pointer"
           >
             <TokenAvatar
               logoUri={outputToken.logoUri}
@@ -486,7 +494,7 @@ export function SwapCard({
 
       {/* ─── QUOTE DETAILS ─── */}
       {quote && (
-        <div className="p-3.5 rounded-xl bg-bg-card border border-border/70 text-xs space-y-2 text-text-muted">
+        <div className="p-3.5 rounded-xl glass-card text-xs space-y-2 text-text-muted">
           <div className="flex items-center justify-between">
             <span>Price Impact</span>
             <span

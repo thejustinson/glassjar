@@ -110,7 +110,7 @@ export function PriceChart({
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#8E92A0",
-        fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+        fontFamily: "var(--font-outfit), system-ui, sans-serif",
       },
       grid: {
         vertLines: { color: "rgba(26, 30, 41, 0.6)" },

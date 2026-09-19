@@ -41,7 +41,7 @@ export function TopNav() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-bg/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#090b10]/75 backdrop-blur-2xl">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Left: Brand Identity */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
@@ -57,7 +57,7 @@ export function TopNav() {
 
         {/* Center: Nav Capsule Container */}
         <nav
-          className="hidden md:flex items-center gap-1 p-1 bg-bg-card border border-border rounded-full shadow-inner"
+          className="hidden md:flex items-center gap-1 p-1 glass-pill rounded-full"
           aria-label="Main navigation"
         >
           {NAV_LINKS.map(({ href, label }) => {
@@ -69,8 +69,8 @@ export function TopNav() {
                 className={cn(
                   "relative h-8 px-4 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 select-none flex items-center justify-center",
                   active
-                    ? "bg-accent text-bg shadow-[0_0_12px_rgba(59,178,115,0.4)] font-bold"
-                    : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated/80"
+                    ? "bg-accent text-[#08090C] shadow-[0_0_14px_rgba(59,178,115,0.45)] font-bold"
+                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.06]"
                 )}
               >
                 <span className="relative z-10">{label}</span>
@@ -89,7 +89,7 @@ export function TopNav() {
         {/* Right Side: Network badge + Wallet + Actions */}
         <div className="flex items-center gap-2.5">
           {/* Chain Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-full bg-bg-card border border-border text-xs text-text-secondary select-none">
+          <div className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-full glass-pill text-xs text-text-secondary select-none">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
@@ -105,7 +105,7 @@ export function TopNav() {
             href="https://cookiescan.io"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-9 w-9 rounded-full flex items-center justify-center bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            className="h-9 w-9 rounded-full flex items-center justify-center glass-pill text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
             title="Open CookieScan Explorer"
           >
             <i className="ri-external-link-line text-[15px]" />

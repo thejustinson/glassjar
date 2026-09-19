@@ -11,18 +11,32 @@ import Link from "next/link";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex flex-col min-h-dvh bg-bg text-text-primary overflow-x-hidden">
-      {/* Ambient Neon Emerald Backlight Glows (Reference visual match) */}
+      {/* Ambient Multi-Spectrum Backlight Glows for Glassmorphism */}
       <div
-        className="pointer-events-none fixed top-[-250px] left-[-200px] w-[700px] h-[700px] rounded-full opacity-15 blur-[140px]"
+        className="pointer-events-none fixed top-[-250px] left-[-200px] w-[700px] h-[700px] rounded-full opacity-20 blur-[150px]"
         style={{
-          background: "radial-gradient(circle, rgba(59,178,115,0.8) 0%, rgba(59,178,115,0) 70%)",
+          background: "radial-gradient(circle, rgba(59,178,115,0.7) 0%, rgba(59,178,115,0) 70%)",
         }}
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none fixed top-[-200px] right-[-250px] w-[800px] h-[800px] rounded-full opacity-12 blur-[160px]"
+        className="pointer-events-none fixed top-[-200px] right-[-250px] w-[800px] h-[800px] rounded-full opacity-15 blur-[160px]"
         style={{
-          background: "radial-gradient(circle, rgba(59,178,115,0.7) 0%, rgba(59,178,115,0) 70%)",
+          background: "radial-gradient(circle, rgba(59,178,115,0.6) 0%, rgba(59,178,115,0) 70%)",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none fixed top-[40%] right-[10%] w-[500px] h-[500px] rounded-full opacity-10 blur-[170px]"
+        style={{
+          background: "radial-gradient(circle, rgba(251,255,108,0.4) 0%, rgba(251,255,108,0) 70%)",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none fixed bottom-[-100px] left-[15%] w-[600px] h-[600px] rounded-full opacity-10 blur-[160px]"
+        style={{
+          background: "radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(56,189,248,0) 70%)",
         }}
         aria-hidden="true"
       />

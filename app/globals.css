@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 @import "remixicon/fonts/remixicon.css";
 
@@ -56,9 +57,9 @@
 
 /* ─── Tailwind v4 Theme Bridge ───────────────────────────────────────────── */
 @theme inline {
-  /* Font — all text uses DM Sans */
-  --font-sans: var(--font-dm-sans);
-  --font-mono: var(--font-dm-sans);
+  /* Font — all text uses Outfit */
+  --font-sans: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--font-outfit, "Outfit", monospace);
 
   /* Colors — expose design tokens as Tailwind utilities */
   --color-accent:           var(--accent);
@@ -101,24 +102,25 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif);
 }
 
 body {
   background-color: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif);
   min-height: 100dvh;
   line-height: 1.5;
 }
 
-/* Ensure all text and form elements use DM Sans */
+/* Ensure all text and form elements use Outfit */
 html, body, input, button, select, textarea, kbd, code, pre, table, th, td {
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif);
 }
 
 /* ─── Typography Scale ───────────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif);
   font-weight: 600;
   line-height: 1.2;
   color: var(--text-primary);
@@ -158,20 +160,20 @@ textarea:focus-visible {
   box-shadow: none !important;
 }
 
-/* ─── Numeric tabular figures (DM Sans with tabular alignment) ───────────── */
+/* ─── Numeric tabular figures (Outfit with tabular alignment) ────────────── */
 .tabular-nums,
 .font-mono {
-  font-family: var(--font-dm-sans), system-ui, sans-serif !important;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif) !important;
   font-variant-numeric: tabular-nums;
 }
 
-/* ─── Wallet Adapter Modal & Buttons (DM Sans) ───────────────────────────── */
+/* ─── Wallet Adapter Modal & Buttons (Outfit) ────────────────────────────── */
 .wallet-adapter-dropdown,
 .wallet-adapter-button,
 .wallet-adapter-modal-title,
 .wallet-adapter-modal-wrapper,
 .wallet-adapter-modal-list {
-  font-family: var(--font-dm-sans), system-ui, sans-serif !important;
+  font-family: var(--font-outfit, "Outfit", ui-sans-serif, system-ui, sans-serif) !important;
 }
 
 /* ─── Remove default spin buttons on number inputs ───────────────────────── */
@@ -184,4 +186,69 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* ─── Infinite Marquee Animation ─────────────────────────────────────────── */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 32s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* ─── Glassmorphism Design Tokens & Utilities ────────────────────────────── */
+.glass-panel {
+  background: rgba(13, 16, 23, 0.62);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-card {
+  background: rgba(20, 24, 35, 0.48);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 4px 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-input {
+  background: rgba(13, 16, 23, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-input:focus-within,
+.glass-input:focus {
+  border-color: rgba(59, 178, 115, 0.6);
+  box-shadow: 0 0 16px 0 rgba(59, 178, 115, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }

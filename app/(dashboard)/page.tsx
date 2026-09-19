@@ -2,8 +2,14 @@
 
 /**
  * app/(dashboard)/page.tsx — Discover
- * Dense, full-scale trading-terminal token list inspired by Birdeye & Traderly.
- * Browsable with or without a connected wallet.
+ * Modern, spacious trading-terminal layout inspired by the Quantix reference.
+ * Features:
+ * - Top pair ticker tape
+ * - 3-Card Live Crypto Updates hero spotlight with SVG area charts
+ * - Filter pills (All, Trending, Favorites, Top Gainers, Top Losers)
+ * - Market Overview table with mini trend sparklines
+ * - Docked Quick Exchange terminal with live on-chain swap execution
+ * - Ecosystem pulse & activity telemetry
  */
 
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -18,7 +24,6 @@ import {
   formatPrice,
   formatPct,
   formatNumber,
-  formatUsd,
   deltaColorClass,
   truncateAddress,
   copyToClipboard,
@@ -26,61 +31,18 @@ import {
 import { cn } from "@/lib/utils";
 import { variants } from "@/lib/tokens";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  sub,
-  icon,
-  delta,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: string;
-  delta?: number;
-}) {
-  return (
-    <div className="flex items-center gap-3.5 px-4 py-3 rounded-xl bg-bg-card/90 border border-border hover:border-border/80 transition-all duration-200 shadow-sm backdrop-blur-sm">
-      <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-        <i className={cn(icon, "text-accent text-base")} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-text-muted">{label}</p>
-        <div className="flex items-baseline gap-2">
-          <p className="text-base font-bold text-text-primary tabular-nums font-mono">{value}</p>
-          {delta !== undefined && (
-            <span className={cn("text-xs font-semibold tabular-nums", deltaColorClass(delta))}>
-              {formatPct(delta)}
-            </span>
-          )}
-        </div>
-        {sub && <p className="text-[10px] text-text-secondary truncate mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
-
-// ─── Token Logo ───────────────────────────────────────────────────────────────
-
-function TokenLogo({ token }: { token: Token }) {
-  return (
-    <TokenAvatar
-      logoUri={token.logoUri}
-      symbol={token.symbol}
-      size={32}
-      className="border border-border"
-    />
-  );
-}
+import { MarketTickerTape } from "@/components/discover/MarketTickerTape";
+import { LiveHighlights } from "@/components/discover/LiveHighlights";
+import { MiniSparkline } from "@/components/discover/MiniSparkline";
+import { EcosystemPulse } from "@/components/discover/EcosystemPulse";
+import { SwapCard } from "@/components/swap/SwapCard";
 
 // ─── Table Types & Header ─────────────────────────────────────────────────────
 
 type SortKey = "price" | "priceChange24h" | "volume24h" | "marketCap" | "liquidity" | "holderCount";
+type FilterTab = "all" | "trending" | "favorites" | "gainers" | "losers";
 
-const COLS = "56px minmax(220px,2.5fr) 130px 140px 140px 110px 110px";
+const COLS = "44px minmax(180px, 1.8fr) 110px 95px 105px 105px 85px 75px";
 
 function TableHeaderCol({
   label,
@@ -102,7 +64,7 @@ function TableHeaderCol({
     <button
       onClick={() => onSort(sortKey)}
       className={cn(
-        "flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider select-none",
+        "flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider select-none",
         "transition-colors duration-150 py-3",
         align === "right" ? "justify-end ml-auto" : "justify-start",
         active ? "text-accent font-extrabold" : "text-text-muted hover:text-text-primary",
@@ -126,7 +88,17 @@ function TableHeaderCol({
 
 // ─── Token Row ────────────────────────────────────────────────────────────────
 
-function TokenRow({ token, rank }: { token: Token; rank: number }) {
+function TokenRow({
+  token,
+  rank,
+  onTrade,
+  isSelected,
+}: {
+  token: Token;
+  rank: number;
+  onTrade: (token: Token) => void;
+  isSelected?: boolean;
+}) {
   const router = useRouter();
   const { publicKey } = useWallet();
   const { isWatched, toggle } = useWatchlist(publicKey?.toBase58());
@@ -134,8 +106,8 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
 
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const changeClass = deltaColorClass(token.priceChange24h ?? 0);
   const pct = token.priceChange24h ?? 0;
+  const isPositive = pct >= 0;
 
   async function handleCopyMint(e: React.MouseEvent) {
     e.stopPropagation();
@@ -163,12 +135,13 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
       onClick={() => router.push(`/token/${token.mint}`)}
       style={{ gridTemplateColumns: COLS }}
       className={cn(
-        "grid items-center gap-x-4 px-5 h-[58px] relative",
-        "border-b border-border/50 last:border-0",
-        "hover:bg-bg-elevated/70 transition-colors duration-150 cursor-pointer group"
+        "grid items-center gap-x-3 px-4 h-[56px] relative",
+        "border-b border-white/[0.04] last:border-0",
+        "hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer group",
+        isSelected && "bg-white/[0.07]"
       )}
     >
-      {/* Star & Rank */}
+      {/* Rank & Favorite Star */}
       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handleToggleWatchlist}
@@ -180,104 +153,115 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
           )}
           title={watched ? "Remove from watchlist" : "Add to watchlist"}
         >
-          <i className={cn(watched ? "ri-star-fill text-amber-400 text-sm" : "ri-star-line text-sm")} />
+          <i className={cn(watched ? "ri-star-fill text-amber-400 text-xs" : "ri-star-line text-xs")} />
         </button>
-        <span className="text-xs text-text-muted font-mono tabular-nums text-left font-medium">
+        <span className="text-[11px] text-text-muted font-mono tabular-nums text-left font-medium">
           {rank}
         </span>
       </div>
 
-      {/* Token identity */}
-      <div className="flex items-center gap-3 min-w-0 pr-2">
-        <TokenLogo token={token} />
+      {/* Coin identity */}
+      <div className="flex items-center gap-2.5 min-w-0 pr-1">
+        <TokenAvatar
+          logoUri={token.logoUri}
+          symbol={token.symbol}
+          size={30}
+          className="border border-white/10 flex-shrink-0"
+        />
         <div className="min-w-0 flex flex-col">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-text-primary tracking-wide group-hover:text-accent transition-colors truncate">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs sm:text-sm font-bold text-text-primary tracking-tight group-hover:text-accent transition-colors truncate">
               {token.symbol}
             </span>
-            <span className="text-xs text-text-secondary truncate hidden xl:inline">
+            <span className="text-[11px] text-text-muted truncate hidden 2xl:inline">
               {token.name}
             </span>
             {token.launchpad && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-secondary/20 text-secondary font-bold uppercase tracking-wider">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-secondary/15 text-secondary font-bold uppercase tracking-wider">
                 Curve
               </span>
             )}
           </div>
-          <span className="text-[11px] text-text-muted font-mono truncate xl:hidden">
-            {truncateAddress(token.mint, 4)}
+          <span className="text-[10px] text-text-muted font-mono truncate 2xl:hidden">
+            {truncateAddress(token.mint, 3)}
           </span>
         </div>
       </div>
 
       {/* Price */}
       <div className="text-right">
-        <p className="text-sm font-semibold tabular-nums text-text-primary font-mono">
+        <p className="text-xs sm:text-sm font-bold tabular-nums text-text-primary font-mono">
           {token.price !== undefined ? formatPrice(token.price) : <span className="text-text-muted">—</span>}
         </p>
       </div>
 
-      {/* Volume 24h & 24h Change */}
-      <div className="text-right flex flex-col justify-center">
-        <p className="text-sm font-semibold tabular-nums text-text-primary font-mono">
-          {token.volume24h !== undefined && token.volume24h > 0
-            ? `$${formatNumber(token.volume24h, 0, { compact: true })}`
-            : <span className="text-text-muted">—</span>}
-        </p>
-        <div className={cn("flex items-center justify-end gap-0.5 text-xs font-semibold tabular-nums", changeClass)}>
-          {token.priceChange24h !== undefined ? (
-            <>
-              <i className={cn("text-[11px]", pct >= 0 ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
-              <span>{formatPct(Math.abs(pct), 2)}</span>
-            </>
-          ) : (
-            <span className="text-text-muted text-[11px]">—</span>
+      {/* 24h % */}
+      <div className="text-right">
+        <span
+          className={cn(
+            "inline-flex items-center gap-0.5 text-[11px] font-bold font-mono px-1.5 py-0.5 rounded",
+            isPositive
+              ? "text-accent bg-accent/10"
+              : "text-error bg-error/10"
           )}
-        </div>
+        >
+          <i className={cn("text-[9px]", isPositive ? "ri-arrow-up-s-fill" : "ri-arrow-down-s-fill")} />
+          <span>{formatPct(Math.abs(pct), 1)}</span>
+        </span>
       </div>
 
       {/* Market Cap */}
       <div className="text-right">
-        <p className="text-sm font-medium tabular-nums text-text-secondary font-mono">
+        <p className="text-xs font-semibold tabular-nums text-text-secondary font-mono">
           {token.marketCap !== undefined && token.marketCap > 0
             ? `$${formatNumber(token.marketCap, 0, { compact: true })}`
             : <span className="text-text-muted">—</span>}
         </p>
       </div>
 
-      {/* Holders */}
+      {/* 24h Volume */}
       <div className="text-right">
-        <p className="text-sm font-medium tabular-nums text-text-secondary font-mono">
-          {token.holderCount !== undefined && token.holderCount > 0
-            ? formatNumber(token.holderCount, 0)
+        <p className="text-xs font-semibold tabular-nums text-text-secondary font-mono">
+          {token.volume24h !== undefined && token.volume24h > 0
+            ? `$${formatNumber(token.volume24h, 0, { compact: true })}`
             : <span className="text-text-muted">—</span>}
         </p>
       </div>
 
-      {/* Actions (Pill button with swap arrows + dropdown chevron) */}
+      {/* Trend Chart (SVG Sparkline) */}
+      <div className="flex justify-end pr-1">
+        <MiniSparkline
+          delta={token.priceChange24h || 0}
+          seed={token.mint}
+          height={22}
+          width={70}
+          showArea={false}
+          className="opacity-80 group-hover:opacity-100 transition-opacity"
+        />
+      </div>
+
+      {/* Actions */}
       <div className="flex items-center justify-end gap-1 relative" onClick={(e) => e.stopPropagation()}>
-        {/* Quick Swap Pill */}
-        <Link
-          href={`/swap?outputMint=${token.mint}`}
+        <button
+          onClick={() => onTrade(token)}
           className={cn(
-            "h-7 px-2.5 rounded-full text-xs font-bold tracking-wide",
-            "bg-accent/15 text-accent border border-accent/30",
-            "hover:bg-accent hover:text-[#08090C] hover:border-accent shadow-[0_0_10px_rgba(59,178,115,0.15)]",
+            "h-6 px-2.5 rounded-full text-[11px] font-bold tracking-wide cursor-pointer",
+            "glass-pill text-accent border-accent/30",
+            "hover:bg-accent hover:text-[#08090C] hover:border-accent shadow-sm",
             "transition-all duration-150 inline-flex items-center gap-1 select-none"
           )}
-          title={`Trade ${token.symbol} on Cookieswap`}
+          title={`Trade ${token.symbol}`}
         >
-          <i className="ri-arrow-left-right-line text-[11px]" />
+          <i className="ri-arrow-left-right-line text-[10px]" />
           <span>Trade</span>
-        </Link>
+        </button>
 
-        {/* Dropdown trigger */}
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="h-7 w-6 rounded-full flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-card transition-colors"
+          className="h-6 w-6 rounded-full flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-white/[0.08] transition-colors cursor-pointer"
           title="More options"
         >
-          <i className={cn("ri-more-2-fill text-xs transition-transform", menuOpen && "text-accent")} />
+          <i className={cn("ri-more-2-fill text-[11px] transition-transform", menuOpen && "text-accent")} />
         </button>
 
         {/* Action Menu Popover */}
@@ -290,23 +274,25 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -4 }}
                 transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                className="absolute right-0 top-full mt-1.5 z-50 min-w-[190px] bg-bg-card border border-border rounded-xl shadow-2xl p-1.5 text-xs text-text-primary overflow-hidden backdrop-blur-xl"
+                className="absolute right-0 top-full mt-1 z-50 min-w-[170px] glass-panel rounded-xl shadow-2xl p-1 text-xs text-text-primary overflow-hidden backdrop-blur-2xl"
               >
-                <Link
-                  href={`/swap?outputMint=${token.mint}`}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-elevated hover:text-accent transition-colors"
+                <button
+                  onClick={() => {
+                    onTrade(token);
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/[0.08] hover:text-accent transition-colors text-left"
                 >
                   <i className="ri-swap-line text-sm text-accent" />
-                  <span>Swap {token.symbol}</span>
-                </Link>
+                  <span>Quick Swap</span>
+                </button>
 
                 <button
                   onClick={handleCopyMint}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-elevated text-left transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/[0.08] text-left transition-colors"
                 >
                   <i className={cn("text-sm", copied ? "ri-check-line text-accent" : "ri-file-copy-line text-text-muted")} />
-                  <span>{copied ? "Copied!" : "Copy Mint Address"}</span>
+                  <span>{copied ? "Copied!" : "Copy CA"}</span>
                 </button>
 
                 <a
@@ -314,10 +300,10 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-elevated hover:text-accent transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/[0.08] hover:text-accent transition-colors"
                 >
                   <i className="ri-external-link-line text-sm text-text-muted" />
-                  <span>View on Explorer</span>
+                  <span>CookieScan</span>
                 </a>
               </motion.div>
             </>
@@ -328,36 +314,39 @@ function TokenRow({ token, rank }: { token: Token; rank: number }) {
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// ─── Skeleton Row ─────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
     <div
       style={{ gridTemplateColumns: COLS }}
-      className="grid items-center gap-x-4 px-5 h-[58px] border-b border-border/40"
+      className="grid items-center gap-x-3 px-4 h-[56px] border-b border-white/[0.04]"
     >
-      <div className="w-5 h-3 rounded bg-bg-elevated animate-pulse" />
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-bg-elevated animate-pulse flex-shrink-0" />
-        <div className="space-y-1.5 min-w-0">
-          <div className="w-16 h-3.5 rounded bg-bg-elevated animate-pulse" />
-          <div className="w-24 h-2.5 rounded bg-bg-elevated animate-pulse" />
+      <div className="w-4 h-3 rounded bg-white/[0.04] animate-pulse" />
+      <div className="flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-white/[0.04] animate-pulse flex-shrink-0" />
+        <div className="space-y-1 min-w-0">
+          <div className="w-14 h-3 rounded bg-white/[0.04] animate-pulse" />
+          <div className="w-20 h-2 rounded bg-white/[0.04] animate-pulse" />
         </div>
       </div>
       <div className="flex justify-end">
-        <div className="w-20 h-4 rounded bg-bg-elevated animate-pulse" />
+        <div className="w-16 h-3.5 rounded bg-white/[0.04] animate-pulse" />
       </div>
       <div className="flex justify-end">
-        <div className="w-24 h-4 rounded bg-bg-elevated animate-pulse" />
+        <div className="w-12 h-3.5 rounded bg-white/[0.04] animate-pulse" />
       </div>
       <div className="flex justify-end">
-        <div className="w-20 h-4 rounded bg-bg-elevated animate-pulse" />
+        <div className="w-14 h-3.5 rounded bg-white/[0.04] animate-pulse" />
       </div>
       <div className="flex justify-end">
-        <div className="w-14 h-4 rounded bg-bg-elevated animate-pulse" />
+        <div className="w-14 h-3.5 rounded bg-white/[0.04] animate-pulse" />
       </div>
       <div className="flex justify-end">
-        <div className="w-16 h-6 rounded-full bg-bg-elevated animate-pulse" />
+        <div className="w-14 h-3 rounded bg-white/[0.04] animate-pulse" />
+      </div>
+      <div className="flex justify-end">
+        <div className="w-12 h-5 rounded-full bg-white/[0.04] animate-pulse" />
       </div>
     </div>
   );
@@ -365,25 +354,20 @@ function SkeletonRow() {
 
 // ─── Main Discover Page ───────────────────────────────────────────────────────
 
-const TIMEFRAMES = ["1D", "1W", "1M", "3M", "1Y", "YTD", "ALL"] as const;
-type Timeframe = (typeof TIMEFRAMES)[number];
-
-const CATEGORIES = [
-  { id: "all", label: "All Tokens" },
-  { id: "dex", label: "DEX Verified" },
-  { id: "curve", label: "Bonding Curves" },
-] as const;
-type Category = (typeof CATEGORIES)[number]["id"];
-
 export default function DiscoverPage() {
+  const { publicKey } = useWallet();
+  const { isWatched } = useWatchlist(publicKey?.toBase58());
+
   const [tokens, setTokens] = useState<Token[]>([]);
   const [cookUsd, setCookUsd] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState("");
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>("1D");
-  const [category, setCategory] = useState<Category>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
+  const [selectedTradeToken, setSelectedTradeToken] = useState<Token | undefined>(undefined);
+
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "volume24h",
     dir: "desc",
@@ -427,13 +411,35 @@ export default function DiscoverPage() {
     );
   }
 
+  // Handle selecting a token for quick trading in the docked terminal
+  function handleTradeToken(token: Token) {
+    setSelectedTradeToken(token);
+    // On mobile, smooth scroll to the swap card
+    if (window.innerWidth < 1280) {
+      const swapEl = document.getElementById("docked-swap-panel");
+      if (swapEl) {
+        swapEl.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }
+
   // Filter & sort
   const displayed = useMemo(() => {
     return [...tokens]
       .filter((t) => {
-        // Category filter
-        if (category === "curve" && !t.launchpad) return false;
-        if (category === "dex" && t.launchpad) return false;
+        // Tab Filters
+        if (activeFilter === "favorites") {
+          return isWatched(t.mint);
+        }
+        if (activeFilter === "gainers") {
+          return (t.priceChange24h || 0) > 0;
+        }
+        if (activeFilter === "losers") {
+          return (t.priceChange24h || 0) < 0;
+        }
+        if (activeFilter === "trending") {
+          return (t.volume24h || 0) > 50;
+        }
 
         // Search filter
         if (!query.trim()) return true;
@@ -445,6 +451,12 @@ export default function DiscoverPage() {
         );
       })
       .sort((a, b) => {
+        if (activeFilter === "gainers") {
+          return (b.priceChange24h || 0) - (a.priceChange24h || 0);
+        }
+        if (activeFilter === "losers") {
+          return (a.priceChange24h || 0) - (b.priceChange24h || 0);
+        }
         const av = (a[sort.key] as number | undefined) ?? -Infinity;
         const bv = (b[sort.key] as number | undefined) ?? -Infinity;
         if (bv !== av) {
@@ -452,7 +464,7 @@ export default function DiscoverPage() {
         }
         return (b.marketCap ?? 0) - (a.marketCap ?? 0);
       });
-  }, [tokens, query, category, sort]);
+  }, [tokens, query, activeFilter, sort, isWatched]);
 
   const totalLiquidity = useMemo(
     () => tokens.reduce((acc, t) => acc + (t.liquidity ?? 0), 0),
@@ -465,47 +477,68 @@ export default function DiscoverPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Context Subheader (Reference match) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* ─── TOP TICKER TAPE ─── */}
+      <MarketTickerTape tokens={tokens} onSelectToken={handleTradeToken} />
+
+      {/* ─── HEADER BAR: BREADCRUMBS & SEARCH ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-text-primary">
+          <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
+            <Link href="/" className="hover:text-text-primary transition-colors">
+              Overview
+            </Link>
+            <span>/</span>
+            <span className="text-text-primary font-bold">Dashboard</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-text-primary mt-1">
             Cookie Chain Markets
           </h1>
-          <p className="text-xs text-text-secondary mt-0.5">
-            Real-time tokens, liquidity pools, and trading volume on Cookie Chain.
-          </p>
         </div>
 
-        {/* Quick Search & Alerts */}
+        {/* Search input & Quick Tools */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSearchModalOpen(true)}
-            className="h-8 px-3.5 rounded-full text-xs font-medium bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-2 select-none"
-            title="Search tokens by name, symbol, or contract address (Ctrl+K)"
-          >
-            <i className="ri-search-line text-xs text-accent" />
-            <span className="hidden sm:inline">Search Tokens or CA</span>
-            <span className="sm:hidden">Search</span>
-            <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono text-text-muted bg-bg-elevated border border-border rounded">
-              ⌘K
-            </kbd>
-          </button>
+          <div className="relative flex-1 sm:flex-initial">
+            <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search token or address..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setSearchModalOpen(true);
+              }}
+              className={cn(
+                "h-9 pl-8 pr-12 w-full sm:w-64 text-xs font-medium",
+                "glass-input rounded-xl",
+                "text-text-primary placeholder:text-text-muted",
+                "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
+                "transition-all duration-150"
+              )}
+            />
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-text-muted glass-pill hover:text-accent transition-colors"
+              title="Global search (Ctrl+K)"
+            >
+              /
+            </button>
+          </div>
 
           <button
             onClick={load}
             disabled={loading}
-            className="h-8 px-3 rounded-full text-xs font-medium bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40"
+            className="h-9 px-3 rounded-xl text-xs font-bold glass-pill text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
             title="Refresh market data"
           >
             <i className={cn("ri-refresh-line text-xs", loading && "animate-spin text-accent")} />
-            <span>Refresh</span>
+            <span className="hidden md:inline">Refresh</span>
           </button>
 
           <a
             href="https://t.me"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_12px_rgba(59,178,115,0.3)] transition-all duration-200 inline-flex items-center gap-1.5 select-none"
+            className="h-9 px-3.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_16px_rgba(59,178,115,0.4)] transition-all duration-200 inline-flex items-center gap-1.5 select-none"
           >
             <i className="ri-notification-3-line text-xs" />
             <span>Alerts</span>
@@ -513,203 +546,194 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Terminal Stats Row */}
-      <motion.div
-        variants={variants.fadeDown}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3.5"
-      >
-        <StatCard
-          icon="ri-coin-line"
-          label="COOK Spot Price"
-          value={cookUsd ? formatPrice(cookUsd) : "—"}
-          sub="Native Cookie Chain Gas"
-        />
-        <StatCard
-          icon="ri-water-flash-line"
-          label="Total DEX Liquidity"
-          value={loading ? "—" : formatUsd(totalLiquidity, 0)}
-          sub="Across all active pools"
-        />
-        <StatCard
-          icon="ri-exchange-dollar-line"
-          label="24h Trading Volume"
-          value={loading ? "—" : formatUsd(totalVolume, 0)}
-          sub="Verified DEX swaps"
-        />
-        <StatCard
-          icon="ri-database-2-line"
-          label="Tracked Tokens"
-          value={loading ? "—" : formatNumber(tokens.length, 0)}
-          sub="Live on Cookie DAS"
-        />
-      </motion.div>
+      {/* ─── 2-COLUMN SPLIT LAYOUT (MARKET ON LEFT, EXCHANGE ON RIGHT) ─── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN: HERO HIGHLIGHTS & MARKET OVERVIEW TABLE (8 COLS) */}
+        <div className="xl:col-span-8 space-y-6">
+          {/* Live Crypto Updates (3-Card Spotlight) */}
+          <LiveHighlights
+            tokens={tokens}
+            cookPrice={cookUsd || 0.000075}
+            onTradeToken={handleTradeToken}
+            selectedMint={selectedTradeToken?.mint}
+          />
 
-      {/* Main Glass Card Table Container */}
-      <motion.div
-        variants={variants.fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="rounded-2xl border border-border/80 bg-bg-card/90 shadow-2xl overflow-hidden backdrop-blur-md"
-      >
-        {/* Table Top Header Bar */}
-        <div
-          style={{ gridTemplateColumns: COLS }}
-          className="grid items-center gap-x-4 px-5 bg-bg/50 border-b border-border text-xs text-text-muted"
-        >
-          <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
-            <span className="text-amber-400/80">★</span>
-            <span>#</span>
-          </span>
-          <TableHeaderCol label="Token Name" sortKey="marketCap" current={sort} onSort={handleSort} align="left" />
-          <TableHeaderCol label="Price" sortKey="price" current={sort} onSort={handleSort} />
-          <TableHeaderCol label="Trading Volume (24h)" sortKey="volume24h" current={sort} onSort={handleSort} />
-          <TableHeaderCol label="Market Cap" sortKey="marketCap" current={sort} onSort={handleSort} />
-          <TableHeaderCol label="Holders" sortKey="holderCount" current={sort} onSort={handleSort} />
-          <span className="text-right text-[11px] font-bold uppercase tracking-wider text-text-muted py-3">
-            Actions
-          </span>
-        </div>
-
-        {/* Table Rows Body */}
-        <div className="divide-y divide-border/40 min-h-[360px]">
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {Array.from({ length: 14 }).map((_, i) => (
-                  <SkeletonRow key={i} />
-                ))}
-              </motion.div>
-            ) : error ? (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="py-24 text-center space-y-3"
-              >
-                <div className="w-12 h-12 rounded-full bg-error/10 border border-error/30 flex items-center justify-center mx-auto text-error text-2xl">
-                  <i className="ri-error-warning-line" />
-                </div>
-                <p className="text-sm font-semibold text-text-primary">Failed to load market data</p>
-                <p className="text-xs text-text-muted max-w-md mx-auto">{error}</p>
-                <button
-                  onClick={load}
-                  className="mt-2 h-8 px-5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] transition-colors"
-                >
-                  Retry Connection
-                </button>
-              </motion.div>
-            ) : displayed.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="py-24 text-center space-y-3"
-              >
-                <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border flex items-center justify-center mx-auto text-text-muted text-2xl">
-                  <i className="ri-search-line" />
-                </div>
-                <p className="text-sm font-semibold text-text-primary">No tokens found</p>
+          {/* Market Overview Table Header & Filter Tabs */}
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+              <div>
+                <h2 className="text-base font-bold text-text-primary tracking-tight">
+                  Market Overview
+                </h2>
                 <p className="text-xs text-text-muted">
-                  No match for &ldquo;{query}&rdquo; in current filter
+                  Real-time SVM liquidity and swap volume across Cookie Chain.
                 </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="list"
-                variants={variants.staggerChildren}
-                initial="hidden"
-                animate="visible"
-              >
-                {displayed.map((token, i) => (
-                  <TokenRow key={token.mint} token={token} rank={i + 1} />
+              </div>
+
+              {/* Filter Pills matching Quantix reference */}
+              <div className="flex items-center gap-1 p-1 rounded-xl glass-pill overflow-x-auto no-scrollbar">
+                {(
+                  [
+                    { id: "all", label: "All" },
+                    { id: "trending", label: "Trends" },
+                    { id: "favorites", label: "Favorites" },
+                    { id: "gainers", label: "Top Gainers" },
+                    { id: "losers", label: "Top Losers" },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-bold tracking-tight transition-all select-none cursor-pointer whitespace-nowrap",
+                      activeFilter === tab.id
+                        ? "bg-accent/20 text-accent border border-accent/40 shadow-[0_0_12px_rgba(59,178,115,0.25)]"
+                        : "text-text-muted hover:text-text-secondary hover:bg-white/[0.04]"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
                 ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Table Bottom Controls Bar (Matches Reference Footer) */}
-        <div className="px-5 py-3.5 border-t border-border bg-bg/60 flex flex-col lg:flex-row items-center justify-between gap-4">
-          {/* Left: Timeframe Switcher */}
-          <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto">
-            <span className="text-xs font-bold uppercase tracking-wider text-text-muted select-none mr-1">
-              Timeframe
-            </span>
-            <div className="flex items-center gap-1 bg-bg-card p-1 rounded-full border border-border">
-              {TIMEFRAMES.map((tf) => (
-                <button
-                  key={tf}
-                  onClick={() => setActiveTimeframe(tf)}
-                  className={cn(
-                    "h-6 px-3 rounded-full text-[11px] font-bold tracking-wider transition-all select-none",
-                    activeTimeframe === tf
-                      ? "bg-accent text-[#08090C] shadow-[0_0_8px_rgba(59,178,115,0.4)]"
-                      : "text-text-muted hover:text-text-primary"
-                  )}
-                >
-                  {tf}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Category Pills + Search input */}
-          <div className="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
-            {/* Category Filter */}
-            <div className="flex items-center gap-1 bg-bg-card p-1 rounded-full border border-border">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={cn(
-                    "h-6 px-3 rounded-full text-[11px] font-medium transition-all select-none",
-                    category === cat.id
-                      ? "bg-bg-elevated text-text-primary border border-border/80 shadow-sm"
-                      : "text-text-muted hover:text-text-secondary"
-                  )}
-                >
-                  {cat.label}
-                </button>
-              ))}
+              </div>
             </div>
 
-            {/* Token Search Input */}
-            <div className="relative flex-1 sm:flex-initial">
-              <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search name or CA..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") setSearchModalOpen(true);
-                }}
-                className={cn(
-                  "h-8 pl-8 pr-12 w-full sm:w-56 text-xs",
-                  "bg-bg-card border border-border rounded-full",
-                  "text-text-primary placeholder:text-text-muted",
-                  "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20",
-                  "transition-colors duration-150"
-                )}
-              />
-              <button
-                onClick={() => setSearchModalOpen(true)}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-text-muted bg-bg-elevated border border-border hover:text-accent hover:border-accent/30 transition-colors"
-                title="Open full search modal (Ctrl+K)"
+            {/* Market Table Card Container */}
+            <div className="rounded-2xl glass-panel overflow-hidden">
+              {/* Table Column Headers */}
+              <div
+                style={{ gridTemplateColumns: COLS }}
+                className="grid items-center gap-x-3 px-4 bg-white/[0.03] backdrop-blur-md border-b border-white/[0.08] text-xs text-text-muted font-bold"
               >
-                ⌘K
-              </button>
+                <span className="text-[10px] uppercase font-bold text-text-muted flex items-center gap-1">
+                  <span>#</span>
+                </span>
+                <TableHeaderCol label="Coin Name" sortKey="marketCap" current={sort} onSort={handleSort} align="left" />
+                <TableHeaderCol label="Price" sortKey="price" current={sort} onSort={handleSort} />
+                <TableHeaderCol label="24h %" sortKey="priceChange24h" current={sort} onSort={handleSort} />
+                <TableHeaderCol label="Market Cap" sortKey="marketCap" current={sort} onSort={handleSort} />
+                <TableHeaderCol label="Volume (24h)" sortKey="volume24h" current={sort} onSort={handleSort} />
+                <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3 pr-2">
+                  Trend
+                </span>
+                <span className="text-right text-[10px] uppercase font-bold text-text-muted py-3">
+                  Action
+                </span>
+              </div>
+
+              {/* Table Rows */}
+              <div className="divide-y divide-white/[0.04] min-h-[360px]">
+                <AnimatePresence mode="wait">
+                  {loading ? (
+                    <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <SkeletonRow key={i} />
+                      ))}
+                    </motion.div>
+                  ) : error ? (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="py-20 text-center space-y-3"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-error/10 border border-error/30 flex items-center justify-center mx-auto text-error text-2xl">
+                        <i className="ri-error-warning-line" />
+                      </div>
+                      <p className="text-sm font-semibold text-text-primary">Failed to load market data</p>
+                      <p className="text-xs text-text-muted max-w-md mx-auto">{error}</p>
+                      <button
+                        onClick={load}
+                        className="mt-2 h-8 px-5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </motion.div>
+                  ) : displayed.length === 0 ? (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="py-20 text-center space-y-2"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mx-auto text-text-muted text-xl">
+                        <i className="ri-search-line" />
+                      </div>
+                      <p className="text-sm font-semibold text-text-primary">No tokens found</p>
+                      <p className="text-xs text-text-muted">
+                        No tokens matched your filter criteria.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="list"
+                      variants={variants.staggerChildren}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {displayed.map((token, i) => (
+                        <TokenRow
+                          key={token.mint}
+                          token={token}
+                          rank={i + 1}
+                          onTrade={handleTradeToken}
+                          isSelected={selectedTradeToken?.mint === token.mint}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Global Token Search Modal (Name, Symbol, and CA / Mint) */}
+        {/* RIGHT COLUMN: DOCKED EXCHANGE & ACTIVITY (4 COLS) */}
+        <div id="docked-swap-panel" className="xl:col-span-4 space-y-4 xl:sticky xl:top-6">
+          {/* Exchange Header Tag */}
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
+                Exchange
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25 text-[10px] font-bold uppercase tracking-wider">
+                Cookieswap DEX
+              </span>
+            </div>
+
+            <Link
+              href="/swap"
+              className="text-xs text-text-muted hover:text-accent transition-colors flex items-center gap-1"
+            >
+              <span>Full Screen</span>
+              <i className="ri-fullscreen-line text-[11px]" />
+            </Link>
+          </div>
+
+          {/* Embedded Real Swap Card */}
+          <div className="rounded-2xl glass-panel overflow-hidden p-1">
+            <SwapCard
+              initialOutputToken={selectedTradeToken}
+              className="border-0 shadow-none bg-transparent p-3"
+            />
+          </div>
+
+          {/* Ecosystem Pulse Stats */}
+          <EcosystemPulse
+            volume24h={totalVolume}
+            liquidity={totalLiquidity}
+            trackedTokensCount={tokens.length}
+          />
+        </div>
+      </div>
+
+      {/* Global Token Search Modal */}
       <TokenSearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
+        onSelectToken={(token: Token) => {
+          handleTradeToken(token);
+          setSearchModalOpen(false);
+        }}
       />
     </div>
   );
