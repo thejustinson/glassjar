@@ -45,14 +45,14 @@ export function PortfolioMetrics({
           {/* Fund Wallet Button */}
           <button
             onClick={() => setFundModalOpen(true)}
-            className="h-9 px-3.5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_12px_rgba(59,178,115,0.3)] transition-all flex items-center gap-1.5 cursor-pointer select-none"
+            className="h-9 px-3.5 rounded-full text-xs font-bold bg-accent text-[#08090C] hover:bg-[#45c381] transition-all flex items-center gap-1.5 cursor-pointer select-none"
           >
             <i className="ri-qr-code-line text-sm" />
             <span>Fund Wallet</span>
           </button>
 
           {/* Wallet Address Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-card border border-border text-xs text-text-secondary">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-xs text-text-secondary">
             <span className="w-2 h-2 rounded-full bg-accent" />
             <span className="font-semibold text-text-primary">
               {truncateAddress(walletAddress, 4)}
@@ -79,7 +79,7 @@ export function PortfolioMetrics({
           <button
             onClick={onRefresh}
             disabled={loading}
-            className="h-9 w-9 rounded-full bg-bg-card border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors disabled:opacity-50 cursor-pointer"
+            className="h-9 w-9 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border transition-colors disabled:opacity-50 cursor-pointer"
             title="Refresh balances"
           >
             <i className={cn("ri-refresh-line text-sm", loading && "animate-spin text-accent")} />
@@ -96,7 +96,7 @@ export function PortfolioMetrics({
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Card 1: Total Net Worth */}
-        <div className="p-4 rounded-2xl bg-bg-card border border-border/80 relative overflow-hidden">
+        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 relative overflow-hidden">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Total Net Worth</span>
             <i className="ri-wallet-line text-accent text-sm" />
@@ -115,7 +115,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 2: Native COOK Holdings */}
-        <div className="p-4 rounded-2xl bg-bg-card border border-border/80">
+        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Native COOK</span>
             <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded">
@@ -131,7 +131,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 3: SPL Token Holdings */}
-        <div className="p-4 rounded-2xl bg-bg-card border border-border/80">
+        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Token Assets</span>
             <i className="ri-coins-line text-text-muted text-sm" />
@@ -145,7 +145,7 @@ export function PortfolioMetrics({
         </div>
 
         {/* Card 4: Total Assets Count */}
-        <div className="p-4 rounded-2xl bg-bg-card border border-border/80">
+        <div className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
           <div className="flex items-center justify-between text-xs text-text-muted mb-1">
             <span className="font-bold uppercase tracking-wider text-[10px]">Active Assets</span>
             <i className="ri-pie-chart-line text-text-muted text-sm" />

@@ -54,7 +54,7 @@ export function WatchlistEditModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/80"
         />
 
         {/* Modal Window */}
@@ -63,15 +63,12 @@ export function WatchlistEditModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ type: "spring", stiffness: 450, damping: 32 }}
-          className="relative z-10 w-full max-w-md squircle-lg glass-panel border border-white/10 shadow-2xl p-6 space-y-5 overflow-hidden"
+          className="relative z-10 w-full max-w-md squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-6 space-y-5 overflow-hidden"
         >
-          {/* Ambient Glow */}
-          <div className="absolute -top-16 -right-16 w-36 h-36 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-
           {/* Header */}
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3">
-              <div className="squircle-sm p-1 bg-white/[0.04] border border-white/10 shadow-md">
+              <div className="squircle-sm p-1 bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80">
                 <TokenAvatar
                   logoUri={item.logoUri}
                   symbol={item.symbol}
@@ -92,7 +89,7 @@ export function WatchlistEditModal({
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full glass-pill border border-white/10 flex items-center justify-center text-text-muted hover:text-text-primary hover:border-white/20 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 flex items-center justify-center text-text-muted hover:text-text-primary hover:border-border transition-colors cursor-pointer"
             >
               <i className="ri-close-line text-lg" />
             </button>
@@ -114,7 +111,7 @@ export function WatchlistEditModal({
                   placeholder="e.g. 0.045"
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
+                  className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
                 />
               </div>
             </div>
@@ -133,7 +130,7 @@ export function WatchlistEditModal({
                 placeholder="e.g. 5000"
                 value={trackedAmount}
                 onChange={(e) => setTrackedAmount(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
               />
             </div>
 
@@ -147,7 +144,7 @@ export function WatchlistEditModal({
                 placeholder="e.g. Watching for DEX volume surge after graduation; exit target 2x."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors resize-none"
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors resize-none"
               />
             </div>
 
@@ -156,13 +153,13 @@ export function WatchlistEditModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-full glass-pill border border-white/10 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-full bg-accent text-[#08090C] text-xs font-bold hover:bg-[#45c381] transition-all shadow-[0_0_14px_rgba(59,178,115,0.3)] cursor-pointer"
+                className="px-5 py-2 rounded-full bg-accent text-[#08090C] text-xs font-bold hover:bg-[#45c381] transition-all cursor-pointer"
               >
                 Save Tracking Info
               </button>

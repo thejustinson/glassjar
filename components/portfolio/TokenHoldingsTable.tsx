@@ -23,8 +23,8 @@ export function TokenHoldingsTable({ holdings, loading }: TokenHoldingsTableProp
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-bg-card overflow-hidden">
-        <div className="p-4 border-b border-border text-xs font-bold uppercase tracking-wider text-text-muted">
+      <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
+        <div className="p-4 border-b border-border/80 text-xs font-bold uppercase tracking-wider text-text-muted">
           Holdings
         </div>
         <div className="py-16 text-center text-xs text-text-muted space-y-2">
@@ -37,8 +37,8 @@ export function TokenHoldingsTable({ holdings, loading }: TokenHoldingsTableProp
 
   if (holdings.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-bg-card p-12 text-center space-y-3">
-        <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border flex items-center justify-center mx-auto text-text-muted text-xl">
+      <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-12 text-center space-y-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 flex items-center justify-center mx-auto text-text-muted text-xl">
           <i className="ri-inbox-line" />
         </div>
         <h3 className="text-sm font-bold text-text-primary">No tokens found</h3>
@@ -55,7 +55,7 @@ export function TokenHoldingsTable({ holdings, loading }: TokenHoldingsTableProp
           </Link>
           <Link
             href="/bridge"
-            className="h-8 px-4 rounded-full text-xs font-semibold bg-bg-elevated border border-border text-text-primary hover:border-accent/40 transition-colors inline-flex items-center gap-1.5"
+            className="h-8 px-4 rounded-full text-xs font-semibold bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-primary hover:border-border transition-colors inline-flex items-center gap-1.5"
           >
             <span>Bridge Funds</span>
           </Link>
@@ -65,12 +65,12 @@ export function TokenHoldingsTable({ holdings, loading }: TokenHoldingsTableProp
   }
 
   return (
-    <div className="rounded-2xl border border-border/80 bg-bg-card overflow-hidden shadow-xl">
+    <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
       {/* Table Header Bar */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-4 border-b border-border/80 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-text-primary">Asset Holdings</h3>
-          <span className="text-[11px] font-semibold text-text-muted px-2 py-0.5 rounded-full bg-bg-elevated border border-border">
+          <span className="text-[11px] font-semibold text-text-muted px-2 py-0.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80">
             {holdings.length}
           </span>
         </div>

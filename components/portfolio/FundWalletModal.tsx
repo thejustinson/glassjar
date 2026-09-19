@@ -45,20 +45,17 @@ export function FundWalletModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150 select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-in fade-in duration-150 select-none"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl rounded-3xl bg-[#0E1015] border border-border shadow-2xl p-6 sm:p-7 overflow-hidden text-left"
+        className="relative w-full max-w-2xl squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-6 sm:p-7 overflow-hidden text-left"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Subtle decorative background glow */}
-        <div className="absolute -top-20 -right-20 w-56 h-56 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-
         {/* Modal Top Header Bar */}
         <div className="flex items-center justify-between pb-5 border-b border-border/70 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+            <div className="w-9 h-9 squircle-sm bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
               <i className="ri-qr-code-line text-lg" />
             </div>
             <div>
@@ -77,7 +74,7 @@ export function FundWalletModal({
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-bg-card border border-border text-text-muted hover:text-text-primary hover:bg-bg-elevated flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-muted hover:text-text-primary flex items-center justify-center transition-colors cursor-pointer"
             title="Close modal"
           >
             <i className="ri-close-line text-lg" />
@@ -87,8 +84,8 @@ export function FundWalletModal({
         {/* 2-Column Horizontally Aligned Body */}
         <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 items-center">
           {/* Left Column: QR Code Card */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-bg-card border border-border text-center">
-            <div className="p-2.5 bg-white rounded-xl shadow-md">
+          <div className="flex flex-col items-center justify-center p-3 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 text-center">
+            <div className="p-2.5 bg-white rounded-xl">
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
@@ -110,7 +107,7 @@ export function FundWalletModal({
           {/* Right Column: Address, Copy, and Actions */}
           <div className="space-y-4">
             {/* Wallet Address Container */}
-            <div className="p-3.5 rounded-2xl bg-bg-card border border-border">
+            <div className="p-3.5 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-text-muted">
                   Your Address
@@ -119,7 +116,7 @@ export function FundWalletModal({
                   Cookie Chain Native
                 </span>
               </div>
-              <p className="text-xs font-mono text-text-primary break-all leading-relaxed bg-bg-elevated/60 p-2 rounded-lg border border-border/50">
+              <p className="text-xs font-mono text-text-primary break-all leading-relaxed bg-[#0B0D13] p-2 rounded-lg border border-border/60">
                 {walletAddress}
               </p>
             </div>
@@ -130,10 +127,10 @@ export function FundWalletModal({
               <button
                 onClick={handleCopy}
                 className={cn(
-                  "h-10 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+                  "h-10 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
                   copied
-                    ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.4)]"
-                    : "bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_10px_rgba(59,178,115,0.25)]"
+                    ? "bg-accent text-[#08090C]"
+                    : "bg-accent text-[#08090C] hover:bg-[#45c381]"
                 )}
               >
                 <i className={cn("text-sm", copied ? "ri-check-line font-bold" : "ri-file-copy-line")} />
@@ -145,7 +142,7 @@ export function FundWalletModal({
                 href={explorerAddressUrl(walletAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-10 px-3 rounded-xl bg-bg-elevated border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                className="h-10 px-3 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-secondary hover:text-text-primary text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
               >
                 <span>Cookiescan</span>
                 <i className="ri-external-link-line text-xs" />
@@ -153,7 +150,7 @@ export function FundWalletModal({
             </div>
 
             {/* Bridge Notice & Link */}
-            <div className="p-3 rounded-xl bg-bg-elevated/40 border border-border/70 flex items-center justify-between gap-3 text-xs">
+            <div className="p-3 squircle-sm bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/70 flex items-center justify-between gap-3 text-xs">
               <div className="min-w-0">
                 <p className="text-[11px] text-text-secondary font-medium">
                   Need to move funds from Solana?
@@ -165,7 +162,7 @@ export function FundWalletModal({
               <Link
                 href="/bridge"
                 onClick={onClose}
-                className="h-8 px-3 rounded-lg bg-accent/15 border border-accent/30 text-accent hover:bg-accent hover:text-[#08090C] text-[11px] font-bold transition-all flex items-center gap-1 flex-shrink-0"
+                className="h-8 px-3 rounded-full bg-accent/15 border border-accent/30 text-accent hover:bg-accent hover:text-[#08090C] text-[11px] font-bold transition-all flex items-center gap-1 flex-shrink-0"
               >
                 <span>Bridge</span>
                 <i className="ri-arrow-right-line text-xs" />

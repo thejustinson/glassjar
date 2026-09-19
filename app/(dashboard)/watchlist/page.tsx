@@ -53,7 +53,7 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className="p-4 sm:p-4.5 squircle-md glass-card border border-white/8 transition-all hover:border-accent/30 group relative overflow-hidden shadow-lg">
+    <div className="p-4 sm:p-4.5 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 transition-all hover:border-accent/40 group relative overflow-hidden">
       <div className="flex items-center justify-between">
         <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-muted">{label}</p>
         <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -410,7 +410,7 @@ export default function WatchlistPage() {
                 Watchlist
               </h1>
             </div>
-            <span className="px-3 py-1 rounded-full glass-pill border border-accent/30 text-accent text-xs font-extrabold font-mono shadow-sm">
+            <span className="px-3 py-1 rounded-full bg-gradient-to-b from-[#1A1E2B] to-[#11141D] border border-accent/30 text-accent text-xs font-extrabold font-mono">
               {count} {count === 1 ? "Token" : "Tokens"}
             </span>
           </div>
@@ -427,7 +427,7 @@ export default function WatchlistPage() {
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="h-9 px-3.5 rounded-full glass-pill border border-white/10 text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-white/20 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+            className="h-9 px-3.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-accent/40 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             title={`Last updated ${lastUpdated.toLocaleTimeString()}`}
           >
             <i
@@ -442,7 +442,7 @@ export default function WatchlistPage() {
           {/* Add Token Button */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="h-9 px-4.5 rounded-full bg-accent text-[#08090C] text-xs font-extrabold hover:bg-[#45c381] transition-all flex items-center gap-1.5 shadow-[0_0_16px_rgba(59,178,115,0.35)] select-none cursor-pointer"
+            className="h-9 px-4.5 rounded-full bg-accent text-[#08090C] text-xs font-extrabold hover:bg-[#45c381] transition-all flex items-center gap-1.5 select-none cursor-pointer"
           >
             <i className="ri-add-line text-base font-bold" />
             <span>Add Token</span>
@@ -496,7 +496,7 @@ export default function WatchlistPage() {
 
       {/* ─── FILTER & SEARCH TOOLBAR ─── */}
       {items.length > 0 && (
-        <div className="p-2 sm:p-2.5 squircle-md glass-panel border border-white/8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-md">
+        <div className="p-2 sm:p-2.5 squircle-md bg-gradient-to-b from-[#141824] to-[#0D1017] border border-border/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Filter Pills with Sliding Active Indicator */}
           <div className="relative flex items-center p-1 rounded-full bg-black/40 border border-white/5 overflow-x-auto">
             {(
@@ -529,7 +529,7 @@ export default function WatchlistPage() {
                   {active && (
                     <motion.div
                       layoutId="watchlistFilterTab"
-                      className="absolute inset-0 rounded-full bg-accent/15 border border-accent/30 shadow-[0_0_12px_rgba(59,178,115,0.2)]"
+                      className="absolute inset-0 rounded-full bg-accent/15 border border-accent/30"
                       transition={{ type: "spring", stiffness: 450, damping: 32 }}
                     />
                   )}
@@ -547,7 +547,7 @@ export default function WatchlistPage() {
               placeholder="Search watchlist..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-1.5 rounded-full glass-pill border border-white/10 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-all shadow-inner"
+              className="w-full pl-9 pr-8 py-1.5 rounded-full bg-gradient-to-b from-[#1A1E2B] to-[#11141D] border border-border/80 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-all"
             />
             {searchQuery && (
               <button
@@ -564,11 +564,11 @@ export default function WatchlistPage() {
       {/* ─── MAIN CONTENT: TABLE OR EMPTY STATE ─── */}
       {items.length === 0 ? (
         /* Empty Watchlist State with Quick Add */
-        <div className="squircle-lg glass-panel border border-white/10 p-8 sm:p-14 text-center space-y-6 shadow-2xl relative overflow-hidden">
+        <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-8 sm:p-14 text-center space-y-6 relative overflow-hidden">
           {/* Ambient radial blur */}
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto text-accent text-3xl shadow-[0_0_20px_rgba(59,178,115,0.25)] relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto text-accent text-3xl relative z-10">
             <i className="ri-bookmark-star-line" />
           </div>
 
@@ -583,7 +583,7 @@ export default function WatchlistPage() {
           <div className="flex justify-center relative z-10">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="px-6 py-2.5 rounded-full bg-accent text-[#08090C] text-xs font-bold hover:bg-[#45c381] transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(59,178,115,0.35)] cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-accent text-[#08090C] text-xs font-bold hover:bg-[#45c381] transition-all flex items-center gap-2 cursor-pointer"
             >
               <i className="ri-search-line text-sm" />
               <span>Search & Add Tokens</span>
@@ -592,7 +592,7 @@ export default function WatchlistPage() {
 
           {/* Quick Add Popular Chips */}
           {suggestedTokens.length > 0 && (
-            <div className="pt-8 border-t border-white/8 max-w-xl mx-auto space-y-3.5 relative z-10">
+            <div className="pt-8 border-t border-border/60 max-w-xl mx-auto space-y-3.5 relative z-10">
               <p className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
                 Popular on Cookie Chain
               </p>
@@ -601,7 +601,7 @@ export default function WatchlistPage() {
                   <button
                     key={st.mint}
                     onClick={() => handleAddFromSearch(st)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-pill border border-white/8 hover:border-accent/50 text-xs font-medium text-text-primary transition-all group shadow-sm cursor-pointer"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 hover:border-accent/50 text-xs font-medium text-text-primary transition-all group cursor-pointer"
                   >
                     <TokenAvatar
                       logoUri={st.logoUri}
@@ -625,7 +625,7 @@ export default function WatchlistPage() {
       ) : (
         <>
           {/* ─── DESKTOP TABLE VIEW (md+) ─── */}
-          <div className="hidden md:block squircle-lg glass-panel border border-white/10 overflow-hidden shadow-2xl">
+          <div className="hidden md:block squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
               <div className="min-w-[1020px]">
                 {/* Table Header */}
@@ -692,7 +692,7 @@ export default function WatchlistPage() {
                           key={item.mint}
                           style={{ gridTemplateColumns: COLS }}
                           onClick={() => router.push(`/token/${item.mint}`)}
-                          className="grid items-center gap-x-3 px-4 h-[64px] hover:bg-white/[0.04] transition-colors cursor-pointer group select-none text-xs"
+                          className="grid items-center gap-x-3 px-4 h-[64px] hover:bg-[#161A24]/60 transition-colors cursor-pointer group select-none text-xs"
                         >
                           {/* Star Button (Remove) */}
                           <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
@@ -701,13 +701,13 @@ export default function WatchlistPage() {
                               className="text-amber-400 hover:text-amber-300 p-1.5 rounded-full hover:bg-amber-400/10 transition-all hover:scale-110 cursor-pointer"
                               title="Remove from watchlist"
                             >
-                              <i className="ri-star-fill text-sm shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
+                              <i className="ri-star-fill text-sm" />
                             </button>
                           </div>
 
                           {/* Token Identity */}
                           <div className="flex items-center gap-3 min-w-0 pr-2">
-                            <div className="squircle-sm p-0.5 bg-white/[0.04] border border-white/10 shadow-sm shrink-0">
+                            <div className="squircle-sm p-0.5 bg-[#181C27] border border-border/70 shrink-0">
                               <TokenAvatar
                                 logoUri={item.logoUri}
                                 symbol={item.symbol}
@@ -764,9 +764,9 @@ export default function WatchlistPage() {
                             {sinceWatchedPct !== null ? (
                               <div
                                 className={cn(
-                                  "px-2.5 py-0.5 rounded-full font-mono font-bold text-xs inline-flex items-center gap-1 tabular-nums shadow-sm",
+                                  "px-2.5 py-0.5 rounded-full font-mono font-bold text-xs inline-flex items-center gap-1 tabular-nums",
                                   sinceWatchedPct >= 0
-                                    ? "bg-accent/15 text-accent border border-accent/30 shadow-[0_0_10px_rgba(59,178,115,0.15)]"
+                                    ? "bg-accent/15 text-accent border border-accent/30"
                                     : "bg-error/15 text-error border border-error/30"
                                 )}
                                 title={`Added at ${formatPrice(item.addedPrice)} • Current ${formatPrice(currentPrice)}`}
@@ -838,7 +838,7 @@ export default function WatchlistPage() {
                             {/* Trade Button */}
                             <Link
                               href={`/swap?outputMint=${item.mint}`}
-                              className="h-7 px-3 rounded-full bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-[#08090C] text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                              className="h-7 px-3 rounded-full bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-[#08090C] text-[11px] font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer"
                               title="Swap on Cookieswap"
                             >
                               <i className="ri-arrow-left-right-line text-[10px]" />
@@ -848,7 +848,7 @@ export default function WatchlistPage() {
                             {/* Edit Notes / Target */}
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="w-7 h-7 rounded-full glass-pill border border-white/10 text-text-muted hover:text-text-primary hover:border-white/20 flex items-center justify-center transition-all cursor-pointer"
+                              className="w-7 h-7 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-muted hover:text-text-primary hover:border-border flex items-center justify-center transition-all cursor-pointer"
                               title="Edit Strategy Notes or Target Price"
                             >
                               <i className="ri-edit-line text-xs" />
@@ -857,7 +857,7 @@ export default function WatchlistPage() {
                             {/* Delete */}
                             <button
                               onClick={() => remove(item.mint)}
-                              className="w-7 h-7 rounded-full glass-pill border border-white/10 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-all cursor-pointer"
+                              className="w-7 h-7 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-all cursor-pointer"
                               title="Remove"
                             >
                               <i className="ri-delete-bin-line text-xs" />
@@ -875,7 +875,7 @@ export default function WatchlistPage() {
           {/* ─── MOBILE CARD VIEW (< md) ─── */}
           <div className="md:hidden space-y-3">
             {filteredTokens.length === 0 ? (
-              <div className="py-12 text-center text-xs text-text-muted squircle-lg glass-panel border border-white/10">
+              <div className="py-12 text-center text-xs text-text-muted squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80">
                 No tokens match your search filter.
               </div>
             ) : (
@@ -887,7 +887,7 @@ export default function WatchlistPage() {
                   <div
                     key={item.mint}
                     onClick={() => router.push(`/token/${item.mint}`)}
-                    className="p-4 squircle-md glass-card border border-white/8 space-y-3 shadow-lg transition-all hover:border-accent/30 cursor-pointer select-none"
+                    className="p-4 squircle-md bg-gradient-to-b from-[#151924] to-[#0D1017] border border-border/80 space-y-3 transition-all hover:border-accent/40 cursor-pointer select-none"
                   >
                     {/* Top Row: Token Identity + Price & Delta */}
                     <div className="flex items-center justify-between gap-3">
@@ -902,7 +902,7 @@ export default function WatchlistPage() {
                         >
                           <i className="ri-star-fill text-sm" />
                         </button>
-                        <div className="squircle-sm p-0.5 bg-white/[0.04] border border-white/10 shrink-0">
+                        <div className="squircle-sm p-0.5 bg-[#181C27] border border-border/70 shrink-0">
                           <TokenAvatar logoUri={item.logoUri} symbol={item.symbol} size={32} className="squircle-xs" />
                         </div>
                         <div className="min-w-0">
@@ -1004,7 +1004,7 @@ export default function WatchlistPage() {
 
                       <button
                         onClick={() => setEditingItem(item)}
-                        className="h-8 px-3.5 rounded-full glass-pill border border-white/10 text-text-secondary hover:text-text-primary text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                        className="h-8 px-3.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-secondary hover:text-text-primary text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <i className="ri-edit-line text-xs" />
                         <span>Target</span>
@@ -1012,7 +1012,7 @@ export default function WatchlistPage() {
 
                       <button
                         onClick={() => remove(item.mint)}
-                        className="w-8 h-8 rounded-full glass-pill border border-white/10 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-muted hover:text-error hover:border-error/40 flex items-center justify-center transition-colors cursor-pointer"
                         title="Remove"
                       >
                         <i className="ri-delete-bin-line text-xs" />

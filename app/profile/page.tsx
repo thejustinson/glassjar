@@ -103,7 +103,7 @@ export default function ProfilePage() {
                   className={cn(
                     "px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 select-none",
                     activeTab === "holdings"
-                      ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.3)]"
+                      ? "bg-accent text-[#08090C]"
                       : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                   )}
                 >
@@ -127,7 +127,7 @@ export default function ProfilePage() {
                   className={cn(
                     "px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 select-none",
                     activeTab === "activity"
-                      ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.3)]"
+                      ? "bg-accent text-[#08090C]"
                       : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                   )}
                 >
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                   className={cn(
                     "px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 select-none",
                     activeTab === "watchlist"
-                      ? "bg-accent text-[#08090C] shadow-[0_0_12px_rgba(59,178,115,0.3)]"
+                      ? "bg-accent text-[#08090C]"
                       : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                   )}
                 >
@@ -199,7 +199,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === "watchlist" && (
-              <div className="rounded-2xl border border-border/80 bg-bg-card overflow-hidden shadow-xl">
+              <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-sm font-bold text-text-primary">Saved Watchlist Tokens</h3>
                   <Link

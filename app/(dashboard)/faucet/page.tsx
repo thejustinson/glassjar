@@ -149,7 +149,7 @@ export default function FaucetPage() {
       <div className="relative z-10 w-full max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 text-accent mb-4">
             <i className="ri-water-flash-fill text-accent text-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">
@@ -161,11 +161,11 @@ export default function FaucetPage() {
         </div>
 
         {/* Main Card */}
-        <div className="rounded-2xl border border-border bg-bg-card/80 backdrop-blur-sm overflow-hidden">
+        <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
           {/* Not Connected */}
           {!connected && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center">
                 <i className="ri-wallet-3-line text-text-muted text-2xl" />
               </div>
               <div className="text-center">
@@ -183,7 +183,7 @@ export default function FaucetPage() {
           {/* Connected — Idle */}
           {connected && state.type === "idle" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center text-accent">
                 <i className="ri-hand-coin-fill text-accent text-2xl" />
               </div>
               <div className="text-center">
@@ -196,7 +196,7 @@ export default function FaucetPage() {
               </div>
               <button
                 onClick={handleClaim}
-                className="w-full max-w-[280px] h-11 rounded-full bg-accent text-bg font-bold text-sm tracking-wide hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(59,178,115,0.3)]"
+                className="w-full max-w-[280px] h-11 rounded-full bg-accent text-[#08090C] font-bold text-sm tracking-wide hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
                 Claim Faucet to Test GlassJar
               </button>
@@ -206,7 +206,7 @@ export default function FaucetPage() {
           {/* Loading */}
           {connected && state.type === "loading" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center animate-pulse">
+              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center animate-pulse">
                 <i className="ri-loader-4-line text-accent text-2xl animate-spin" />
               </div>
               <div className="text-center">
@@ -223,7 +223,7 @@ export default function FaucetPage() {
           {/* Success */}
           {connected && state.type === "success" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-green-500/10 border border-green-500/30 flex items-center justify-center">
                 <i className="ri-check-line text-green-400 text-3xl" />
               </div>
 
@@ -247,7 +247,7 @@ export default function FaucetPage() {
                 View transaction
               </a>
 
-              <div className="w-full pt-4 border-t border-border/60">
+              <div className="w-full pt-4 border-t border-border/80">
                 <p className="text-[11px] text-text-muted text-center">
                   You can claim again in 24 hours
                 </p>
@@ -258,7 +258,7 @@ export default function FaucetPage() {
           {/* Rate Limited */}
           {connected && state.type === "rate_limited" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
                 <i className="ri-time-line text-amber-400 text-2xl" />
               </div>
 
@@ -300,7 +300,7 @@ export default function FaucetPage() {
           {/* Error */}
           {connected && state.type === "error" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-red-500/10 border border-red-500/30 flex items-center justify-center">
                 <i className="ri-error-warning-line text-red-400 text-2xl" />
               </div>
 
