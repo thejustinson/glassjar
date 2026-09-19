@@ -43,7 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <TopNav />
 
-      <main className="relative z-10 flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
+      <main className="relative z-10 flex-1 w-full">
         {children}
       </main>
 

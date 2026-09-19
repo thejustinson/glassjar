@@ -125,7 +125,7 @@ export default function TokenPage({ params }: TokenPageProps) {
       variants={variants.fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6"
     >
       {/* Top Breadcrumb */}
       <div className="flex items-center justify-between">

@@ -111,7 +111,7 @@ function SwapPageContent() {
   }
 
   return (
-    <div className="relative min-h-[82vh] flex flex-col items-center justify-center py-6 select-none">
+    <div className="relative min-h-[82vh] flex flex-col items-center justify-center py-6 px-4 sm:px-6 select-none">
       {/* Subtle dotted grid background */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"

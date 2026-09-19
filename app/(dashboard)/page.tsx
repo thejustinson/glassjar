@@ -476,12 +476,14 @@ export default function DiscoverPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* ─── TOP TICKER TAPE ─── */}
+    <div className="w-full">
+      {/* ─── TOP TICKER TAPE (FULL VIEWPORT WIDTH) ─── */}
       <MarketTickerTape tokens={tokens} onSelectToken={handleTradeToken} />
 
-      {/* ─── HEADER BAR: BREADCRUMBS & SEARCH ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ─── MAIN DISCOVER CONTENT (COMPACT TOP SPACING) ─── */}
+      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 pt-3 sm:pt-4 pb-8 space-y-5">
+        {/* ─── HEADER BAR: BREADCRUMBS & SEARCH ─── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
             <Link href="/" className="hover:text-text-primary transition-colors">
@@ -735,6 +737,7 @@ export default function DiscoverPage() {
           setSearchModalOpen(false);
         }}
       />
+      </div>
     </div>
   );
 }

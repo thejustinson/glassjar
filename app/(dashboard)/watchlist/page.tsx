@@ -379,7 +379,7 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       {/* ─── HEADER & REAL-TIME CONTROLS ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
