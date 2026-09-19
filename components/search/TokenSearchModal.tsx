@@ -201,11 +201,11 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ type: "spring", stiffness: 450, damping: 32 }}
-            className="relative z-10 w-full max-w-xl squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden flex flex-col max-h-[75vh]"
+            className="relative z-10 w-full max-w-xl squircle-lg bg-[#0E1015] border border-border overflow-hidden flex flex-col max-h-[75vh]"
           >
 
             {/* Search Input Bar */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-border/70 bg-bg-card">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-[#0B0D13]">
               <i className="ri-search-line text-accent text-lg flex-shrink-0" />
               <input
                 ref={inputRef}

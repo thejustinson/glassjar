@@ -49,7 +49,7 @@ export function FundWalletModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-6 sm:p-7 overflow-hidden text-left"
+        className="relative w-full max-w-2xl squircle-lg bg-[#0E1015] border border-border p-6 sm:p-7 overflow-hidden text-left"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Header Bar */}
@@ -74,7 +74,7 @@ export function FundWalletModal({
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-muted hover:text-text-primary flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-[#141720] border border-border text-text-muted hover:text-text-primary flex items-center justify-center transition-colors cursor-pointer"
             title="Close modal"
           >
             <i className="ri-close-line text-lg" />
@@ -142,7 +142,7 @@ export function FundWalletModal({
                 href={explorerAddressUrl(walletAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-10 px-3 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-text-secondary hover:text-text-primary text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                className="h-10 px-3 rounded-full bg-[#141720] border border-border text-text-secondary hover:text-text-primary text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
               >
                 <span>Cookiescan</span>
                 <i className="ri-external-link-line text-xs" />
@@ -150,7 +150,7 @@ export function FundWalletModal({
             </div>
 
             {/* Bridge Notice & Link */}
-            <div className="p-3 squircle-sm bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/70 flex items-center justify-between gap-3 text-xs">
+            <div className="p-3 squircle-sm bg-[#12151D] border border-border flex items-center justify-between gap-3 text-xs">
               <div className="min-w-0">
                 <p className="text-[11px] text-text-secondary font-medium">
                   Need to move funds from Solana?

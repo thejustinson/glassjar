@@ -34,8 +34,8 @@ export function WalletActivityFeed({
 
   if (loading) {
     return (
-      <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
-        <div className="p-4 border-b border-border/80 text-xs font-bold uppercase tracking-wider text-text-muted">
+      <div className="squircle-lg bg-[#0E1015] border border-border overflow-hidden">
+        <div className="p-4 border-b border-border text-xs font-bold uppercase tracking-wider text-text-muted">
           Wallet Activity
         </div>
         <div className="py-16 text-center text-xs text-text-muted space-y-2">
@@ -48,8 +48,8 @@ export function WalletActivityFeed({
 
   if (transactions.length === 0) {
     return (
-      <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-12 text-center space-y-2">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 flex items-center justify-center mx-auto text-text-muted text-xl">
+      <div className="squircle-lg bg-[#0E1015] border border-border p-12 text-center space-y-2">
+        <div className="w-12 h-12 rounded-full bg-[#141720] border border-border flex items-center justify-center mx-auto text-text-muted text-xl">
           <i className="ri-history-line" />
         </div>
         <h3 className="text-sm font-bold text-text-primary">No transactions found</h3>
@@ -61,12 +61,12 @@ export function WalletActivityFeed({
   }
 
   return (
-    <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
+    <div className="squircle-lg bg-[#0E1015] border border-border overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-border/80 flex items-center justify-between">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-text-primary">Transaction History</h3>
-          <span className="text-[11px] font-semibold text-text-muted px-2 py-0.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80">
+          <span className="text-[11px] font-semibold text-text-muted px-2 py-0.5 rounded-full bg-[#141720] border border-border">
             {transactions.length}
           </span>
         </div>
@@ -86,7 +86,7 @@ export function WalletActivityFeed({
         <div className="min-w-[640px]">
           <div
             style={{ gridTemplateColumns: "140px 100px 100px 1fr 140px 40px" }}
-            className="grid items-center px-5 py-2.5 bg-bg/50 border-b border-border text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
+            className="grid items-center px-5 py-2.5 bg-[#0B0D13] border-b border-border text-[10px] font-bold uppercase tracking-wider text-text-muted select-none"
           >
             <span>Time</span>
             <span>Type</span>

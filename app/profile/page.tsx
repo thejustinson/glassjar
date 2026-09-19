@@ -199,7 +199,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === "watchlist" && (
-              <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
+              <div className="squircle-lg bg-[#0E1015] border border-border overflow-hidden">
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-sm font-bold text-text-primary">Saved Watchlist Tokens</h3>
                   <Link

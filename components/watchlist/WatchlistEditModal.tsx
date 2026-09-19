@@ -63,12 +63,12 @@ export function WatchlistEditModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ type: "spring", stiffness: 450, damping: 32 }}
-          className="relative z-10 w-full max-w-md squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-6 space-y-5 overflow-hidden"
+          className="relative z-10 w-full max-w-md squircle-lg bg-[#0E1015] border border-border p-6 space-y-5 overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3">
-              <div className="squircle-sm p-1 bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80">
+              <div className="squircle-sm p-1 bg-[#141720] border border-border">
                 <TokenAvatar
                   logoUri={item.logoUri}
                   symbol={item.symbol}
@@ -89,7 +89,7 @@ export function WatchlistEditModal({
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 flex items-center justify-center text-text-muted hover:text-text-primary hover:border-border transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#141720] border border-border flex items-center justify-center text-text-muted hover:text-text-primary hover:border-border transition-colors cursor-pointer"
             >
               <i className="ri-close-line text-lg" />
             </button>
@@ -111,7 +111,7 @@ export function WatchlistEditModal({
                   placeholder="e.g. 0.045"
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
+                  className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
                 />
               </div>
             </div>
@@ -130,7 +130,7 @@ export function WatchlistEditModal({
                 placeholder="e.g. 5000"
                 value={trackedAmount}
                 onChange={(e) => setTrackedAmount(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors"
               />
             </div>
 
@@ -144,7 +144,7 @@ export function WatchlistEditModal({
                 placeholder="e.g. Watching for DEX volume surge after graduation; exit target 2x."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border/80 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors resize-none"
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0D13] border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-colors resize-none"
               />
             </div>
 
@@ -153,7 +153,7 @@ export function WatchlistEditModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-full bg-[#141720] border border-border text-xs font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer"
               >
                 Cancel
               </button>

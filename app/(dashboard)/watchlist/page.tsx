@@ -496,9 +496,9 @@ export default function WatchlistPage() {
 
       {/* ─── FILTER & SEARCH TOOLBAR ─── */}
       {items.length > 0 && (
-        <div className="p-2 sm:p-2.5 squircle-md bg-gradient-to-b from-[#141824] to-[#0D1017] border border-border/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="p-2 sm:p-2.5 squircle-md bg-[#0E1015] border border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Filter Pills with Sliding Active Indicator */}
-          <div className="relative flex items-center p-1 rounded-full bg-black/40 border border-white/5 overflow-x-auto">
+          <div className="relative flex items-center p-1 rounded-full bg-black/40 border border-border overflow-x-auto">
             {(
               [
                 { id: "all", label: `All (${enrichedTokens.length})` },
@@ -547,7 +547,7 @@ export default function WatchlistPage() {
               placeholder="Search watchlist..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-1.5 rounded-full bg-gradient-to-b from-[#1A1E2B] to-[#11141D] border border-border/80 text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-all"
+              className="w-full pl-9 pr-8 py-1.5 rounded-full bg-[#08090C] border border-border text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/60 transition-all"
             />
             {searchQuery && (
               <button
@@ -564,10 +564,7 @@ export default function WatchlistPage() {
       {/* ─── MAIN CONTENT: TABLE OR EMPTY STATE ─── */}
       {items.length === 0 ? (
         /* Empty Watchlist State with Quick Add */
-        <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 p-8 sm:p-14 text-center space-y-6 relative overflow-hidden">
-          {/* Ambient radial blur */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-
+        <div className="squircle-lg bg-[#0E1015] border border-border p-8 sm:p-14 text-center space-y-6 relative overflow-hidden">
           <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto text-accent text-3xl relative z-10">
             <i className="ri-bookmark-star-line" />
           </div>
@@ -601,7 +598,7 @@ export default function WatchlistPage() {
                   <button
                     key={st.mint}
                     onClick={() => handleAddFromSearch(st)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-b from-[#181C26] to-[#0E1118] border border-border/80 hover:border-accent/50 text-xs font-medium text-text-primary transition-all group cursor-pointer"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141720] border border-border hover:border-accent/50 text-xs font-medium text-text-primary transition-all group cursor-pointer"
                   >
                     <TokenAvatar
                       logoUri={st.logoUri}
@@ -625,13 +622,13 @@ export default function WatchlistPage() {
       ) : (
         <>
           {/* ─── DESKTOP TABLE VIEW (md+) ─── */}
-          <div className="hidden md:block squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
+          <div className="hidden md:block squircle-lg bg-[#0E1015] border border-border overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
               <div className="min-w-[1020px]">
                 {/* Table Header */}
                 <div
                   style={{ gridTemplateColumns: COLS }}
-                  className="grid items-center gap-x-3 px-4 py-3 bg-white/[0.03] border-b border-white/8 text-[11px] font-bold uppercase tracking-wider text-text-muted select-none"
+                  className="grid items-center gap-x-3 px-4 py-3 bg-[#0B0D13] border-b border-border text-[11px] font-bold uppercase tracking-wider text-text-muted select-none"
                 >
                   <span className="text-center">★</span>
                   <span>Token</span>
@@ -875,7 +872,7 @@ export default function WatchlistPage() {
           {/* ─── MOBILE CARD VIEW (< md) ─── */}
           <div className="md:hidden space-y-3">
             {filteredTokens.length === 0 ? (
-              <div className="py-12 text-center text-xs text-text-muted squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80">
+              <div className="py-12 text-center text-xs text-text-muted squircle-lg bg-[#0E1015] border border-border">
                 No tokens match your search filter.
               </div>
             ) : (

@@ -149,7 +149,7 @@ export default function FaucetPage() {
       <div className="relative z-10 w-full max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 text-accent mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 squircle-md bg-[#141720] border border-border text-accent mb-4">
             <i className="ri-water-flash-fill text-accent text-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">
@@ -161,11 +161,11 @@ export default function FaucetPage() {
         </div>
 
         {/* Main Card */}
-        <div className="squircle-lg bg-gradient-to-b from-[#141824] via-[#0F121A] to-[#0A0C11] border border-border/80 overflow-hidden">
+        <div className="squircle-lg bg-[#0E1015] border border-border overflow-hidden">
           {/* Not Connected */}
           {!connected && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center">
+              <div className="w-16 h-16 squircle-md bg-[#141720] border border-border flex items-center justify-center">
                 <i className="ri-wallet-3-line text-text-muted text-2xl" />
               </div>
               <div className="text-center">
@@ -183,7 +183,7 @@ export default function FaucetPage() {
           {/* Connected — Idle */}
           {connected && state.type === "idle" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center text-accent">
+              <div className="w-16 h-16 squircle-md bg-[#141720] border border-border flex items-center justify-center text-accent">
                 <i className="ri-hand-coin-fill text-accent text-2xl" />
               </div>
               <div className="text-center">
@@ -206,7 +206,7 @@ export default function FaucetPage() {
           {/* Loading */}
           {connected && state.type === "loading" && (
             <div className="p-8 flex flex-col items-center gap-5">
-              <div className="w-16 h-16 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center animate-pulse">
+              <div className="w-16 h-16 squircle-md bg-[#141720] border border-border flex items-center justify-center animate-pulse">
                 <i className="ri-loader-4-line text-accent text-2xl animate-spin" />
               </div>
               <div className="text-center">
