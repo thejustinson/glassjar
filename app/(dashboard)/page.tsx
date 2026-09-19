@@ -40,7 +40,7 @@ import { SwapCard } from "@/components/swap/SwapCard";
 // ─── Table Types & Header ─────────────────────────────────────────────────────
 
 type SortKey = "price" | "priceChange24h" | "volume24h" | "marketCap" | "liquidity" | "holderCount";
-type FilterTab = "all" | "trending" | "favorites" | "gainers" | "losers";
+type FilterTab = "all" | "favorites" | "gainers" | "losers";
 
 const COLS = "44px minmax(180px, 1.8fr) 110px 95px 105px 105px 85px 75px";
 
@@ -437,9 +437,6 @@ export default function DiscoverPage() {
         if (activeFilter === "losers") {
           return (t.priceChange24h || 0) < 0;
         }
-        if (activeFilter === "trending") {
-          return (t.volume24h || 0) > 50;
-        }
 
         // Search filter
         if (!query.trim()) return true;
@@ -565,30 +562,39 @@ export default function DiscoverPage() {
                 </p>
               </div>
 
-              {/* Filter Pills matching Quantix reference */}
-              <div className="flex items-center gap-1 p-1 rounded-xl glass-pill overflow-x-auto no-scrollbar">
+              {/* Filter Pills with Smooth Sliding Background Animation */}
+              <div className="flex items-center gap-1 p-1 rounded-full glass-pill overflow-x-auto no-scrollbar">
                 {(
                   [
                     { id: "all", label: "All" },
-                    { id: "trending", label: "Trends" },
-                    { id: "favorites", label: "Favorites" },
+                    { id: "favorites", label: "Watchlist" },
                     { id: "gainers", label: "Top Gainers" },
                     { id: "losers", label: "Top Losers" },
                   ] as const
-                ).map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveFilter(tab.id)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-bold tracking-tight transition-all select-none cursor-pointer whitespace-nowrap",
-                      activeFilter === tab.id
-                        ? "bg-accent/20 text-accent border border-accent/40 shadow-[0_0_12px_rgba(59,178,115,0.25)]"
-                        : "text-text-muted hover:text-text-secondary hover:bg-white/[0.04]"
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                ).map((tab) => {
+                  const isActive = activeFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveFilter(tab.id)}
+                      className={cn(
+                        "relative px-3.5 py-1.5 rounded-full text-xs font-bold tracking-tight transition-colors duration-200 select-none cursor-pointer whitespace-nowrap",
+                        isActive
+                          ? "text-accent"
+                          : "text-text-muted hover:text-text-secondary hover:bg-white/[0.04]"
+                      )}
+                    >
+                      <span className="relative z-10">{tab.label}</span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-market-filter-pill"
+                          className="absolute inset-0 rounded-full bg-accent/20 border border-accent/40 shadow-[0_0_14px_rgba(59,178,115,0.28)]"
+                          transition={{ type: "spring", stiffness: 480, damping: 32 }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
