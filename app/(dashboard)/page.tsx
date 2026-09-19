@@ -558,7 +558,7 @@ export default function DiscoverPage() {
       </div>
 
       {/* ─── 2-COLUMN SPLIT LAYOUT (MARKET ON LEFT, EXCHANGE ON RIGHT) ─── */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* LEFT COLUMN: HERO HIGHLIGHTS & MARKET OVERVIEW TABLE (8 COLS) */}
         <div className="xl:col-span-8 space-y-6">
           {/* Live Crypto Updates (3-Card Spotlight) */}
@@ -724,47 +724,49 @@ export default function DiscoverPage() {
         </div>
 
         {/* RIGHT COLUMN: DOCKED EXCHANGE & ACTIVITY (4 COLS) */}
-        <div id="docked-swap-panel" className="xl:col-span-4 space-y-4 xl:sticky xl:top-20 self-start">
-          {/* Exchange Header Tag */}
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
-                Exchange
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25 text-[10px] font-bold uppercase tracking-wider">
-                Cookieswap DEX
-              </span>
+        <div className="xl:col-span-4 relative">
+          <div id="docked-swap-panel" className="space-y-4 xl:sticky xl:top-20">
+            {/* Exchange Header Tag */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
+                  Exchange
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25 text-[10px] font-bold uppercase tracking-wider">
+                  Cookieswap DEX
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="hidden 2xl:inline-flex items-center gap-1 text-[10px] font-semibold text-text-muted bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/[0.06] select-none">
+                  <i className="ri-drag-move-fill text-accent text-xs" />
+                  <span>Drag tokens here</span>
+                </span>
+                <Link
+                  href="/swap"
+                  className="text-xs text-text-muted hover:text-accent transition-colors flex items-center gap-1"
+                >
+                  <span>Full Screen</span>
+                  <i className="ri-fullscreen-line text-[11px]" />
+                </Link>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="hidden 2xl:inline-flex items-center gap-1 text-[10px] font-semibold text-text-muted bg-white/[0.04] px-2 py-0.5 rounded-full border border-white/[0.06] select-none">
-                <i className="ri-drag-move-fill text-accent text-xs" />
-                <span>Drag tokens here</span>
-              </span>
-              <Link
-                href="/swap"
-                className="text-xs text-text-muted hover:text-accent transition-colors flex items-center gap-1"
-              >
-                <span>Full Screen</span>
-                <i className="ri-fullscreen-line text-[11px]" />
-              </Link>
+            {/* Embedded Real Swap Card */}
+            <div className="squircle glass-panel overflow-hidden p-1">
+              <SwapCard
+                initialOutputToken={selectedTradeToken}
+                className="border-0 shadow-none bg-transparent p-3"
+              />
             </div>
-          </div>
 
-          {/* Embedded Real Swap Card */}
-          <div className="squircle glass-panel overflow-hidden p-1">
-            <SwapCard
-              initialOutputToken={selectedTradeToken}
-              className="border-0 shadow-none bg-transparent p-3"
+            {/* Ecosystem Pulse Stats */}
+            <EcosystemPulse
+              volume24h={totalVolume}
+              liquidity={totalLiquidity}
+              trackedTokensCount={tokens.length}
             />
           </div>
-
-          {/* Ecosystem Pulse Stats */}
-          <EcosystemPulse
-            volume24h={totalVolume}
-            liquidity={totalLiquidity}
-            trackedTokensCount={tokens.length}
-          />
         </div>
       </div>
 

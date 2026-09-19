@@ -11,7 +11,7 @@ import Link from "next/link";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex flex-col min-h-dvh bg-bg text-text-primary overflow-x-hidden">
+    <div className="relative flex flex-col min-h-dvh bg-bg text-text-primary overflow-x-clip">
       {/* Ambient Multi-Spectrum Backlight Glows for Glassmorphism */}
       <div
         className="pointer-events-none fixed top-[-250px] left-[-200px] w-[700px] h-[700px] rounded-full opacity-20 blur-[150px]"
