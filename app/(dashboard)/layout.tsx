@@ -44,14 +44,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <TopNav />
 
-      <main className="relative z-10 flex-1 w-full pb-24 md:pb-0">
+      <main className="relative z-10 flex-1 w-full pb-6 md:pb-0">
         {children}
       </main>
 
       <MobileBottomNav />
 
       {/* Global Terminal Footer (Matches Reference) */}
-      <footer className="relative z-10 border-t border-border/70 bg-bg-card/40 backdrop-blur-sm mt-12">
+      <footer className="relative z-10 border-t border-border/70 bg-bg-card/40 backdrop-blur-sm mt-12 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-muted">
           {/* Left: Copyright */}
           <div>

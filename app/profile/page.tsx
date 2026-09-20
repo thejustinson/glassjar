@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { TopNav } from "@/components/ui/TopNav";
+import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import {
   fetchWalletPortfolio,
   fetchWalletTransactions,
@@ -81,7 +82,7 @@ export default function ProfilePage() {
     <div className="flex flex-col min-h-dvh bg-bg">
       <TopNav />
 
-      <main className="flex-1 max-w-screen-2xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
+      <main className="flex-1 max-w-screen-2xl mx-auto w-full px-4 sm:px-6 pt-6 pb-28 md:pb-6 space-y-6">
         {!connected || !walletAddress ? (
           <PortfolioEmptyState />
         ) : (
@@ -298,6 +299,8 @@ export default function ProfilePage() {
           </div>
         )}
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }
