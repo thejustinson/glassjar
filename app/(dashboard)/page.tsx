@@ -631,7 +631,7 @@ export default function DiscoverPage() {
               </div>
 
               {/* Responsive Horizontal Scroll Container */}
-              <div className="overflow-x-auto no-scrollbar touch-pan-x">
+              <div className="overflow-x-auto no-scrollbar">
                 <div className="min-w-[760px]">
                   {/* Table Column Headers */}
                   <div
