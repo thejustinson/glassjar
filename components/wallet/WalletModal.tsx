@@ -39,9 +39,37 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { wallets, select, connecting } = useWallet();
   const [selectedWalletName, setSelectedWalletName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasInjectedNightly, setHasInjectedNightly] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const mobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      setIsMobile(mobile);
+
+      const checkNightly = () => {
+        const injected = Boolean(
+          (window as any).nightly?.solana ||
+          (window as any).nightly ||
+          (window as any).solana?.isNightly
+        );
+        if (injected) setHasInjectedNightly(true);
+      };
+
+      checkNightly();
+      window.addEventListener("load", checkNightly);
+      window.addEventListener("focus", checkNightly);
+      const timer = setTimeout(checkNightly, 400);
+
+      return () => {
+        window.removeEventListener("load", checkNightly);
+        window.removeEventListener("focus", checkNightly);
+        clearTimeout(timer);
+      };
+    }
   }, []);
 
   // Separate Nightly from other wallets
@@ -54,6 +82,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   );
 
   const isNightlyInstalled =
+    hasInjectedNightly ||
     nightlyWallet?.readyState === WalletReadyState.Installed ||
     nightlyWallet?.readyState === WalletReadyState.Loadable;
 
@@ -70,6 +99,30 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to connect wallet");
       setSelectedWalletName(null);
     }
+  }
+
+  function handleOpenNightlyApp() {
+    if (typeof window === "undefined") return;
+    const currentUrl = window.location.href;
+    const customScheme = `nightly://v1?network=solana&cluster=mainnet&url=${encodeURIComponent(currentUrl)}`;
+    const universalLink = `https://nightly.app/v1?network=solana&cluster=mainnet&url=${encodeURIComponent(currentUrl)}`;
+
+    window.location.href = customScheme;
+    setTimeout(() => {
+      window.location.href = universalLink;
+    }, 700);
+  }
+
+  async function handleNightlyConnect() {
+    const nightlyName = (nightlyWallet?.adapter.name || "Nightly") as WalletName;
+
+    // If mobile user and extension/in-app provider not injected into current browser:
+    if (isMobile && !hasInjectedNightly && nightlyWallet?.readyState !== WalletReadyState.Installed) {
+      handleOpenNightlyApp();
+      return;
+    }
+
+    handleSelect(nightlyName);
   }
 
   if (!mounted) return null;
@@ -141,75 +194,105 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                   </span>
                 </div>
 
-                {isNightlyInstalled && nightlyWallet ? (
-                  /* Installed: Connect Directly */
+                <div
+                  className={cn(
+                    "w-full p-4 rounded-xl border transition-all duration-200",
+                    "bg-gradient-to-r from-accent/10 via-bg-elevated to-bg-elevated",
+                    "border-accent/40 hover:border-accent hover:shadow-[0_0_20px_rgba(59,178,115,0.25)]",
+                    "flex items-center justify-between gap-3 group",
+                    selectedWalletName === (nightlyWallet?.adapter.name || "Nightly") && "border-accent bg-accent/20"
+                  )}
+                >
                   <button
-                    onClick={() => handleSelect(nightlyWallet.adapter.name)}
+                    type="button"
+                    onClick={handleNightlyConnect}
                     disabled={connecting}
-                    className={cn(
-                      "w-full p-4 rounded-xl text-left border transition-all duration-200",
-                      "bg-gradient-to-r from-accent/10 via-bg-elevated to-bg-elevated",
-                      "border-accent/40 hover:border-accent hover:shadow-[0_0_20px_rgba(59,178,115,0.25)]",
-                      "flex items-center justify-between gap-3 group",
-                      selectedWalletName === nightlyWallet.adapter.name && "border-accent bg-accent/20"
-                    )}
+                    className="flex items-center gap-3.5 min-w-0 flex-1 text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      {NIGHTLY_LOGO_IMG}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors whitespace-nowrap">
-                            Nightly Wallet
-                          </p>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/20 text-accent whitespace-nowrap flex-shrink-0">
-                            Installed
-                          </span>
-                        </div>
-                        <p className="text-xs text-text-muted mt-0.5 truncate">
-                          Native support for Cookie Chain SVM
+                    {NIGHTLY_LOGO_IMG}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors whitespace-nowrap">
+                          Nightly Wallet
                         </p>
+                        {isNightlyInstalled ? (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/20 text-accent whitespace-nowrap flex-shrink-0">
+                            Detected
+                          </span>
+                        ) : isMobile ? (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/20 text-accent whitespace-nowrap flex-shrink-0">
+                            Mobile App
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-text-secondary whitespace-nowrap flex-shrink-0">
+                            Ready
+                          </span>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="w-8 h-8 min-w-[32px] rounded-full bg-accent text-[#08090C] flex items-center justify-center font-bold text-sm shadow-md group-hover:scale-105 transition-transform flex-shrink-0">
-                      {connecting && selectedWalletName === nightlyWallet.adapter.name ? (
-                        <i className="ri-loader-4-line animate-spin" />
-                      ) : (
-                        <i className="ri-arrow-right-line" />
-                      )}
+                      <p className="text-xs text-text-muted mt-0.5 truncate">
+                        {isMobile && !hasInjectedNightly
+                          ? "Open in Nightly mobile app"
+                          : "Native support for Cookie Chain SVM"}
+                      </p>
                     </div>
                   </button>
-                ) : (
-                  /* Not Detected: Clean Unsquished Install Card */
-                  <div className="p-4 rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 via-bg-elevated to-bg-elevated flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      {NIGHTLY_LOGO_IMG}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-text-primary whitespace-nowrap">
-                            Nightly Wallet
-                          </p>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/20 text-warning whitespace-nowrap flex-shrink-0">
-                            Not Installed
-                          </span>
-                        </div>
-                        <p className="text-xs text-text-muted mt-0.5 truncate">
-                          Official wallet for Cookie Chain
-                        </p>
-                      </div>
-                    </div>
 
-                    <a
-                      href={NIGHTLY_DOWNLOAD_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="h-8 px-4 rounded-full text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_14px_rgba(59,178,115,0.35)] transition-all flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap select-none"
-                    >
-                      <span>Get Nightly</span>
-                      <i className="ri-external-link-line text-xs" />
-                    </a>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isMobile && !hasInjectedNightly ? (
+                      <button
+                        type="button"
+                        onClick={handleOpenNightlyApp}
+                        className="h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_12px_rgba(59,178,115,0.3)] transition-all flex items-center gap-1.5 cursor-pointer select-none"
+                      >
+                        <span>Open App</span>
+                        <i className="ri-external-link-line text-xs" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleNightlyConnect}
+                        disabled={connecting}
+                        className="w-8 h-8 min-w-[32px] rounded-full bg-accent text-[#08090C] flex items-center justify-center font-bold text-sm shadow-md group-hover:scale-105 transition-transform cursor-pointer"
+                        title="Connect Nightly"
+                      >
+                        {connecting && selectedWalletName === (nightlyWallet?.adapter.name || "Nightly") ? (
+                          <i className="ri-loader-4-line animate-spin" />
+                        ) : (
+                          <i className="ri-arrow-right-line" />
+                        )}
+                      </button>
+                    )}
                   </div>
-                )}
+                </div>
+
+                {/* Helpful secondary link */}
+                <div className="flex items-center justify-between px-1 text-[11px] text-text-muted">
+                  {isMobile ? (
+                    <>
+                      <span>Don&apos;t have Nightly installed?</span>
+                      <a
+                        href={NIGHTLY_DOWNLOAD_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent hover:underline font-semibold flex items-center gap-1"
+                      >
+                        Get Nightly <i className="ri-external-link-line text-xs" />
+                      </a>
+                    </>
+                  ) : !isNightlyInstalled ? (
+                    <>
+                      <span>Extension not showing?</span>
+                      <a
+                        href={NIGHTLY_DOWNLOAD_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent hover:underline font-semibold flex items-center gap-1"
+                      >
+                        Install Nightly <i className="ri-external-link-line text-xs" />
+                      </a>
+                    </>
+                  ) : null}
+                </div>
               </div>
 
               {/* ─── OTHER WALLETS ─── */}

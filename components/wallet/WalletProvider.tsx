@@ -16,6 +16,7 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { NightlyWalletAdapter } from "@solana/wallet-adapter-nightly";
 
 // Default wallet-adapter styles (modal backdrop, wallet list, etc.)
 // We override the accent colors in globals.css below
@@ -25,10 +26,11 @@ const COOKIE_RPC =
   process.env.NEXT_PUBLIC_COOKIE_RPC ?? "https://rpc.cookiescan.io";
 
 export function AppWalletProvider({ children }: { children: React.ReactNode }) {
-  // Empty array = Wallet Standard mode.
-  // All Wallet Standard wallets (Nightly, Phantom, Solflare, Backpack…)
-  // are detected automatically — no stale adapter packages needed.
-  const wallets = useMemo(() => [], []);
+  // Explicit Nightly adapter ensures Nightly is always registered and detected
+  // alongside any auto-discovered Wallet Standard wallets (Phantom, Backpack, Solflare...).
+  const wallets = useMemo(() => [
+    new NightlyWalletAdapter(),
+  ], []);
 
   return (
     <ConnectionProvider
