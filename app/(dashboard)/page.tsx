@@ -546,7 +546,7 @@ export default function DiscoverPage() {
           </button>
 
           <a
-            href="https://t.me"
+            href="https://t.me/glassjardotfun"
             target="_blank"
             rel="noopener noreferrer"
             className="h-9 px-3 sm:px-3.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-accent text-[#08090C] hover:bg-[#45c381] shadow-[0_0_16px_rgba(59,178,115,0.4)] transition-all duration-200 inline-flex items-center gap-1.5 select-none flex-shrink-0"

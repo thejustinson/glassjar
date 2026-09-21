@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Right: Social icons */}
           <div className="flex items-center gap-3 text-[15px] text-text-muted">
             <a
-              href="https://x.com"
+              href="https://x.com/thejustinson"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-accent transition-colors"
@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <i className="ri-twitter-x-fill" />
             </a>
             <a
-              href="https://t.me"
+              href="https://t.me/glassjardotfun"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-accent transition-colors"
@@ -116,16 +116,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <i className="ri-telegram-fill" />
             </a>
             <a
-              href="https://discord.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-              title="Discord"
-            >
-              <i className="ri-discord-fill" />
-            </a>
-            <a
-              href="https://github.com"
+              href="https://github.com/thejustinson/glassjar"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-accent transition-colors"
