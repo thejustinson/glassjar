@@ -103,35 +103,47 @@ export function LiveHighlights({
               )}
             >
               {/* Card Header: Avatar, Symbol, Category Pill & Trade Icon */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <TokenAvatar
                     symbol={token.symbol}
                     logoUri={token.logoUri}
                     size={36}
                     className="border border-white/10 group-hover:border-accent/40 transition-colors flex-shrink-0"
                   />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-bold text-base text-text-primary tracking-tight whitespace-nowrap">
+                      <span className="font-bold text-base text-text-primary tracking-tight truncate">
                         {token.symbol}
                       </span>
                       <span
-                        className="hidden xl:inline-block opacity-0 group-hover:opacity-60 transition-opacity text-text-muted text-[10px]"
+                        className="hidden xl:inline-block opacity-0 group-hover:opacity-60 transition-opacity text-text-muted text-[10px] flex-shrink-0"
                         title="Drag token to swap terminal"
                       >
                         <i className="ri-drag-move-2-line" />
                       </span>
                     </div>
-                    <span className="text-[11px] text-text-muted block truncate max-w-[140px]">
+                    <span className="text-[11px] text-text-muted block truncate">
                       {token.name}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full glass-pill text-text-muted">
-                    {badge}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={cn(
+                      "h-6 px-2.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0 flex items-center gap-1 leading-none select-none border",
+                      badge === "Most Traded"
+                        ? "bg-accent/10 border-accent/30 text-accent shadow-[0_0_10px_rgba(59,178,115,0.12)]"
+                        : badge === "Top Gainer"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.12)]"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.12)]"
+                    )}
+                  >
+                    {badge === "Most Traded" && <i className="ri-fire-fill text-[11px]" />}
+                    {badge === "Top Gainer" && <i className="ri-arrow-right-up-line text-[11px]" />}
+                    {badge === "Hot Asset" && <i className="ri-flashlight-fill text-[11px]" />}
+                    <span>{badge}</span>
                   </span>
                   <button
                     onClick={(e) => {
@@ -139,7 +151,7 @@ export function LiveHighlights({
                       onTradeToken?.(token);
                     }}
                     title="Quick Trade"
-                    className="w-7 h-7 rounded-full glass-pill hover:bg-accent/20 hover:text-accent hover:border-accent/30 text-text-muted flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 hover:bg-accent/20 hover:text-accent hover:border-accent/40 text-text-muted flex items-center justify-center transition-all shrink-0 cursor-pointer"
                   >
                     <i className="ri-swap-line text-xs" />
                   </button>

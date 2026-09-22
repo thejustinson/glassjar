@@ -110,8 +110,15 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
 
   // Popular quick chips
   const popularTokens = useMemo(() => {
-    const prioritySymbols = ["TRS", "bCOOK", "HAYGUMMY", "TRASHCOIN", "COOKHOUSE", "CINU", "BURNT"];
-    return tokens.filter((t) => prioritySymbols.includes(t.symbol)).slice(0, 6);
+    const prioritySymbols = ["BURNT", "CINU", "bCOOK", "TRASHCOIN", "TRS"];
+    return tokens
+      .filter(
+        (t) =>
+          prioritySymbols.includes(t.symbol) &&
+          t.symbol.toUpperCase() !== "COOK" &&
+          t.mint.toLowerCase() !== COOK_MINT.toLowerCase()
+      )
+      .slice(0, 5);
   }, [tokens]);
 
   // Filtered tokens with strict COOK prioritization
@@ -311,30 +318,28 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
               )}
             </div>
 
-            {/* Quick Popular Tokens Bar with COOK as Featured Native Asset */}
-            <div className="flex items-center gap-1.5 px-5 py-2 bg-[#0E1015] border-b border-border/50 overflow-x-auto no-scrollbar select-none">
-              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider mr-1 flex-shrink-0">
+            {/* Quick Popular Tokens Bar */}
+            <div className="flex flex-wrap items-center gap-1.5 px-4 sm:px-5 py-2.5 bg-[#0B0D13]/70 border-b border-white/[0.06] select-none">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider mr-1 shrink-0">
                 Popular:
               </span>
               <button
                 type="button"
                 onClick={() => handleSelect(COOK_MINT)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-accent/15 border border-accent/35 text-accent hover:bg-accent hover:text-[#08090C] transition-all flex-shrink-0 cursor-pointer shadow-[0_0_12px_rgba(59,178,115,0.25)]"
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs font-bold bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/50 transition-all shrink-0 cursor-pointer shadow-sm shadow-accent/15"
               >
-                <img src="/cook.jpeg" alt="COOK" className="w-3.5 h-3.5 rounded-full object-cover" />
+                <img src="/cook.jpeg" alt="COOK" className="w-4 h-4 rounded-full object-cover" />
                 <span>COOK</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-accent/25 uppercase font-mono tracking-wide">
-                  Native
-                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               </button>
               {popularTokens.map((qt) => (
                 <button
                   key={qt.mint}
                   type="button"
                   onClick={() => handleSelect(qt.mint)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors flex-shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/[0.08] text-text-secondary hover:text-text-primary hover:bg-white/[0.08] hover:border-accent/40 transition-all shrink-0 cursor-pointer"
                 >
-                  <TokenAvatar symbol={qt.symbol} logoUri={qt.logoUri} size={14} />
+                  <TokenAvatar symbol={qt.symbol} logoUri={qt.logoUri} size={15} />
                   <span>{qt.symbol}</span>
                 </button>
               ))}
