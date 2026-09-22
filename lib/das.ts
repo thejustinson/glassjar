@@ -222,6 +222,10 @@ export function isTestToken(token: {
 }): boolean {
   const sym = (token.symbol || "").toLowerCase().trim();
   const name = (token.name || "").toLowerCase().trim();
+  const mint = (token.mint || "").toLowerCase().trim();
+
+  // Native COOK token is the core ecosystem asset and is never a test token
+  if (sym === "cook" || mint === "so11111111111111111111111111111111111111112") return false;
 
   // No symbol
   if (!sym) return true;
@@ -242,14 +246,48 @@ export function isTestToken(token: {
 
 /**
  * GET /api/tokens — filtered to top verified/active tokens by 24h trading volume.
- * Filters out spam/test mints so the terminal looks professional and real.
+ * Always pins the native COOK token at index 0 and filters out test/spam mints.
  */
 export async function getTopTokens(limit = 100): Promise<Token[]> {
   const all = await getAllTokens();
-  return all
-    .filter((t) => !isTestToken(t))
-    .sort((a, b) => ((b.volume24h ?? 0) - (a.volume24h ?? 0)) || ((b.marketCap ?? 0) - (a.marketCap ?? 0)))
-    .slice(0, limit);
+  const filtered = all.filter((t) => !isTestToken(t));
+
+  const cookIdx = filtered.findIndex(
+    (t) =>
+      t.symbol.toUpperCase() === "COOK" ||
+      t.mint.toLowerCase() === "so11111111111111111111111111111111111111112"
+  );
+
+  let cookToken: Token;
+  if (cookIdx >= 0) {
+    cookToken = filtered.splice(cookIdx, 1)[0];
+  } else {
+    let cookPrice: number | undefined = undefined;
+    try {
+      cookPrice = (await getCookPrice()) ?? undefined;
+    } catch {}
+    cookToken = {
+      mint: "So11111111111111111111111111111111111111112",
+      symbol: "COOK",
+      name: "Cookie Chain",
+      decimals: 9,
+      logoUri: "/cook.jpeg",
+      price: cookPrice,
+    };
+  }
+
+  // Ensure COOK uses the official cookie icon if missing
+  if (!cookToken.logoUri) {
+    cookToken.logoUri = "/cook.jpeg";
+  }
+
+  const sortedOthers = filtered.sort(
+    (a, b) =>
+      (b.volume24h ?? 0) - (a.volume24h ?? 0) ||
+      (b.marketCap ?? 0) - (a.marketCap ?? 0)
+  );
+
+  return [cookToken, ...sortedOthers].slice(0, limit);
 }
 
 /**

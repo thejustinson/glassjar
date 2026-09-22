@@ -30,6 +30,7 @@ import {
 } from "@/lib";
 import { cn } from "@/lib/utils";
 import { variants } from "@/lib/tokens";
+import { COOK_MINT } from "@/lib/chain";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { MarketTickerTape } from "@/components/discover/MarketTickerTape";
 import { LiveHighlights } from "@/components/discover/LiveHighlights";
@@ -190,6 +191,12 @@ function TokenRow({
             <span className="text-[11px] text-text-muted truncate hidden 2xl:inline">
               {token.name}
             </span>
+            {(token.symbol.toUpperCase() === "COOK" || token.mint === COOK_MINT) && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-accent/20 text-accent font-bold uppercase tracking-wider flex items-center gap-1 border border-accent/30">
+                <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+                Native
+              </span>
+            )}
             {token.launchpad && (
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-secondary/15 text-secondary font-bold uppercase tracking-wider">
                 Curve

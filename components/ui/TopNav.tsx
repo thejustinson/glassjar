@@ -45,8 +45,8 @@ export function TopNav() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Left: Brand Identity */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-          <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center shadow-[0_0_15px_rgba(59,178,115,0.3)] group-hover:shadow-[0_0_20px_rgba(59,178,115,0.5)] transition-all duration-300">
-            <i className="ri-flashlight-fill text-accent text-[17px]" />
+          <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center shadow-[0_0_15px_rgba(59,178,115,0.25)] group-hover:shadow-[0_0_22px_rgba(59,178,115,0.5)] transition-all duration-300 p-1">
+            <img src="/logo.png" alt="GlassJar" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-base tracking-wider text-text-primary uppercase group-hover:text-accent transition-colors duration-150 font-sans">

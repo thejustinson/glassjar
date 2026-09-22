@@ -12,8 +12,8 @@ export function PortfolioEmptyState() {
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Hero Icon */}
-      <div className="relative w-20 h-20 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center mb-6">
-        <i className="ri-wallet-3-line text-3xl text-accent" />
+      <div className="relative w-20 h-20 squircle-md bg-gradient-to-b from-[#181C27] to-[#10131B] border border-border/80 flex items-center justify-center mb-6 p-4">
+        <img src="/logo.png" alt="GlassJar" className="w-12 h-12 object-contain" />
         <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-xs">
           <i className="ri-shield-check-line" />
         </span>

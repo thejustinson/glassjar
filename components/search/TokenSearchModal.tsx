@@ -7,10 +7,13 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTopTokens, getTokenByMint, type Token } from "@/lib/das";
+import { COOK_MINT } from "@/lib/chain";
+import { NATIVE_COOK_TOKEN } from "@/components/swap/TokenSelectModal";
 import {
   formatPrice,
   formatPct,
@@ -48,7 +51,23 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
     if (isOpen) {
       setLoading(true);
       getTopTokens(150)
-        .then((data) => setTokens(data))
+        .then((data) => {
+          // Find or create COOK token
+          const cookIdx = data.findIndex(
+            (t) =>
+              t.mint.toLowerCase() === COOK_MINT.toLowerCase() ||
+              t.symbol.toUpperCase() === "COOK"
+          );
+          let cookToken = cookIdx >= 0 ? data[cookIdx] : NATIVE_COOK_TOKEN;
+          cookToken = { ...cookToken, symbol: "COOK", logoUri: "/cook.jpeg" };
+          const others = data.filter(
+            (t) =>
+              t.mint.toLowerCase() !== COOK_MINT.toLowerCase() &&
+              t.symbol.toUpperCase() !== "COOK"
+          );
+          // COOK is always pinned as the primary token
+          setTokens([cookToken, ...others]);
+        })
         .catch(() => {})
         .finally(() => setLoading(false));
 
@@ -89,18 +108,56 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
     }
   }, [query, tokens]);
 
-  // Filtered tokens
+  // Popular quick chips
+  const popularTokens = useMemo(() => {
+    const prioritySymbols = ["TRS", "bCOOK", "HAYGUMMY", "TRASHCOIN", "COOKHOUSE", "CINU", "BURNT"];
+    return tokens.filter((t) => prioritySymbols.includes(t.symbol)).slice(0, 6);
+  }, [tokens]);
+
+  // Filtered tokens with strict COOK prioritization
   const filtered = useMemo(() => {
-    if (!query.trim()) return tokens.slice(0, 15);
+    const isCook = (t: Token) =>
+      t.mint.toLowerCase() === COOK_MINT.toLowerCase() ||
+      t.symbol.toUpperCase() === "COOK";
+
+    if (!query.trim()) {
+      const cook = tokens.find(isCook);
+      const others = tokens.filter((t) => !isCook(t));
+      return cook ? [cook, ...others.slice(0, 14)] : tokens.slice(0, 15);
+    }
+
     const q = query.toLowerCase().trim();
 
-    return tokens
-      .filter((t) => {
-        return (
-          t.symbol.toLowerCase().includes(q) ||
-          t.name.toLowerCase().includes(q) ||
-          t.mint.toLowerCase().includes(q)
-        );
+    const matches = tokens.filter((t) => {
+      return (
+        t.symbol.toLowerCase().includes(q) ||
+        t.name.toLowerCase().includes(q) ||
+        t.mint.toLowerCase().includes(q)
+      );
+    });
+
+    return matches
+      .sort((a, b) => {
+        const aIsCook = isCook(a);
+        const bIsCook = isCook(b);
+        // COOK always ranks first if it matches
+        if (aIsCook && !bIsCook) return -1;
+        if (!aIsCook && bIsCook) return 1;
+
+        // Exact symbol match
+        const aExact = a.symbol.toLowerCase() === q;
+        const bExact = b.symbol.toLowerCase() === q;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+
+        // Symbol starts with query
+        const aStart = a.symbol.toLowerCase().startsWith(q);
+        const bStart = b.symbol.toLowerCase().startsWith(q);
+        if (aStart && !bStart) return -1;
+        if (!aStart && bStart) return 1;
+
+        // Volume / Market cap tie-breaker
+        return (b.volume24h ?? 0) - (a.volume24h ?? 0);
       })
       .slice(0, 20);
   }, [tokens, query]);
@@ -206,7 +263,7 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
 
             {/* Search Input Bar */}
             <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-[#0B0D13]">
-              <i className="ri-search-line text-accent text-lg flex-shrink-0" />
+              <img src="/logo.png" alt="GlassJar" className="w-5 h-5 object-contain flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
@@ -230,6 +287,35 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
               )}
             </div>
 
+            {/* Quick Popular Tokens Bar with COOK as Featured Native Asset */}
+            <div className="flex items-center gap-1.5 px-5 py-2 bg-[#0E1015] border-b border-border/50 overflow-x-auto no-scrollbar select-none">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider mr-1 flex-shrink-0">
+                Popular:
+              </span>
+              <button
+                type="button"
+                onClick={() => handleSelect(COOK_MINT)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-accent/15 border border-accent/35 text-accent hover:bg-accent hover:text-[#08090C] transition-all flex-shrink-0 cursor-pointer shadow-[0_0_12px_rgba(59,178,115,0.25)]"
+              >
+                <img src="/cook.jpeg" alt="COOK" className="w-3.5 h-3.5 rounded-full object-cover" />
+                <span>COOK</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-accent/25 uppercase font-mono tracking-wide">
+                  Native
+                </span>
+              </button>
+              {popularTokens.map((qt) => (
+                <button
+                  key={qt.mint}
+                  type="button"
+                  onClick={() => handleSelect(qt.mint)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-bg-card border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors flex-shrink-0 cursor-pointer"
+                >
+                  <TokenAvatar symbol={qt.symbol} logoUri={qt.logoUri} size={14} />
+                  <span>{qt.symbol}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Results List */}
             <div className="flex-1 overflow-y-auto divide-y divide-border/30 p-2">
               {/* If querying a direct Contract Address */}
@@ -247,7 +333,9 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
                 </div>
               ) : displayList.length === 0 && !caSearching ? (
                 <div className="py-12 text-center text-xs text-text-muted space-y-2">
-                  <i className="ri-search-line text-2xl text-text-muted opacity-50 block mx-auto" />
+                  <div className="w-10 h-10 mx-auto relative opacity-30 mb-2">
+                    <Image src="/logo.png" alt="GlassJar" fill className="object-contain" />
+                  </div>
                   <p className="font-semibold text-text-secondary">No tokens found</p>
                   <p>Try searching by ticker, name, or paste a full contract address (CA).</p>
                 </div>
@@ -318,6 +406,7 @@ function TokenResultRow({
   itemRef?: (el: HTMLDivElement | null) => void;
 }) {
   const changeClass = deltaColorClass(token.priceChange24h ?? 0);
+  const isCook = token.symbol.toUpperCase() === "COOK" || token.mint === COOK_MINT;
 
   return (
     <div
@@ -353,6 +442,12 @@ function TokenResultRow({
             <span className="text-xs text-text-muted truncate hidden sm:inline">
               {token.name}
             </span>
+            {isCook && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-accent/15 text-accent font-bold flex items-center gap-1 border border-accent/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                Native Gas
+              </span>
+            )}
             {token.launchpad && (
               <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-secondary/20 text-secondary font-semibold">
                 CURVE

@@ -158,7 +158,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/60">
               <div>
                 <h3 className="text-base font-bold text-text-primary tracking-wide flex items-center gap-2">
-                  <i className="ri-wallet-3-line text-accent text-lg" />
+                  <img src="/logo.png" alt="GlassJar" className="w-5 h-5 object-contain" />
                   Connect Wallet
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">

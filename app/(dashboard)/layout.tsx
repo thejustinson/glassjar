@@ -54,10 +54,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <footer className="relative z-10 border-t border-border/70 bg-bg-card/40 backdrop-blur-sm mt-12 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-muted">
           {/* Left: Copyright */}
-          <div>
-            <span>2026 © </span>
-            <span className="font-semibold text-text-secondary tracking-wider">GLASSJAR</span>
-            <span className="ml-2 text-[11px] text-text-muted">Cookie Chain DEX & Terminal</span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="GlassJar" className="w-4 h-4 object-contain opacity-85" />
+            <div>
+              <span>2026 © </span>
+              <span className="font-semibold text-text-secondary tracking-wider">GLASSJAR</span>
+              <span className="ml-2 text-[11px] text-text-muted">Cookie Chain DEX & Terminal</span>
+            </div>
           </div>
 
           {/* Center: Nav links */}

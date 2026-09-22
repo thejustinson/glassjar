@@ -13,7 +13,17 @@ export const metadata: Metadata = {
   title: "GlassJar — Cookie Chain Trading Terminal",
   description:
     "Connect your wallet, execute real swaps on Cookie Chain, and track your portfolio — all in one place.",
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
+  openGraph: {
+    title: "GlassJar — Cookie Chain Trading Terminal",
+    description:
+      "Connect your wallet, execute real swaps on Cookie Chain, and track your portfolio — all in one place.",
+    images: [{ url: "/icon.png", width: 512, height: 512, alt: "GlassJar Logo" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

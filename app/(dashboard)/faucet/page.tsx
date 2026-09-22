@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
 import { explorerTxUrl } from "@/lib/chain";
@@ -149,8 +150,16 @@ export default function FaucetPage() {
       <div className="relative z-10 w-full max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 squircle-md bg-[#141720] border border-border text-accent mb-4">
-            <i className="ri-water-flash-fill text-accent text-2xl" />
+          <div className="inline-flex items-center justify-center w-16 h-16 squircle-md bg-[#141720] border border-border/80 p-2.5 mb-4 shadow-lg shadow-accent/5">
+            <div className="relative w-full h-full rounded-full overflow-hidden">
+              <Image
+                src="/cook.jpeg"
+                alt="COOK Token"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">
             COOK Faucet

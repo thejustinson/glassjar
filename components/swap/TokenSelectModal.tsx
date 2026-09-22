@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTopTokens, getTokenByMint, type Token } from "@/lib/das";
@@ -54,9 +55,14 @@ export function TokenSelectModal({
       setLoading(true);
       getTopTokens(150)
         .then((data) => {
-          // Prepend native COOK if not already in list
-          const hasCook = data.some((t) => t.mint === COOK_MINT);
-          setTokens(hasCook ? data : [NATIVE_COOK_TOKEN, ...data]);
+          // Prepend native COOK if not already in list, and always pin COOK at index 0
+          const cookToken =
+            data.find((t) => t.mint === COOK_MINT || t.symbol.toUpperCase() === "COOK") ||
+            NATIVE_COOK_TOKEN;
+          const others = data.filter(
+            (t) => t.mint !== COOK_MINT && t.symbol.toUpperCase() !== "COOK"
+          );
+          setTokens([cookToken, ...others]);
         })
         .catch(() => {})
         .finally(() => setLoading(false));
@@ -88,24 +94,50 @@ export function TokenSelectModal({
     }
   }, [query, tokens]);
 
-  // Filtered tokens
+  // Filtered tokens with COOK prioritized at the top
   const filtered = useMemo(() => {
     if (!query.trim()) return tokens;
     const q = query.toLowerCase().trim();
 
-    return tokens.filter((t) => {
-      return (
-        t.symbol.toLowerCase().includes(q) ||
-        t.name.toLowerCase().includes(q) ||
-        t.mint.toLowerCase().includes(q)
-      );
-    });
+    return tokens
+      .filter((t) => {
+        return (
+          t.symbol.toLowerCase().includes(q) ||
+          t.name.toLowerCase().includes(q) ||
+          t.mint.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => {
+        const aIsCook = a.symbol.toUpperCase() === "COOK" || a.mint === COOK_MINT;
+        const bIsCook = b.symbol.toUpperCase() === "COOK" || b.mint === COOK_MINT;
+        if (aIsCook && !bIsCook) return -1;
+        if (!aIsCook && bIsCook) return 1;
+
+        const aExact = a.symbol.toLowerCase() === q;
+        const bExact = b.symbol.toLowerCase() === q;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+
+        const aStarts = a.symbol.toLowerCase().startsWith(q);
+        const bStarts = b.symbol.toLowerCase().startsWith(q);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+
+        return (b.volume24h ?? 0) - (a.volume24h ?? 0);
+      });
   }, [tokens, query]);
 
-  // Popular tokens for quick selection chips
+  // Popular tokens for quick selection chips with COOK explicitly first
   const popularTokens = useMemo(() => {
     const symbols = ["COOK", "TRS", "bCOOK", "HAYGUMMY", "TRASHCOIN", "COOKHOUSE"];
-    return tokens.filter((t) => symbols.includes(t.symbol));
+    const found = tokens.filter((t) => symbols.includes(t.symbol));
+    return found.sort((a, b) => {
+      const aIsCook = a.symbol.toUpperCase() === "COOK" || a.mint === COOK_MINT;
+      const bIsCook = b.symbol.toUpperCase() === "COOK" || b.mint === COOK_MINT;
+      if (aIsCook && !bIsCook) return -1;
+      if (!aIsCook && bIsCook) return 1;
+      return symbols.indexOf(a.symbol) - symbols.indexOf(b.symbol);
+    });
   }, [tokens]);
 
   if (!mounted) return null;
@@ -159,24 +191,34 @@ export function TokenSelectModal({
               {/* Quick Token Chips */}
               {popularTokens.length > 0 && !query && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  {popularTokens.map((t) => (
-                    <button
-                      key={t.mint}
-                      onClick={() => {
-                        onSelect(t);
-                        onClose();
-                      }}
-                      className={cn(
-                        "h-7 px-2.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all select-none",
-                        selectedMint === t.mint
-                          ? "bg-accent/20 border-accent text-accent"
-                          : "bg-bg-card border-border text-text-secondary hover:text-text-primary hover:border-border/80"
-                      )}
-                    >
-                      <TokenAvatar logoUri={t.logoUri} symbol={t.symbol} size={16} />
-                      <span>{t.symbol}</span>
-                    </button>
-                  ))}
+                  {popularTokens.map((t) => {
+                    const isCook = t.symbol.toUpperCase() === "COOK" || t.mint === COOK_MINT;
+                    return (
+                      <button
+                        key={t.mint}
+                        onClick={() => {
+                          onSelect(t);
+                          onClose();
+                        }}
+                        className={cn(
+                          "h-7 px-2.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all select-none",
+                          selectedMint === t.mint
+                            ? "bg-accent/25 border-accent text-accent font-bold shadow-sm shadow-accent/20 ring-1 ring-accent/30"
+                            : isCook
+                            ? "bg-accent/10 border-accent/40 text-accent hover:bg-accent/20"
+                            : "bg-bg-card border-border text-text-secondary hover:text-text-primary hover:border-border/80"
+                        )}
+                      >
+                        <TokenAvatar logoUri={t.logoUri} symbol={t.symbol} size={16} />
+                        <span>{t.symbol}</span>
+                        {isCook && (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-accent/20 text-accent font-bold">
+                            Native
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -213,7 +255,9 @@ export function TokenSelectModal({
                 </div>
               ) : filtered.length === 0 && !caToken && !caSearching ? (
                 <div className="py-12 text-center text-xs text-text-muted space-y-2">
-                  <i className="ri-search-line text-2xl opacity-40 block mx-auto" />
+                  <div className="w-10 h-10 mx-auto relative opacity-30 mb-2">
+                    <Image src="/logo.png" alt="GlassJar" fill className="object-contain" />
+                  </div>
                   <p className="font-semibold text-text-secondary">No tokens found</p>
                   <p>Try searching by ticker, name, or paste a Contract Address.</p>
                 </div>
@@ -250,6 +294,7 @@ function TokenSelectRow({
   onSelect: () => void;
 }) {
   const changeClass = deltaColorClass(token.priceChange24h ?? 0);
+  const isCook = token.symbol.toUpperCase() === "COOK" || token.mint === COOK_MINT;
 
   return (
     <button
@@ -269,13 +314,24 @@ function TokenSelectRow({
             <span className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">
               {token.symbol}
             </span>
+            {isCook && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-accent/15 text-accent font-bold flex items-center gap-1 border border-accent/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                Native Gas
+              </span>
+            )}
             {token.launchpad && (
               <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-secondary/20 text-secondary font-semibold">
                 CURVE
               </span>
             )}
           </div>
-          <span className="text-xs text-text-muted truncate block">{token.name}</span>
+          <div className="flex items-center gap-1.5 text-xs text-text-muted">
+            <span className="truncate">{token.name}</span>
+            <span className="text-[10px] text-text-muted/70 font-mono">
+              • {truncateAddress(token.mint, 4)}
+            </span>
+          </div>
         </div>
       </div>
 
