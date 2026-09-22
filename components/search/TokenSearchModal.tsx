@@ -176,6 +176,30 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
     return list;
   }, [caToken, caSearching, filtered]);
 
+  const cookToken = useMemo(() => {
+    return (
+      tokens.find(
+        (t) =>
+          t.symbol.toUpperCase() === "COOK" ||
+          t.mint.toLowerCase() === COOK_MINT.toLowerCase()
+      ) || NATIVE_COOK_TOKEN
+    );
+  }, [tokens]);
+
+  const showCookSpotlight = useMemo(() => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase().trim();
+    return "cook".includes(q) || "cookie".includes(q) || cookToken.mint.toLowerCase().includes(q);
+  }, [query, cookToken]);
+
+  const cookIndexInDisplayList = useMemo(() => {
+    return displayList.findIndex(
+      (t) =>
+        t.mint.toLowerCase() === COOK_MINT.toLowerCase() ||
+        t.symbol.toUpperCase() === "COOK"
+    );
+  }, [displayList]);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -341,25 +365,137 @@ export function TokenSearchModal({ isOpen, onClose, onSelectToken }: TokenSearch
                 </div>
               ) : (
                 <div className="space-y-1">
+                  {/* Featured Native Asset Spotlight: COOK */}
+                  {showCookSpotlight && (
+                    <div className="mb-2">
+                      <div className="flex items-center justify-between px-2 py-1 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                          Cookie Chain Native Gas & Currency
+                        </span>
+                        <span className="text-[10px] text-text-muted font-mono">L1 Native Asset</span>
+                      </div>
+
+                      <div
+                        ref={(el) => {
+                          if (cookIndexInDisplayList >= 0) {
+                            itemRefs.current[cookIndexInDisplayList] = el;
+                          }
+                        }}
+                        onClick={() => handleSelect(cookToken.mint)}
+                        onMouseEnter={() => {
+                          if (cookIndexInDisplayList >= 0) setSelectedIndex(cookIndexInDisplayList);
+                        }}
+                        className={cn(
+                          "p-3.5 rounded-xl border transition-all duration-150 cursor-pointer group flex items-center justify-between gap-3",
+                          selectedIndex === cookIndexInDisplayList
+                            ? "bg-accent/15 border-accent shadow-[0_0_20px_rgba(59,178,115,0.22)] ring-1 ring-accent/40"
+                            : "bg-white/[0.04] border-accent/30 hover:border-accent/60 hover:bg-white/[0.06]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="relative w-10 h-10 rounded-full p-0.5 border border-accent/50 bg-accent/20 flex-shrink-0 shadow-[0_0_10px_rgba(59,178,115,0.25)]">
+                            <img
+                              src="/cook.jpeg"
+                              alt="COOK"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "font-extrabold text-base tracking-tight transition-colors truncate",
+                                  selectedIndex === cookIndexInDisplayList
+                                    ? "text-accent"
+                                    : "text-text-primary group-hover:text-accent"
+                                )}
+                              >
+                                COOK
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-accent/20 text-accent font-bold uppercase tracking-wider flex items-center gap-1 border border-accent/40">
+                                <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+                                Native Gas
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                              <span className="truncate">Cookie Chain Gas & Liquidity</span>
+                              <span>•</span>
+                              <span className="font-mono text-[11px]">{truncateAddress(cookToken.mint, 4)}</span>
+                              <button
+                                onClick={(e) => handleCopy(e, cookToken.mint)}
+                                className="hover:text-accent transition-colors"
+                                title="Copy Contract Address"
+                              >
+                                <i className={cn(copiedMint === cookToken.mint ? "ri-check-line text-accent" : "ri-file-copy-line")} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3.5 flex-shrink-0">
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-text-primary tabular-nums font-mono">
+                              {cookToken.price !== undefined ? formatPrice(cookToken.price) : "Native Gas"}
+                            </p>
+                            {cookToken.priceChange24h !== undefined && (
+                              <p className={cn("text-xs font-semibold tabular-nums font-mono", deltaColorClass(cookToken.priceChange24h))}>
+                                {formatPct(cookToken.priceChange24h)}
+                              </p>
+                            )}
+                          </div>
+                          <div
+                            className={cn(
+                              "w-7 h-7 rounded-full flex items-center justify-center transition-all",
+                              selectedIndex === cookIndexInDisplayList
+                                ? "bg-accent text-[#08090C] shadow-[0_0_10px_rgba(59,178,115,0.4)]"
+                                : "bg-bg-card border border-border text-text-muted group-hover:text-accent group-hover:border-accent/40"
+                            )}
+                          >
+                            <i className="ri-arrow-right-line text-xs" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {caToken && !caSearching && (
                     <div className="text-[10px] font-bold uppercase tracking-wider text-accent px-2 pt-1 pb-0.5">
                       Direct Contract Address Match
                     </div>
                   )}
-                  {displayList.map((t, idx) => (
-                    <TokenResultRow
-                      key={t.mint}
-                      token={t}
-                      isSelected={idx === selectedIndex}
-                      onMouseEnter={() => setSelectedIndex(idx)}
-                      itemRef={(el) => {
-                        itemRefs.current[idx] = el;
-                      }}
-                      onSelect={handleSelect}
-                      onCopy={handleCopy}
-                      isCopied={copiedMint === t.mint}
-                    />
-                  ))}
+
+                  {!query.trim() && displayList.length > 1 && (
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-2 pt-2 pb-1">
+                      Verified Market Tokens
+                    </div>
+                  )}
+
+                  {displayList.map((t, idx) => {
+                    // If COOK is already highlighted in the spotlight above, omit duplicate standard row
+                    if (
+                      showCookSpotlight &&
+                      (t.mint.toLowerCase() === COOK_MINT.toLowerCase() ||
+                        t.symbol.toUpperCase() === "COOK")
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <TokenResultRow
+                        key={t.mint}
+                        token={t}
+                        isSelected={idx === selectedIndex}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                        itemRef={(el) => {
+                          itemRefs.current[idx] = el;
+                        }}
+                        onSelect={handleSelect}
+                        onCopy={handleCopy}
+                        isCopied={copiedMint === t.mint}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

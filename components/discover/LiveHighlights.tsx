@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { type Token } from "@/lib/das";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { formatPrice, formatPct, deltaColorClass } from "@/lib";
-import { COOK_MINT } from "@/lib/chain";
 import { cn } from "@/lib/utils";
 import { MiniSparkline } from "./MiniSparkline";
 
@@ -24,44 +23,42 @@ export function LiveHighlights({
 }: LiveHighlightsProps) {
   const router = useRouter();
 
-  // 1. Highlight 1: Native COOK
-  const cookCardToken: Token = useMemo(() => {
-    const found = tokens.find(
-      (t) => t.symbol.toUpperCase() === "COOK" || t.name.toLowerCase().includes("cookie")
+  // Dynamic Highlight Cards based on live market activity (Most Traded, Top Gainer, Hot Asset)
+  const highlightCards = useMemo(() => {
+    if (!tokens || tokens.length === 0) return [];
+
+    // Prioritize active tokens with established prices or volume
+    const activePool = tokens.filter((t) => (t.price ?? 0) > 0);
+    const pool = activePool.length >= 3 ? activePool : tokens;
+
+    if (pool.length === 0) return [];
+
+    // 1. Most Traded (Highest 24h volume)
+    const sortedByVolume = [...pool].sort((a, b) => (b.volume24h ?? 0) - (a.volume24h ?? 0));
+    const topVolume = sortedByVolume[0] || pool[0];
+
+    // 2. Top Gainer (Highest 24h percentage gain, distinct from topVolume)
+    const gainerCandidates = pool.filter((t) => t.mint !== topVolume.mint);
+    const sortedByGainers = [...gainerCandidates].sort(
+      (a, b) => (b.priceChange24h ?? 0) - (a.priceChange24h ?? 0)
     );
-    if (found) return found;
-    return {
-      mint: COOK_MINT,
-      symbol: "COOK",
-      name: "Cookie Chain Gas",
-      decimals: 9,
-      logoUri: "/cook.jpeg",
-      price: cookPrice || 0.000075,
-      priceChange24h: 3.42,
-      volume24h: 1115,
-      marketCap: 450000,
-    };
-  }, [tokens, cookPrice]);
+    const topGainer = sortedByGainers[0] || pool[1] || topVolume;
 
-  // 2. Highlight 2: Top Gainer
-  const topGainerToken: Token = useMemo(() => {
-    const sorted = [...tokens].sort((a, b) => (b.priceChange24h || 0) - (a.priceChange24h || 0));
-    return sorted[0] || cookCardToken;
-  }, [tokens, cookCardToken]);
+    // 3. Hot Asset (Next most active token by volume & market cap, distinct from #1 and #2)
+    const remaining = pool.filter(
+      (t) => t.mint !== topVolume.mint && t.mint !== topGainer.mint
+    );
+    const sortedByHot = [...remaining].sort(
+      (a, b) => (b.volume24h ?? 0) - (a.volume24h ?? 0) || (b.marketCap ?? 0) - (a.marketCap ?? 0)
+    );
+    const hotAsset = sortedByHot[0] || remaining[0] || pool[2] || topVolume;
 
-  // 3. Highlight 3: High Volume / Trending
-  const trendingToken: Token = useMemo(() => {
-    const sorted = [...tokens]
-      .filter((t) => t.mint !== cookCardToken.mint && t.mint !== topGainerToken.mint)
-      .sort((a, b) => (b.volume24h || 0) - (a.volume24h || 0));
-    return sorted[0] || tokens[1] || cookCardToken;
-  }, [tokens, cookCardToken, topGainerToken]);
-
-  const highlightCards = [
-    { token: cookCardToken, badge: "Native Gas" },
-    { token: topGainerToken, badge: "Top Gainer" },
-    { token: trendingToken, badge: "Hot Asset" },
-  ];
+    return [
+      { token: topVolume, badge: "Most Traded" },
+      { token: topGainer, badge: "Top Gainer" },
+      { token: hotAsset, badge: "Hot Asset" },
+    ];
+  }, [tokens]);
 
   return (
     <div className="space-y-3">
