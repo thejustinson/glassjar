@@ -102,59 +102,59 @@ export function LiveHighlights({
                 isSelected && "border-accent/70 ring-1 ring-accent/30 bg-white/[0.06]"
               )}
             >
-              {/* Card Header: Avatar, Symbol, Category Pill & Trade Icon */}
-              <div className="flex items-start justify-between gap-2.5">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <TokenAvatar
-                    symbol={token.symbol}
-                    logoUri={token.logoUri}
-                    size={36}
-                    className="border border-white/10 group-hover:border-accent/40 transition-colors flex-shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-bold text-base text-text-primary tracking-tight truncate">
-                        {token.symbol}
-                      </span>
-                      <span
-                        className="hidden xl:inline-block opacity-0 group-hover:opacity-60 transition-opacity text-text-muted text-[10px] flex-shrink-0"
-                        title="Drag token to swap terminal"
-                      >
-                        <i className="ri-drag-move-2-line" />
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-text-muted block truncate">
-                      {token.name}
+              {/* Row 1: Category Badge on Top & Quick Trade Action */}
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span
+                  className={cn(
+                    "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 flex items-center gap-1 leading-none select-none border",
+                    badge === "Most Traded"
+                      ? "bg-accent/10 border-accent/25 text-accent shadow-[0_0_8px_rgba(59,178,115,0.1)]"
+                      : badge === "Top Gainer"
+                      ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.1)]"
+                      : "bg-amber-500/10 border-amber-500/25 text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.1)]"
+                  )}
+                >
+                  {badge === "Most Traded" && <i className="ri-fire-fill text-[9px]" />}
+                  {badge === "Top Gainer" && <i className="ri-arrow-right-up-line text-[9px]" />}
+                  {badge === "Hot Asset" && <i className="ri-flashlight-fill text-[9px]" />}
+                  <span>{badge}</span>
+                </span>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTradeToken?.(token);
+                  }}
+                  title="Quick Trade"
+                  className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/10 hover:bg-accent/20 hover:text-accent hover:border-accent/40 text-text-muted flex items-center justify-center transition-all shrink-0 cursor-pointer"
+                >
+                  <i className="ri-swap-line text-[11px]" />
+                </button>
+              </div>
+
+              {/* Row 2: Full Token Identity - Avatar + Full Symbol & Full Name */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <TokenAvatar
+                  symbol={token.symbol}
+                  logoUri={token.logoUri}
+                  size={36}
+                  className="border border-white/10 flex-shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-bold text-base text-text-primary tracking-tight truncate">
+                      {token.symbol}
+                    </span>
+                    <span
+                      className="hidden xl:inline-block opacity-0 group-hover:opacity-60 transition-opacity text-text-muted text-[10px] flex-shrink-0"
+                      title="Drag token to swap terminal"
+                    >
+                      <i className="ri-drag-move-2-line" />
                     </span>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <span
-                    className={cn(
-                      "h-6 px-2.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0 flex items-center gap-1 leading-none select-none border",
-                      badge === "Most Traded"
-                        ? "bg-accent/10 border-accent/30 text-accent shadow-[0_0_10px_rgba(59,178,115,0.12)]"
-                        : badge === "Top Gainer"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.12)]"
-                        : "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.12)]"
-                    )}
-                  >
-                    {badge === "Most Traded" && <i className="ri-fire-fill text-[11px]" />}
-                    {badge === "Top Gainer" && <i className="ri-arrow-right-up-line text-[11px]" />}
-                    {badge === "Hot Asset" && <i className="ri-flashlight-fill text-[11px]" />}
-                    <span>{badge}</span>
+                  <span className="text-xs text-text-muted block truncate font-normal">
+                    {token.name}
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTradeToken?.(token);
-                    }}
-                    title="Quick Trade"
-                    className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 hover:bg-accent/20 hover:text-accent hover:border-accent/40 text-text-muted flex items-center justify-center transition-all shrink-0 cursor-pointer"
-                  >
-                    <i className="ri-swap-line text-xs" />
-                  </button>
                 </div>
               </div>
 

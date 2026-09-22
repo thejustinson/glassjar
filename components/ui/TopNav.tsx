@@ -44,12 +44,12 @@ export function TopNav() {
     <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#090b10]/75 backdrop-blur-2xl">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Left: Brand Identity */}
-        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-          <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center shadow-[0_0_15px_rgba(59,178,115,0.25)] group-hover:shadow-[0_0_22px_rgba(59,178,115,0.5)] transition-all duration-300 p-1">
+        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="w-8 h-8 flex items-center justify-center">
             <img src="/logo.png" alt="GlassJar" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-base tracking-wider text-text-primary uppercase group-hover:text-accent transition-colors duration-150 font-sans">
+            <span className="font-bold text-base tracking-wider text-text-primary uppercase font-sans">
               GlassJar
             </span>
           </div>
