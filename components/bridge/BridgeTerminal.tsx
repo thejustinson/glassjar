@@ -19,6 +19,7 @@ import {
   getDestinationCollateral,
   getSolanaCookBalance,
   getSolanaWalletBalances,
+  getSolanaTokenBalance,
   buildBridgeTransaction,
   broadcastBridgeTransaction,
   checkBridgeDelivery,
@@ -28,6 +29,9 @@ import {
   buildSolanaSwapTransaction,
   getSafeMaxSolAmount,
   type SolanaSwapQuoteResult,
+  type SolanaToken,
+  POPULAR_SOLANA_TOKENS,
+  NATIVE_SOL_MINT,
   OFFICIAL_BRIDGE_URL,
   COOKIE_WARP_PROGRAM_ID,
   SOLANA_WARP_PROGRAM_ID,
@@ -42,24 +46,29 @@ import { formatNumber, truncateAddress } from "@/lib";
 import { cn } from "@/lib/utils";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { WalletModal } from "@/components/wallet/WalletModal";
+import { SolanaTokenSelectModal } from "./SolanaTokenSelectModal";
 import { recordTransactionDb } from "@/lib/supabase";
 
 export function BridgeTerminal() {
   const router = useRouter();
   const { publicKey, connected, signTransaction } = useWallet();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
 
   // Direction: "solana-to-cookie" or "cookie-to-solana"
   const [direction, setBridgeDirection] = useState<BridgeDirection>("solana-to-cookie");
   const isCookieToSolana = direction === "cookie-to-solana";
 
-  // Source Asset on Solana: "SOL" or "COOK"
-  const [sourceAsset, setSourceAsset] = useState<"SOL" | "COOK">("SOL");
+  // Selected Source Token on Solana (default to SOL)
+  const [selectedSolanaToken, setSelectedSolanaToken] = useState<SolanaToken>(
+    POPULAR_SOLANA_TOKENS[0]
+  );
 
   // Balances
   const [cookieBalance, setCookieBalance] = useState<number>(0);
   const [solanaBalance, setSolanaBalance] = useState<number>(0);
   const [solNativeBalance, setSolNativeBalance] = useState<number>(0);
+  const [solanaTokenBalance, setSolanaTokenBalance] = useState<number>(0);
   const [loadingBalances, setLoadingBalances] = useState<boolean>(false);
 
   // Form State
@@ -67,7 +76,7 @@ export function BridgeTerminal() {
   const [customRecipient, setCustomRecipient] = useState<string>("");
   const [showRecipientInput, setShowRecipientInput] = useState<boolean>(false);
 
-  // Solana Swap Quote State (SOL -> COOK)
+  // Solana Swap Quote State (Any Token -> COOK)
   const [solQuote, setSolQuote] = useState<SolanaSwapQuoteResult | null>(null);
   const [loadingSolQuote, setLoadingSolQuote] = useState<boolean>(false);
   const [solQuoteError, setSolQuoteError] = useState<string | null>(null);
@@ -93,13 +102,16 @@ export function BridgeTerminal() {
   const [uniqueMessageAccount, setUniqueMessageAccount] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const isSolMode = !isCookieToSolana && sourceAsset === "SOL";
+  // Zap Mode: active when bridging from Solana to Cookie using ANY token other than COOK
+  const isZapMode = !isCookieToSolana && selectedSolanaToken.mint !== SOLANA_WARP_MINT;
 
   const effectiveSourceBalance = isCookieToSolana
     ? cookieBalance
-    : sourceAsset === "SOL"
+    : selectedSolanaToken.mint === NATIVE_SOL_MINT
     ? solNativeBalance
-    : solanaBalance;
+    : selectedSolanaToken.mint === SOLANA_WARP_MINT
+    ? solanaBalance
+    : solanaTokenBalance;
 
   const effectiveDestBalance = isCookieToSolana ? solanaBalance : cookieBalance;
   const sourceChainName = isCookieToSolana ? "Cookie Chain" : "Solana";
@@ -118,6 +130,15 @@ export function BridgeTerminal() {
         if (sBal.status === "fulfilled") {
           setSolanaBalance(sBal.value.cook);
           setSolNativeBalance(sBal.value.sol);
+
+          if (selectedSolanaToken.mint === NATIVE_SOL_MINT) {
+            setSolanaTokenBalance(sBal.value.sol);
+          } else if (selectedSolanaToken.mint === SOLANA_WARP_MINT) {
+            setSolanaTokenBalance(sBal.value.cook);
+          } else {
+            const tokBal = await getSolanaTokenBalance(publicKey, selectedSolanaToken.mint);
+            setSolanaTokenBalance(tokBal);
+          }
         }
       } catch {
         // ignore
@@ -132,7 +153,7 @@ export function BridgeTerminal() {
     } catch {
       // ignore
     }
-  }, [publicKey, direction]);
+  }, [publicKey, direction, selectedSolanaToken]);
 
   useEffect(() => {
     refreshData();
@@ -140,9 +161,9 @@ export function BridgeTerminal() {
     return () => clearInterval(interval);
   }, [refreshData]);
 
-  // Debounced quote fetcher for SOL
+  // Debounced quote fetcher for Solana Token -> COOK
   useEffect(() => {
-    if (!isSolMode || !amount || Number(amount) <= 0) {
+    if (!isZapMode || !amount || Number(amount) <= 0) {
       setSolQuote(null);
       setSolQuoteError(null);
       setLoadingSolQuote(false);
@@ -155,7 +176,12 @@ export function BridgeTerminal() {
 
     quoteDebounceRef.current = setTimeout(async () => {
       try {
-        const q = await fetchSolanaSwapQuote(amount, 100);
+        const q = await fetchSolanaSwapQuote(
+          amount,
+          selectedSolanaToken.mint,
+          selectedSolanaToken.decimals,
+          100
+        );
         setSolQuote(q);
       } catch (err: any) {
         setSolQuoteError(err?.message || "Quote unavailable");
@@ -168,7 +194,7 @@ export function BridgeTerminal() {
     return () => {
       if (quoteDebounceRef.current) clearTimeout(quoteDebounceRef.current);
     };
-  }, [amount, isSolMode]);
+  }, [amount, isZapMode, selectedSolanaToken]);
 
   // Flip Direction
   function handleFlipDirection() {
@@ -184,7 +210,7 @@ export function BridgeTerminal() {
   // Quick percentage selection
   function handlePercent(p: number) {
     if (effectiveSourceBalance <= 0) return;
-    if (isSolMode) {
+    if (isZapMode && selectedSolanaToken.isNative) {
       if (p === 100) {
         const safeMax = getSafeMaxSolAmount(solNativeBalance, 0.008);
         setAmount(safeMax > 0 ? safeMax.toString() : "0");
@@ -194,16 +220,17 @@ export function BridgeTerminal() {
       }
     } else {
       const calc = (effectiveSourceBalance * p) / 100;
-      setAmount(calc > 0 ? (p === 100 ? calc.toString() : calc.toFixed(4)) : "0");
+      const dec = selectedSolanaToken.decimals > 6 ? 4 : selectedSolanaToken.decimals <= 2 ? 0 : 2;
+      setAmount(calc > 0 ? (p === 100 ? calc.toString() : calc.toFixed(dec)) : "0");
     }
   }
 
   // Calculate quote for COOK 1:1 bridge
-  const standardQuote: BridgeQuote | null = !isSolMode
+  const standardQuote: BridgeQuote | null = !isZapMode
     ? calculateBridgeAmounts(amount, direction, collateral.available)
     : null;
 
-  const expectedDestCook = isSolMode
+  const expectedDestCook = isZapMode
     ? solQuote
       ? solQuote.outputCookAmount
       : 0
@@ -215,9 +242,11 @@ export function BridgeTerminal() {
     expectedDestCook > 0 && expectedDestCook > collateral.available;
 
   const isSolGasInsufficient =
-    isSolMode &&
+    !isCookieToSolana &&
     connected &&
-    (solNativeBalance < 0.008 || Number(amount) > solNativeBalance - 0.008);
+    (selectedSolanaToken.isNative
+      ? solNativeBalance < 0.008 || Number(amount) > solNativeBalance - 0.008
+      : solNativeBalance < 0.005);
 
   const effectiveRecipient = customRecipient.trim() || (publicKey ? publicKey.toBase58() : "");
 
@@ -245,24 +274,30 @@ export function BridgeTerminal() {
     setSolSwapTxHash(null);
     setUniqueMessageAccount(null);
 
-    // ── CASE A: 2-Step SOL Bridging ──
-    if (isSolMode) {
+    // ── CASE A: 2-Step Zap Bridging (Any SPL token -> COOK on Solana -> Hyperlane to Cookie) ──
+    if (isZapMode) {
       if (!solQuote || !solQuote.rawQuote) {
         setStatusMessage("Awaiting swap quote...");
         return;
       }
 
-      if (solNativeBalance < 0.008 + Number(amount)) {
+      if (selectedSolanaToken.isNative && solNativeBalance < 0.008 + Number(amount)) {
         setTransferStatus("error");
         setStatusMessage("Insufficient SOL. Keep at least 0.008 SOL for network gas.");
         return;
       }
 
+      if (!selectedSolanaToken.isNative && solNativeBalance < 0.005) {
+        setTransferStatus("error");
+        setStatusMessage("Insufficient SOL for gas. You need at least ~0.005 SOL to pay transaction fees on Solana.");
+        return;
+      }
+
       try {
-        // Step 1: Swap SOL -> COOK on Solana
+        // Step 1: Swap selected token -> COOK on Solana via Jupiter
         setCurrentStep(1);
         setTransferStatus("preparing");
-        setStatusMessage("Building Solana swap transaction...");
+        setStatusMessage(`Building Solana swap transaction (${selectedSolanaToken.symbol} → COOK)...`);
 
         const swapTx = await buildSolanaSwapTransaction(
           solQuote.rawQuote,
@@ -270,7 +305,7 @@ export function BridgeTerminal() {
         );
 
         setTransferStatus("signing");
-        setStatusMessage("Approve Step 1 in wallet: Swap SOL to COOK on Solana.");
+        setStatusMessage(`Approve Step 1 in wallet: Swap ${selectedSolanaToken.symbol} to COOK on Solana.`);
 
         let signedSwapTx;
         try {
@@ -299,7 +334,7 @@ export function BridgeTerminal() {
           tx_type: "swap",
           source_chain: "solana",
           dest_chain: "solana",
-          input_symbol: "SOL",
+          input_symbol: selectedSolanaToken.symbol,
           input_amount: Number(amount),
           output_symbol: "COOK",
           output_amount: solQuote.outputCookAmount,
@@ -341,7 +376,9 @@ export function BridgeTerminal() {
           ) {
             setTransferStatus("error");
             setStatusMessage("Bridge signature cancelled. Switch token to COOK to finish bridging.");
-            setSourceAsset("COOK");
+            setSelectedSolanaToken(
+              POPULAR_SOLANA_TOKENS.find((t) => t.mint === SOLANA_WARP_MINT) || POPULAR_SOLANA_TOKENS[3]
+            );
             setAmount(cookAmountToBridge.toString());
             return;
           }
@@ -359,7 +396,7 @@ export function BridgeTerminal() {
           tx_type: "bridge",
           source_chain: "solana",
           dest_chain: "cookie",
-          input_symbol: "SOL",
+          input_symbol: selectedSolanaToken.symbol,
           input_amount: Number(amount),
           output_symbol: "COOK",
           output_amount: cookAmountToBridge,
@@ -499,7 +536,7 @@ export function BridgeTerminal() {
             tx_type: "bridge",
             source_chain: sourceChain,
             dest_chain: destChain,
-            input_symbol: isSolMode ? "SOL" : "COOK",
+            input_symbol: isZapMode ? selectedSolanaToken.symbol : "COOK",
             input_amount: Number(amount),
             output_symbol: "COOK",
             output_amount: transferAmountNum,
@@ -562,7 +599,7 @@ export function BridgeTerminal() {
         <div className="flex items-center gap-2">
           <h2 className="text-base font-black text-text-primary tracking-wide">Bridge</h2>
           <span className="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-bold">
-            Hyperlane 1:1
+            {isZapMode ? "Zap Bridge" : "Hyperlane 1:1"}
           </span>
         </div>
 
@@ -612,40 +649,21 @@ export function BridgeTerminal() {
           {/* Token Selector / Toggle */}
           <div className="flex justify-end sm:justify-start flex-shrink-0">
             {!isCookieToSolana ? (
-              <div className="flex items-center p-0.5 rounded-full bg-[#1A1E29] border border-border">
-                <button
-                  onClick={() => {
-                    setSourceAsset("SOL");
-                    setAmount("");
-                    setSolQuote(null);
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
-                    sourceAsset === "SOL"
-                      ? "bg-secondary text-black"
-                      : "text-text-muted hover:text-text-primary"
-                  )}
-                >
-                  <img src="/solana-logo.png" alt="SOL" className="w-3.5 h-3.5 rounded-full bg-black" />
-                  <span>SOL</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSourceAsset("COOK");
-                    setAmount("");
-                    setSolQuote(null);
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer",
-                    sourceAsset === "COOK"
-                      ? "bg-secondary text-black"
-                      : "text-text-muted hover:text-text-primary"
-                  )}
-                >
-                  <TokenAvatar symbol="COOK" size={14} />
-                  <span>COOK</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setTokenModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border hover:border-secondary/60 transition-all text-xs font-bold cursor-pointer group select-none shadow-sm"
+                title="Change Solana Token"
+              >
+                <TokenAvatar
+                  logoUri={selectedSolanaToken.logoUri}
+                  symbol={selectedSolanaToken.symbol}
+                  size={18}
+                />
+                <span className="text-text-primary group-hover:text-secondary transition-colors font-bold">
+                  {selectedSolanaToken.symbol}
+                </span>
+                <i className="ri-arrow-down-s-line text-text-muted group-hover:text-secondary text-xs" />
+              </button>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1A1E29] border border-border text-xs font-bold">
                 <TokenAvatar symbol="COOK" size={18} />
@@ -658,15 +676,17 @@ export function BridgeTerminal() {
         {/* Quick Percentages & Live Conversion */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px] font-mono">
           <div className="text-text-muted truncate max-w-[200px]">
-            {isSolMode ? (
+            {isZapMode ? (
               loadingSolQuote ? (
                 <span className="text-secondary animate-pulse">Calculating swap route...</span>
               ) : solQuote ? (
                 <span className="text-text-secondary">
-                  ≈ {formatNumber(solQuote.outputCookAmount, 0)} COOK on Solana
+                  ≈ {formatNumber(solQuote.outputCookAmount, 0)} COOK (Jupiter)
                 </span>
+              ) : solQuoteError ? (
+                <span className="text-error/80 text-[10px]">{solQuoteError}</span>
               ) : (
-                <span>Jupiter / PumpSwap AMM</span>
+                <span>Jupiter AMM Route</span>
               )
             ) : (
               <span>1 COOK = 1 COOK</span>
@@ -715,7 +735,7 @@ export function BridgeTerminal() {
             readOnly
             placeholder="0.0"
             value={
-              isSolMode
+              isZapMode
                 ? loadingSolQuote
                   ? "..."
                   : solQuote
@@ -774,8 +794,8 @@ export function BridgeTerminal() {
         )}
       </div>
 
-      {/* ─── 2-STEP STEPPER (SOL mode active) ─── */}
-      {isSolMode && (
+      {/* ─── 2-STEP STEPPER (Zap mode active) ─── */}
+      {isZapMode && (
         <div className="px-3 py-2 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-1.5">
             <span
@@ -791,7 +811,7 @@ export function BridgeTerminal() {
               {solSwapTxHash ? "✓" : "1"}
             </span>
             <span className={solSwapTxHash ? "text-accent font-semibold" : "text-text-primary"}>
-              Swap SOL → COOK
+              Swap {selectedSolanaToken.symbol} → COOK
             </span>
           </div>
 
@@ -829,7 +849,11 @@ export function BridgeTerminal() {
       {isSolGasInsufficient && (
         <div className="px-3 py-2 rounded-xl bg-warning/10 border border-warning/30 text-warning text-xs flex items-center gap-2">
           <i className="ri-error-warning-line shrink-0" />
-          <span>Keep at least 0.008 SOL for network gas and message account.</span>
+          <span>
+            {selectedSolanaToken.isNative
+              ? "Keep at least 0.008 SOL for network gas and message account."
+              : "Need at least ~0.005 SOL in wallet to pay Solana network fees."}
+          </span>
         </div>
       )}
 
@@ -840,7 +864,6 @@ export function BridgeTerminal() {
         </div>
       )}
 
-      {/* ─── STATUS BANNER ─── */}
       {/* ─── STATUS BANNER (In-progress or Error) ─── */}
       {transferStatus !== "idle" && transferStatus !== "delivered" && (
         <div
@@ -1083,14 +1106,14 @@ export function BridgeTerminal() {
           disabled
           className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-error/30 text-error/80 cursor-not-allowed select-none"
         >
-          Insufficient {isSolMode ? "SOL" : "COOK"}
+          Insufficient {isCookieToSolana ? "COOK" : selectedSolanaToken.symbol}
         </button>
       ) : isSolGasInsufficient ? (
         <button
           disabled
           className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-warning/30 text-warning cursor-not-allowed select-none"
         >
-          Reserve 0.008 SOL for gas
+          {selectedSolanaToken.isNative ? "Reserve 0.008 SOL for gas" : "Need ~0.005 SOL for gas"}
         </button>
       ) : exceedsCollateral ? (
         <button
@@ -1099,7 +1122,7 @@ export function BridgeTerminal() {
         >
           Exceeds Destination Reserve
         </button>
-      ) : isSolMode && loadingSolQuote ? (
+      ) : isZapMode && loadingSolQuote ? (
         <button
           disabled
           className="w-full py-3.5 rounded-full font-bold text-sm bg-[#141720] border border-secondary/40 text-secondary cursor-wait select-none"
@@ -1114,8 +1137,8 @@ export function BridgeTerminal() {
         >
           <i className="ri-arrow-left-right-line" />
           <span>
-            {isSolMode
-              ? `Bridge ${amount} SOL → Cookie`
+            {isZapMode
+              ? `Bridge ${amount} ${selectedSolanaToken.symbol} → Cookie`
               : `Bridge ${amount} COOK`}
           </span>
         </button>
@@ -1133,6 +1156,19 @@ export function BridgeTerminal() {
           <i className="ri-external-link-line text-[10px]" />
         </a>
       </div>
+
+      <SolanaTokenSelectModal
+        isOpen={tokenModalOpen}
+        onClose={() => setTokenModalOpen(false)}
+        onSelect={(token) => {
+          setSelectedSolanaToken(token);
+          setAmount("");
+          setSolQuote(null);
+          setSolQuoteError(null);
+        }}
+        selectedMint={selectedSolanaToken.mint}
+        userPublicKey={publicKey}
+      />
 
       <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>

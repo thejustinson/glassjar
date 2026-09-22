@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const swapUrl = "https://public.jupiterapi.com/swap";
+    const swapUrl = "https://api.jup.ag/swap/v1/swap";
 
     const res = await fetch(swapUrl, {
       method: "POST",

@@ -54,7 +54,50 @@ export interface BridgeTransferRecord {
   recipient: string;
 }
 
-// ─── Solana Mainnet COOK Balance Reader ─────────────────────────────────────
+// ─── Solana Mainnet COOK & SPL Balance Reader ───────────────────────────────
+
+export const NATIVE_SOL_MINT = "So11111111111111111111111111111111111111112";
+
+export interface SolanaToken {
+  mint: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoUri?: string;
+  isNative?: boolean;
+}
+
+export const POPULAR_SOLANA_TOKENS: SolanaToken[] = [
+  {
+    mint: NATIVE_SOL_MINT,
+    symbol: "SOL",
+    name: "Solana",
+    decimals: 9,
+    logoUri: "/solana-logo.png",
+    isNative: true,
+  },
+  {
+    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    symbol: "USDC",
+    name: "USD Coin",
+    decimals: 6,
+    logoUri: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
+  },
+  {
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    symbol: "USDT",
+    name: "Tether USD",
+    decimals: 6,
+    logoUri: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png",
+  },
+  {
+    mint: SOLANA_WARP_MINT,
+    symbol: "COOK",
+    name: "Cookie (Solana)",
+    decimals: 6,
+    logoUri: "/cook.jpeg",
+  },
+];
 
 const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC ?? "https://api.mainnet-beta.solana.com";
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
@@ -63,6 +106,29 @@ const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqC
 export interface SolanaWalletBalances {
   cook: number;
   sol: number;
+}
+
+/**
+ * Reads any SPL or Token-2022 or native SOL balance for the user on Solana Mainnet.
+ */
+export async function getSolanaTokenBalance(
+  ownerAddress: string | PublicKey,
+  mint: string = NATIVE_SOL_MINT
+): Promise<number> {
+  const pubkeyStr = typeof ownerAddress === "string" ? ownerAddress : ownerAddress.toBase58();
+  try {
+    const res = await fetch(`/api/solana-balance?address=${pubkeyStr}&mint=${encodeURIComponent(mint)}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return typeof data.balance === "number" ? data.balance : 0;
+    }
+  } catch {
+    // fallback
+  }
+  return 0;
 }
 
 /**
@@ -435,20 +501,27 @@ export function getSafeMaxSolAmount(solBalance: number, gasReserve = 0.008): num
 }
 
 /**
- * Fetches a swap quote for swapping native SOL to bridged COOK on Solana Mainnet.
+ * Fetches a swap quote for swapping native SOL or any SPL token to bridged COOK on Solana Mainnet.
  */
 export async function fetchSolanaSwapQuote(
-  solAmount: number | string,
+  amount: number | string,
+  inputMint: string = NATIVE_SOL_MINT,
+  inputDecimals: number = 9,
   slippageBps = 100
 ): Promise<SolanaSwapQuoteResult | null> {
-  const num = typeof solAmount === "string" ? parseFloat(solAmount) : solAmount;
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
   if (isNaN(num) || num <= 0) return null;
 
-  const lamports = Math.round(num * 1e9);
-  const res = await fetch(`/api/solana-swap/quote?amount=${lamports}&slippageBps=${slippageBps}`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
+  const baseUnits = Math.round(num * 10 ** inputDecimals);
+  const res = await fetch(
+    `/api/solana-swap/quote?inputMint=${encodeURIComponent(
+      inputMint
+    )}&outputMint=${encodeURIComponent(SOLANA_WARP_MINT)}&amount=${baseUnits}&slippageBps=${slippageBps}`,
+    {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    }
+  );
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

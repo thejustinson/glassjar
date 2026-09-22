@@ -10,6 +10,9 @@ const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey(
 const TOKEN_2022_PROGRAM_ID = new PublicKey(
   "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 );
+const TOKEN_PROGRAM_ID = new PublicKey(
+  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+);
 
 const SOLANA_RPCS = [
   process.env.SOLANA_MAINNET_RPC,
@@ -20,6 +23,7 @@ const SOLANA_RPCS = [
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const address = searchParams.get("address");
+  const targetMint = searchParams.get("mint") || SOLANA_WARP_MINT;
 
   if (!address) {
     return NextResponse.json(
@@ -38,28 +42,33 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const mint = new PublicKey(SOLANA_WARP_MINT);
-  const [ata] = PublicKey.findProgramAddressSync(
+  // Handle native SOL
+  const isNativeSol = targetMint === "So11111111111111111111111111111111111111112";
+
+  let mint: PublicKey;
+  try {
+    mint = new PublicKey(targetMint);
+  } catch {
+    return NextResponse.json({ error: "Invalid mint address" }, { status: 400 });
+  }
+
+  // Derive ATAs for both standard SPL and Token-2022
+  const isWarpCook = targetMint === SOLANA_WARP_MINT;
+  const [standardAta] = PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+  const [token2022Ata] = PublicKey.findProgramAddressSync(
     [owner.toBuffer(), TOKEN_2022_PROGRAM_ID.toBuffer(), mint.toBuffer()],
     ASSOCIATED_TOKEN_PROGRAM_ID
   );
 
+  const primaryAta = isWarpCook ? token2022Ata : standardAta;
+  const fallbackAta = isWarpCook ? standardAta : token2022Ata;
+
   for (const rpc of SOLANA_RPCS) {
     try {
-      // 1. Direct query on the Token-2022 ATA
-      const res = await fetch(rpc, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "getTokenAccountBalance",
-          params: [ata.toBase58()],
-        }),
-        signal: AbortSignal.timeout(8000),
-      });
-
-      // Query native SOL balance for gas fee preflights
+      // 1. Query native SOL balance
       let solBalance = 0;
       try {
         const solRes = await fetch(rpc, {
@@ -81,61 +90,13 @@ export async function GET(req: NextRequest) {
         // ignore
       }
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.result?.value?.uiAmount !== undefined) {
-          return NextResponse.json(
-            {
-              success: true,
-              balance: data.result.value.uiAmount as number,
-              amount: data.result.value.amount as string,
-              decimals: data.result.value.decimals as number,
-              ata: ata.toBase58(),
-              solBalance,
-            },
-            {
-              status: 200,
-              headers: {
-                "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
-          );
-        }
-      }
-
-      // 2. Fallback query: parsed token accounts by owner
-      const resOwner = await fetch(rpc, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 2,
-          method: "getTokenAccountsByOwner",
-          params: [
-            owner.toBase58(),
-            { programId: TOKEN_2022_PROGRAM_ID.toBase58() },
-            { encoding: "jsonParsed" },
-          ],
-        }),
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (resOwner.ok) {
-        const dataOwner = await resOwner.json();
-        let total = 0;
-        const accounts = dataOwner.result?.value || [];
-        for (const acc of accounts) {
-          if (acc.account?.data?.parsed?.info?.mint === SOLANA_WARP_MINT) {
-            total += acc.account.data.parsed.info.tokenAmount.uiAmount || 0;
-          }
-        }
+      if (isNativeSol) {
         return NextResponse.json(
           {
             success: true,
-            balance: total,
-            ata: ata.toBase58(),
-            decimals: 6,
+            balance: solBalance,
+            decimals: 9,
+            solBalance,
           },
           {
             status: 200,
@@ -146,25 +107,89 @@ export async function GET(req: NextRequest) {
           }
         );
       }
+
+      // 2. Query primary ATA
+      let tokenRes = await fetch(rpc, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getTokenAccountBalance",
+          params: [primaryAta.toBase58()],
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+
+      let tokenData = tokenRes.ok ? await tokenRes.json() : null;
+      if (!tokenData?.result?.value && primaryAta.toBase58() !== fallbackAta.toBase58()) {
+        // Try fallback ATA (e.g. Token-2022)
+        try {
+          const fbRes = await fetch(rpc, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: 2,
+              method: "getTokenAccountBalance",
+              params: [fallbackAta.toBase58()],
+            }),
+            signal: AbortSignal.timeout(5000),
+          });
+          if (fbRes.ok) {
+            const fbData = await fbRes.json();
+            if (fbData?.result?.value) {
+              tokenData = fbData;
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (tokenData?.result?.value?.uiAmount !== undefined) {
+        return NextResponse.json(
+          {
+            success: true,
+            balance: tokenData.result.value.uiAmount as number,
+            amount: tokenData.result.value.amount as string,
+            decimals: tokenData.result.value.decimals as number,
+            ata: primaryAta.toBase58(),
+            solBalance,
+          },
+          {
+            status: 200,
+            headers: {
+              "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10",
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
+      }
+
+      // If token account not found/uninitialized, return 0 balance
+      return NextResponse.json(
+        {
+          success: true,
+          balance: 0,
+          solBalance,
+          ata: primaryAta.toBase58(),
+        },
+        { status: 200 }
+      );
     } catch {
-      // Try next RPC
+      // try next RPC
     }
   }
 
-  // If all attempts failed or returned no accounts, return 0 safely
+  // Fallback if RPCs fail
   return NextResponse.json(
     {
       success: true,
       balance: 0,
-      ata: ata.toBase58(),
-      decimals: 6,
+      solBalance: 0,
+      ata: primaryAta.toBase58(),
     },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-cache",
-        "Access-Control-Allow-Origin": "*",
-      },
-    }
+    { status: 200 }
   );
 }

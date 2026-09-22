@@ -8,14 +8,20 @@ const COOK_SOLANA_MINT = "36ZrtQoab5MhhySaP1YSTwUahSk6GRVUTtZ6cuVfm9e1";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const amountStr = searchParams.get("amount"); // lamports of SOL
+    const inputMint = searchParams.get("inputMint") || SOL_MINT;
+    const outputMint = searchParams.get("outputMint") || COOK_SOLANA_MINT;
+    const amountStr = searchParams.get("amount"); // base units (lamports, etc.)
     const slippageBps = searchParams.get("slippageBps") || "100"; // default 1%
 
     if (!amountStr || Number(amountStr) <= 0) {
       return NextResponse.json({ error: "Missing or invalid amount parameter" }, { status: 400 });
     }
 
-    const jupUrl = `https://public.jupiterapi.com/quote?inputMint=${SOL_MINT}&outputMint=${COOK_SOLANA_MINT}&amount=${amountStr}&slippageBps=${slippageBps}`;
+    const jupUrl = `https://api.jup.ag/swap/v1/quote?inputMint=${encodeURIComponent(
+      inputMint
+    )}&outputMint=${encodeURIComponent(
+      outputMint
+    )}&amount=${encodeURIComponent(amountStr)}&slippageBps=${encodeURIComponent(slippageBps)}`;
 
     const res = await fetch(jupUrl, {
       headers: {
